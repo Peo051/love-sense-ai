@@ -30,6 +30,7 @@
 - `user_id` cho profile, partner profile, history và consent.
 - Kiểm soát để mỗi user chỉ thấy dữ liệu của mình.
 - Quy tắc không lưu chat mặc định.
+- Cấu hình LLM provider tương thích OpenAI Chat Completions, gồm 9router.
 
 Việc nên làm tiếp:
 
@@ -40,7 +41,7 @@ Việc nên làm tiếp:
 ## Giai Đoạn 4 - LLM Thật
 
 - Tích hợp LLM API bằng biến môi trường, không hard-code key.
-- Prompt safety rõ ràng.
+- Prompt safety rõ ràng và output JSON theo schema `AnalyzeResponse`.
 - Không log nội dung chat nhạy cảm nếu user không đồng ý lưu.
 
 ## Giai Đoạn 5 - Production Readiness

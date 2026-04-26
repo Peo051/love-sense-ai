@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.auth import get_optional_current_user
+from app.core.exceptions import AIServiceException
 from app.database.connection import get_db
 from app.models.user import User
 from app.schemas.analyze_schema import AnalyzeRequest, AnalyzeResponse
@@ -54,5 +55,7 @@ async def analyze_emotion(
         return result
     except HTTPException:
         raise
+    except AIServiceException as exc:
+        raise HTTPException(status_code=502, detail=str(exc) or "LLM provider chưa sẵn sàng.") from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Không thể phân tích đoạn chat lúc này.") from exc

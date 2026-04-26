@@ -52,6 +52,20 @@ API chạy tại `http://localhost:8000`.
 
 Swagger UI: `http://localhost:8000/docs`
 
+## LLM / 9router
+
+Mặc định backend dùng mock để test ổn định. Để gọi 9router hoặc provider tương thích OpenAI Chat Completions, cấu hình trong `.env`:
+
+```text
+LLM_PROVIDER=9router
+LLM_BASE_URL=http://localhost:20128/v1
+LLM_API_KEY=your_9router_api_key_here
+LLM_MODEL=api_models_all
+LLM_MOCK_MODE=false
+```
+
+Không commit `.env` hoặc API key thật. Nếu provider lỗi hoặc thiếu cấu hình, `/api/analyze` trả `502` thay vì âm thầm fallback sang mock.
+
 ## Auth Và Phân Quyền Dữ Liệu
 
 - User đăng ký bằng email/password tại `POST /api/register`.

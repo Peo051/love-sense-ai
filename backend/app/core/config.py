@@ -12,6 +12,12 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str = "postgresql://user:password@localhost/loveemotion"
     AI_SERVICE_URL: str = "http://localhost:8001"
+    LLM_PROVIDER: str = "mock"
+    LLM_BASE_URL: str = "http://localhost:20128/v1"
+    LLM_API_KEY: str = ""
+    LLM_MODEL: str = ""
+    LLM_MOCK_MODE: bool = True
+    LLM_TIMEOUT_SECONDS: float = 30.0
 
     SECRET_KEY: str = "dev-only-change-me"
     ALGORITHM: str = "HS256"

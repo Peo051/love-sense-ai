@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from app.core.config import settings
 from app.database.connection import Base, get_db
 from app.main import app
 import app.models as app_models  # noqa: F401 - import models before metadata.create_all
@@ -27,6 +28,12 @@ async def reset_database():
     async with test_engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
+
+
+@pytest.fixture(autouse=True)
+def test_runtime_settings(monkeypatch):
+    monkeypatch.setattr(settings, "LLM_MOCK_MODE", True)
+    monkeypatch.setattr(settings, "LLM_PROVIDER", "mock")
 
 
 @pytest.fixture(autouse=True)

@@ -9,6 +9,7 @@ Love Emotion Web là web app hỗ trợ phân tích sắc thái cảm xúc trong
 - PostgreSQL/Supabase schema và SQL migrations trong `database/`.
 - SQLAlchemy async models cho user, profile, partner profile, consent và analysis history.
 - Auth đơn giản bằng email/password và Bearer JWT.
+- Tích hợp LLM provider tương thích OpenAI Chat Completions, gồm 9router local qua `LLM_*`.
 - Dữ liệu profile/history/consent luôn được lọc theo `user_id`.
 - Consent rõ ràng: lưu kết quả và lưu nội dung chat là hai lựa chọn riêng.
 - Test frontend cho form `/analyze` và test backend cho auth, analyze, profile, history, consent.
@@ -37,6 +38,16 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Cấu hình `DATABASE_URL` trong `backend/.env` trỏ đến PostgreSQL hoặc Supabase. App tự chuyển `postgresql://` thành driver async `postgresql+asyncpg://`.
+
+Để bật 9router local, đặt trong `backend/.env`:
+
+```text
+LLM_PROVIDER=9router
+LLM_BASE_URL=http://localhost:20128/v1
+LLM_API_KEY=your_9router_api_key_here
+LLM_MODEL=api_models_all
+LLM_MOCK_MODE=false
+```
 
 Kiểm tra: `http://localhost:8000/health`
 

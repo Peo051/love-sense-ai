@@ -26,6 +26,7 @@ Người dùng đăng ký/đăng nhập → nhập đoạn chat và bối cảnh
 - `backend/app/routes/analyze.py`: endpoint phân tích, có optional auth để lưu lịch sử.
 - `backend/app/routes/auth.py`: đăng ký, đăng nhập, `/api/me`.
 - `backend/app/services/db_store.py`: repository cho profile/history/consent.
+- `backend/app/services/llm_client.py`: gọi 9router hoặc provider tương thích OpenAI Chat Completions.
 - `backend/app/models/`: SQLAlchemy models.
 - `database/schema.sql`: schema PostgreSQL/Supabase mới.
 - `database/migrations/`: SQL migrations theo thứ tự.
@@ -35,6 +36,20 @@ Người dùng đăng ký/đăng nhập → nhập đoạn chat và bối cảnh
 Backend dùng PostgreSQL/Supabase qua SQLAlchemy async. Profile, partner profile, history và consent đều có `user_id`; routes yêu cầu đăng nhập luôn lọc theo `current_user.id`.
 
 `POST /api/analyze` vẫn chạy khi chưa đăng nhập, nhưng không lưu lịch sử nếu không có token hoặc không có consent hợp lệ.
+
+## LLM / 9router
+
+Backend mặc định dùng mock. Khi cần gọi 9router local, cấu hình trong `backend/.env`:
+
+```text
+LLM_PROVIDER=9router
+LLM_BASE_URL=http://localhost:20128/v1
+LLM_API_KEY=your_9router_api_key_here
+LLM_MODEL=api_models_all
+LLM_MOCK_MODE=false
+```
+
+API key thật chỉ đặt trong `.env`, không commit vào source.
 
 ## Việc Tiếp Theo
 

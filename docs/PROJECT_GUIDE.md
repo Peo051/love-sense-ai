@@ -26,6 +26,8 @@ Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn h�
 - `backend/app/schemas/`: Pydantic request/response schemas.
 - `backend/app/models/`: SQLAlchemy models.
 - `backend/app/services/db_store.py`: repository thao tác profile, history, consent, user data.
+- `backend/app/services/llm_client.py`: client gọi provider tương thích OpenAI Chat Completions như 9router.
+- `backend/app/services/analysis_policy.py`: cảnh báo an toàn và system prompt dùng chung cho mock/LLM.
 - `backend/app/core/auth.py`: dependency lấy user hiện tại từ Bearer token.
 - `backend/app/core/security.py`: hash password và tạo JWT.
 - `backend/app/database/connection.py`: async engine/session.
@@ -49,3 +51,15 @@ Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn h�
 ## Hướng Phát Triển
 
 Ưu tiên tiếp theo là kiểm thử thực tế với PostgreSQL/Supabase local, bổ sung refresh token hoặc session UX tốt hơn, rồi mới tích hợp LLM thật bằng biến môi trường.
+
+## Cấu Hình 9router
+
+Backend đọc các biến:
+
+- `LLM_PROVIDER=9router`
+- `LLM_BASE_URL=http://localhost:20128/v1`
+- `LLM_API_KEY`
+- `LLM_MODEL`
+- `LLM_MOCK_MODE=false`
+
+Không ghi API key thật vào source code. `.env.example` chỉ chứa placeholder.
