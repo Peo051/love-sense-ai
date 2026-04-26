@@ -1,30 +1,69 @@
-export interface EmotionResult {
-  emotion: string;
-  confidence: number;
-  emotions: EmotionScore[];
-  suggestedReplies: string[];
+export interface AnalyzeRequest {
+  chat_text: string;
+  profile_context: string;
+  save_input: boolean;
+  save_result: boolean;
 }
 
-export interface EmotionScore {
-  name: string;
-  value: number;
+export interface AnalyzeResponse {
+  overall_emotion: string;
+  confidence: number;
+  emotion_distribution: Record<string, number>;
+  summary: string;
+  context_note: string;
+  suggested_reply: string;
+  warning: string;
 }
 
 export interface UserProfile {
-  name: string;
-  age: number;
-  communicationStyle: string;
+  nickname: string;
+  primary_language: string;
+  communication_style: string;
+  relationship_status: string;
 }
 
 export interface PartnerProfile {
-  name: string;
-  age: number;
+  nickname: string;
+  likes: string;
+  dislikes: string;
+  texting_style: string;
+  when_happy: string;
+  when_sad: string;
+  when_angry: string;
+  likes_checkins: boolean;
+  dislikes_repeated_questions: boolean;
+  height_cm?: number | null;
+  weight_kg?: number | null;
+  appearance: string;
+  private_notes: string;
 }
 
-export interface AnalysisHistory {
+export interface ProfilePayload {
+  user_profile: UserProfile;
+  partner_profile: PartnerProfile;
+}
+
+export interface ProfileResponse extends ProfilePayload {
+  updated_at: string;
+}
+
+export interface ConsentSettings {
+  history_enabled: boolean;
+  save_input: boolean;
+  save_result: boolean;
+  consent_type: string;
+  is_accepted: boolean;
+  accepted_at: string | null;
+}
+
+export interface HistoryItem extends AnalyzeResponse {
   id: string;
-  date: string;
-  message: string;
-  emotion: string;
-  confidence: number;
+  analyzed_at: string;
+  save_input: boolean;
+  save_result: boolean;
+  chat_text: string | null;
+}
+
+export interface HistoryListResponse {
+  items: HistoryItem[];
 }

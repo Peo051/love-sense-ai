@@ -15,7 +15,11 @@ class AnalyzeRequest(BaseModel):
     )
     save_input: bool = Field(
         default=False,
-        description="MVP chưa lưu dữ liệu; trường này giữ để chuẩn bị cho tính năng lưu có đồng ý.",
+        description="Chỉ lưu nội dung chat nếu người dùng đồng ý rõ ràng.",
+    )
+    save_result: bool = Field(
+        default=False,
+        description="Lưu kết quả tổng hợp vào lịch sử nếu người dùng đồng ý.",
     )
 
 

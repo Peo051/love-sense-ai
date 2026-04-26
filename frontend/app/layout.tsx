@@ -1,14 +1,12 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import '../styles/globals.css';
-import Navbar from '@/components/common/Navbar';
-import Footer from '@/components/common/Footer';
 
-const inter = Inter({ subsets: ['latin'] });
+import Footer from '@/components/common/Footer';
+import Navbar from '@/components/common/Navbar';
+import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Love Emotion - Phân tích cảm xúc tình yêu',
-  description: 'Ứng dụng AI phân tích cảm xúc trong các cuộc trò chuyện tình yêu',
+  title: 'Love Emotion - Phân tích cảm xúc tình cảm',
+  description: 'Ứng dụng web hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm.',
 };
 
 export default function RootLayout({
@@ -18,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body className={inter.className}>
+      <body>
         <Navbar />
         <main className="min-h-screen">{children}</main>
         <Footer />

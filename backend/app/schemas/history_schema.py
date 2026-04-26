@@ -1,10 +1,23 @@
-from pydantic import BaseModel
+from datetime import datetime
 from typing import Optional
 
-class HistoryResponse(BaseModel):
+from pydantic import BaseModel
+
+
+class HistoryItem(BaseModel):
     id: str
-    date: str
-    message: str
-    emotion: str
+    analyzed_at: datetime
+    overall_emotion: str
     confidence: float
-    suggested_reply: Optional[str] = None
+    emotion_distribution: dict[str, float]
+    summary: str
+    context_note: str
+    suggested_reply: str
+    warning: str
+    save_input: bool
+    save_result: bool
+    chat_text: Optional[str] = None
+
+
+class HistoryListResponse(BaseModel):
+    items: list[HistoryItem]
