@@ -2,19 +2,50 @@
 
 Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm theo hướng hỗ trợ giao tiếp nhẹ nhàng.
 
-## Luồng MVP
+## Luồng Chính
 
-1. Người dùng nhập đoạn chat thủ công.
-2. Người dùng nhập bối cảnh cá nhân hóa.
-3. Frontend gửi request đến FastAPI backend.
-4. Backend validate dữ liệu và kiểm tra safety đơn giản.
-5. Mock AI service sinh kết quả phân tích.
-6. Frontend hiển thị kết quả, phân bố cảm xúc, gợi ý phản hồi và cảnh báo.
+1. User có thể đăng ký hoặc đăng nhập bằng email/password.
+2. User nhập đoạn chat thủ công và bối cảnh cá nhân hóa.
+3. Frontend gửi `POST /api/analyze` đến FastAPI backend.
+4. Backend validate dữ liệu, chạy preprocessing đơn giản và mock AI.
+5. Backend áp dụng safety filter.
+6. Nếu user đăng nhập và có consent hợp lệ, backend lưu lịch sử theo `user_id`.
+7. Frontend hiển thị kết quả, phân bố cảm xúc, gợi ý phản hồi và cảnh báo.
 
-## Quyền riêng tư
+## Nguyên Tắc An Toàn
 
-MVP không lưu nội dung chat. Tùy chọn `save_input` đã có trong API contract nhưng backend chưa ghi database. Khi mở tính năng lịch sử, cần bổ sung xác nhận đồng ý lưu, quyền xóa dữ liệu và tài liệu rõ ràng.
+- Không đọc trộm Zalo, Messenger, SMS, thông báo hoặc danh bạ.
+- Không kết luận chắc chắn cảm xúc, hành vi hoặc lòng chung thủy của người khác.
+- Không đưa lời khuyên thao túng cảm xúc.
+- Không lưu nội dung chat mặc định.
+- Luôn hiển thị cảnh báo: “Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.”
 
-## Cách phát triển tiếp
+## Kiến Trúc Backend
 
-Ưu tiên hoàn thiện chất lượng MVP trước khi thêm database hoặc LLM thật. Mỗi bước mở rộng nên giữ nguyên contract an toàn: không theo dõi, không thao túng, không kết luận chắc chắn.
+- `backend/app/routes/`: route FastAPI.
+- `backend/app/schemas/`: Pydantic request/response schemas.
+- `backend/app/models/`: SQLAlchemy models.
+- `backend/app/services/db_store.py`: repository thao tác profile, history, consent, user data.
+- `backend/app/core/auth.py`: dependency lấy user hiện tại từ Bearer token.
+- `backend/app/core/security.py`: hash password và tạo JWT.
+- `backend/app/database/connection.py`: async engine/session.
+
+## Data Ownership
+
+- `profiles.user_id` là unique.
+- `partner_profiles.user_id` là unique.
+- `consents.user_id + consent_type` là unique.
+- `analysis_sessions.user_id` được dùng để lọc lịch sử.
+- Mọi endpoint đọc/xóa dữ liệu cá nhân đều dùng `current_user.id`.
+
+## Quyền Riêng Tư
+
+- `save_input=false` là mặc định.
+- `chat_text` nullable trong database.
+- Backend chỉ set `chat_text` khi user có token, bật lưu lịch sử và request có `save_input=true`.
+- Nếu chỉ `save_result=true`, backend chỉ lưu kết quả tổng hợp.
+- Delete endpoints chỉ xóa dữ liệu của user đang đăng nhập.
+
+## Hướng Phát Triển
+
+Ưu tiên tiếp theo là kiểm thử thực tế với PostgreSQL/Supabase local, bổ sung refresh token hoặc session UX tốt hơn, rồi mới tích hợp LLM thật bằng biến môi trường.

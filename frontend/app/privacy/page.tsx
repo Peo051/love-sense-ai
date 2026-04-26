@@ -61,7 +61,7 @@ export default function PrivacyPage() {
     await runDestructiveAction(async () => {
       await deleteUserData();
       setSettings(defaultConsent);
-    }, 'Đã xóa toàn bộ dữ liệu cá nhân trong bộ nhớ tạm.');
+    }, 'Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.');
   };
 
   const runDestructiveAction = async (action: () => Promise<void>, successMessage: string) => {
@@ -132,8 +132,8 @@ export default function PrivacyPage() {
         <Card title="Xóa dữ liệu">
           <div className="space-y-4">
             <p className="text-sm leading-6 text-slate-600">
-              Các thao tác xóa bên dưới áp dụng cho dữ liệu in-memory của bản sau MVP. Khi dùng database thật,
-              API này cần xóa dữ liệu theo người dùng đang đăng nhập.
+              Các thao tác xóa bên dưới áp dụng cho dữ liệu thuộc tài khoản đang đăng nhập. Ứng dụng không xóa dữ liệu
+              của tài khoản khác.
             </p>
             <Button type="button" variant="secondary" onClick={handleClearHistory}>
               <Trash2 className="h-4 w-4" aria-hidden="true" />

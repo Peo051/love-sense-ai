@@ -2,6 +2,12 @@
 
 Base URL local: `http://localhost:8000`
 
+Các endpoint profile, history, consent và delete data yêu cầu header:
+
+```http
+Authorization: Bearer <access_token>
+```
+
 ## GET /health
 
 Kiểm tra backend đang chạy.
@@ -13,9 +19,54 @@ Kiểm tra backend đang chạy.
 }
 ```
 
+## Auth
+
+### POST /api/register
+
+Tạo user mới.
+
+```json
+{
+  "email": "user@example.com",
+  "password": "secret123"
+}
+```
+
+Response:
+
+```json
+{
+  "id": "uuid",
+  "email": "user@example.com",
+  "is_active": true
+}
+```
+
+### POST /api/token
+
+Đăng nhập bằng OAuth2 password form:
+
+```text
+username=user@example.com
+password=secret123
+```
+
+Response:
+
+```json
+{
+  "access_token": "jwt",
+  "token_type": "bearer"
+}
+```
+
+### GET /api/me
+
+Trả về user hiện tại theo token.
+
 ## POST /api/analyze
 
-Phân tích mock đoạn chat tình cảm. Backend không lưu mặc định.
+Phân tích mock đoạn chat tình cảm. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token và có consent hợp lệ.
 
 Request:
 
@@ -53,7 +104,7 @@ Response:
 - `POST /api/profile`
 - `DELETE /api/profile`
 
-`POST /api/profile` lưu hồ sơ người dùng và hồ sơ người yêu trong bộ nhớ tạm. Chiều cao, cân nặng và ngoại hình là tùy chọn, không dùng để suy luận cảm xúc.
+`POST /api/profile` lưu hồ sơ người dùng và hồ sơ người yêu cho user đang đăng nhập. Chiều cao, cân nặng và ngoại hình là tùy chọn, không dùng để suy luận cảm xúc.
 
 ## History
 
@@ -62,7 +113,7 @@ Response:
 - `DELETE /api/history/{id}`
 - `DELETE /api/history`
 
-Lịch sử chỉ được tạo khi request phân tích có `save_result = true` hoặc `save_input = true`. `chat_text` chỉ được lưu khi `save_input = true`.
+History luôn được lọc theo user đang đăng nhập. `chat_text` chỉ được trả về khi user đã bật lưu nội dung chat tại thời điểm phân tích.
 
 ## Consent
 
@@ -71,15 +122,15 @@ Lịch sử chỉ được tạo khi request phân tích có `save_result = true
 
 Các trường chính:
 
+- `history_enabled`
 - `save_input`
 - `save_result`
 - `consent_type`
 - `is_accepted`
 - `accepted_at`
-- `history_enabled`
 
 ## Delete Data
 
 - `DELETE /api/user-data`
 
-Xóa toàn bộ dữ liệu in-memory: hồ sơ, lịch sử và trạng thái consent.
+Xóa hồ sơ, lịch sử và trạng thái consent của user đang đăng nhập. Endpoint này không xóa tài khoản `users`.

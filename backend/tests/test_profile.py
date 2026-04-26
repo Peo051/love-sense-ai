@@ -1,22 +1,7 @@
-from fastapi.testclient import TestClient
-
-from app.main import app
-from app.services.memory_store import MemoryStore
-
-client = TestClient(app)
-
-
-def setup_function():
-    MemoryStore.reset_all()
-
-
-def teardown_function():
-    MemoryStore.reset_all()
-
-
-def test_save_profile():
+def test_save_profile(client, auth_headers):
     response = client.post(
         "/api/profile",
+        headers=auth_headers,
         json={
             "user_profile": {
                 "nickname": "Test User",
@@ -43,8 +28,13 @@ def test_save_profile():
     assert data["partner_profile"]["nickname"] == "Partner"
 
 
-def test_get_profile():
+def test_get_profile_requires_auth(client):
     response = client.get("/api/profile")
+    assert response.status_code == 401
+
+
+def test_get_profile_returns_user_owned_default(client, auth_headers):
+    response = client.get("/api/profile", headers=auth_headers)
     assert response.status_code == 200
     data = response.json()
     assert data["user_profile"]["nickname"] == ""

@@ -1,8 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.auth import get_optional_current_user
+from app.database.connection import get_db
+from app.models.user import User
 from app.schemas.analyze_schema import AnalyzeRequest, AnalyzeResponse
 from app.services.ai_service import AIService
-from app.services.memory_store import ConsentService, HistoryService
+from app.services.db_store import ConsentRepository, HistoryRepository
 from app.services.preprocessing import preprocess_text
 from app.services.safety_filter import SafetyFilter
 
@@ -10,7 +14,11 @@ router = APIRouter()
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
-async def analyze_emotion(request: AnalyzeRequest):
+async def analyze_emotion(
+    request: AnalyzeRequest,
+    current_user: User | None = Depends(get_optional_current_user),
+    db: AsyncSession = Depends(get_db),
+):
     try:
         cleaned_text = preprocess_text(request.chat_text)
 
@@ -26,17 +34,22 @@ async def analyze_emotion(request: AnalyzeRequest):
         ai_service = AIService()
         result = await ai_service.analyze_emotion(cleaned_text, request.profile_context)
 
-        # Không lưu mặc định. Chỉ lưu khi người dùng bật checkbox đồng ý trong request.
-        ConsentService.accept_analysis_consent(
-            save_input=request.save_input,
-            save_result=request.save_result or request.save_input,
-        )
-        HistoryService.save_analysis(
-            chat_text=cleaned_text,
-            result=result,
-            save_input=request.save_input,
-            save_result=request.save_result or request.save_input,
-        )
+        # Analyze vẫn dùng được khi chưa đăng nhập, nhưng chỉ user có token hợp lệ mới có lịch sử riêng.
+        if current_user and (request.save_input or request.save_result):
+            await ConsentRepository.accept_analysis_consent(
+                db,
+                current_user.id,
+                save_input=request.save_input,
+                save_result=request.save_result or request.save_input,
+            )
+            await HistoryRepository.save_analysis(
+                db,
+                current_user.id,
+                chat_text=cleaned_text,
+                result=result,
+                save_input=request.save_input,
+                save_result=request.save_result or request.save_input,
+            )
 
         return result
     except HTTPException:

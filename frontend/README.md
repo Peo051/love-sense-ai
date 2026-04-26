@@ -2,7 +2,7 @@
 
 Frontend Next.js cho Love Emotion Web.
 
-## Công nghệ
+## Công Nghệ
 
 - Next.js
 - React
@@ -11,13 +11,13 @@ Frontend Next.js cho Love Emotion Web.
 - lucide-react
 - Vitest + React Testing Library
 
-## Cài đặt
+## Cài Đặt
 
 ```powershell
 npm install
 ```
 
-## Chạy development
+## Chạy Development
 
 ```powershell
 npm run dev
@@ -25,7 +25,7 @@ npm run dev
 
 Mở `http://localhost:3000/analyze`.
 
-## Biến môi trường
+## Biến Môi Trường
 
 Tạo `.env.local` nếu backend không chạy ở cổng mặc định:
 
@@ -33,7 +33,11 @@ Tạo `.env.local` nếu backend không chạy ở cổng mặc định:
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Kiểm tra
+## Auth
+
+Trang `/auth` cho phép đăng ký và đăng nhập. Token được lưu trong `localStorage` và tự động gắn vào request profile, history, consent và delete data.
+
+## Kiểm Tra
 
 ```powershell
 npm run test

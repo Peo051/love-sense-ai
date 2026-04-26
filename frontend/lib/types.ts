@@ -67,3 +67,14 @@ export interface HistoryItem extends AnalyzeResponse {
 export interface HistoryListResponse {
   items: HistoryItem[];
 }
+
+export interface AuthToken {
+  access_token: string;
+  token_type: string;
+}
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  is_active: boolean;
+}

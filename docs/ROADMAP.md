@@ -1,37 +1,51 @@
 # Roadmap
 
-## Giai đoạn 1 - MVP local
+## Giai Đoạn 1 - MVP Local
 
 - Frontend `/` và `/analyze`.
 - Backend `/health` và `/api/analyze`.
 - Mock AI response.
 - Cảnh báo an toàn và quyền riêng tư.
+- Test frontend cho form `/analyze`.
 
-## Giai đoạn 2 - Profile, History, Consent
+## Giai Đoạn 2 - Profile, History, Consent
 
-Đã có module in-memory để phát triển sau MVP:
+Đã có:
 
 - Hồ sơ cá nhân hóa.
 - Hồ sơ người yêu.
 - Lịch sử phân tích.
 - Checkbox đồng ý lưu kết quả và lưu nội dung chat.
-- API xóa một lịch sử, xóa toàn bộ lịch sử, xóa hồ sơ và xóa toàn bộ dữ liệu.
+- API xóa một lịch sử, xóa toàn bộ lịch sử, xóa hồ sơ và xóa toàn bộ dữ liệu cá nhân.
+- Cài đặt quyền riêng tư.
 
-Việc còn lại trước production:
+## Giai Đoạn 3 - Database Và Auth
 
-- Thay in-memory store bằng PostgreSQL/Supabase.
-- Gắn dữ liệu theo user thật sau khi có authentication.
-- Thêm migration đầy đủ cho profile fields mới nếu dùng database.
+Đã có:
 
-## Giai đoạn 3 - LLM thật
+- PostgreSQL/Supabase schema.
+- SQLAlchemy async models.
+- SQL migrations.
+- Auth email/password bằng Bearer JWT.
+- `user_id` cho profile, partner profile, history và consent.
+- Kiểm soát để mỗi user chỉ thấy dữ liệu của mình.
+- Quy tắc không lưu chat mặc định.
+
+Việc nên làm tiếp:
+
+- Chạy migration trên PostgreSQL/Supabase thật và kiểm tra thủ công full flow.
+- Bổ sung UX yêu cầu đăng nhập rõ hơn ở `/profile`, `/history`, `/privacy`.
+- Thêm integration test với PostgreSQL test container nếu môi trường cho phép.
+
+## Giai Đoạn 4 - LLM Thật
 
 - Tích hợp LLM API bằng biến môi trường, không hard-code key.
 - Prompt safety rõ ràng.
-- Không log nội dung chat nhạy cảm nếu người dùng không đồng ý lưu.
+- Không log nội dung chat nhạy cảm nếu user không đồng ý lưu.
 
-## Giai đoạn 4 - Production readiness
+## Giai Đoạn 5 - Production Readiness
 
-- Authentication.
+- Refresh token hoặc session strategy tốt hơn.
 - Rate limit.
 - Error monitoring.
 - E2E tests.

@@ -1,6 +1,3 @@
-from sqlalchemy.orm import Session
-from app.database.connection import SessionLocal
+from app.database.connection import AsyncSessionLocal, get_db
 
-def get_session() -> Session:
-    """Get database session"""
-    return SessionLocal()
+__all__ = ["AsyncSessionLocal", "get_db"]
