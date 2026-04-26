@@ -1,0 +1,30 @@
+model:
+  name: "emotion_classifier"
+  type: "transformer"
+  base_model: "vinai/phobert-base"
+
+training:
+  batch_size: 16
+  epochs: 10
+  learning_rate: 2e-5
+  warmup_steps: 500
+  weight_decay: 0.01
+  
+data:
+  max_length: 128
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+
+emotions:
+  - "Hạnh phúc"
+  - "Yêu thương"
+  - "Quan tâm"
+  - "Buồn"
+  - "Lo lắng"
+  - "Giận dữ"
+
+output:
+  model_dir: "models/fine_tuned"
+  checkpoint_dir: "models/checkpoints"
+  logs_dir: "training/logs"

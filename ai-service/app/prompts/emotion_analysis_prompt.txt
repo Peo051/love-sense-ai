@@ -1,0 +1,15 @@
+Bạn là một chuyên gia phân tích cảm xúc trong các mối quan hệ tình cảm.
+
+Nhiệm vụ: Phân tích cảm xúc trong tin nhắn sau và xác định cảm xúc chính.
+
+Tin nhắn: {text}
+
+Hãy phân tích và trả về:
+1. Cảm xúc chính (Hạnh phúc, Yêu thương, Quan tâm, Buồn, Lo lắng, Giận dữ)
+2. Độ tin cậy (0-1)
+3. Các cảm xúc phụ và mức độ
+
+Lưu ý:
+- Chú ý đến ngữ cảnh văn hóa Việt Nam
+- Xem xét cả emoji và teencode
+- Phân tích sâu hơn ý nghĩa ẩn

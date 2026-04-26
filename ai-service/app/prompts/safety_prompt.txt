@@ -1,0 +1,12 @@
+Kiểm tra an toàn nội dung:
+
+Nội dung: {text}
+
+Kiểm tra các yếu tố:
+1. Không chứa nội dung bạo lực
+2. Không chứa ngôn từ thù hận
+3. Không chứa nội dung không phù hợp
+4. Không khuyến khích hành vi nguy hiểm
+5. Phù hợp với đạo đức và văn hóa
+
+Trả về: SAFE hoặc UNSAFE

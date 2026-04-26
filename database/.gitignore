@@ -1,0 +1,11 @@
+# Backup files
+*.sql.backup
+*.dump
+backup/
+
+# Local database files
+*.db
+*.sqlite
+
+# Logs
+*.log

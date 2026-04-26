@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# Models
+models/fine_tuned/*.pkl
+models/fine_tuned/*.pt
+models/checkpoints/*.ckpt
+
+# Data
+training/datasets/raw/*.csv
+training/datasets/raw/*.json
+training/datasets/processed/*.csv
+training/datasets/labeled/*.csv
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+training/logs/
+
+# Environment
+.env
+.env.local
