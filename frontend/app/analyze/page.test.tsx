@@ -75,7 +75,7 @@ describe('AnalyzePage', () => {
     await user.click(screen.getByRole('button', { name: /phân tích/i }));
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'http://localhost:8000/api/analyze',
+      'http://127.0.0.1:8000/api/analyze',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

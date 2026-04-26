@@ -10,8 +10,13 @@ import type {
   ProfileResponse,
 } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
+
+// Debug logging in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  console.log('[API] Base URL:', API_BASE_URL);
+}
 
 function getStoredToken() {
   if (typeof window === 'undefined') {
@@ -70,12 +75,32 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 }
 
 async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage = 'Không thể xử lý yêu cầu.') {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: buildHeaders(init),
-  });
+  try {
+    const url = `${API_BASE_URL}${path}`;
+    
+    // Debug logging in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[API] Request:', init?.method || 'GET', url);
+    }
+    
+    const response = await fetch(url, {
+      ...init,
+      headers: buildHeaders(init),
+    });
 
-  return parseJsonResponse<T>(response, fallbackMessage);
+    // Debug logging in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[API] Response:', response.status, response.statusText);
+    }
+
+    return parseJsonResponse<T>(response, fallbackMessage);
+  } catch (error) {
+    // Debug logging in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.error('[API] Error:', error);
+    }
+    throw error;
+  }
 }
 
 export async function registerUser(email: string, password: string): Promise<AuthUser> {
