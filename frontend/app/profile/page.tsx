@@ -44,7 +44,7 @@ export default function ProfilePage() {
         setUserProfile(profile.user_profile);
         setPartnerProfile(profile.partner_profile);
       })
-      .catch(() => setErrorMessage('Không thể tải hồ sơ. Bạn vẫn có thể nhập và lưu lại.'));
+      .catch(() => setErrorMessage('Vui lòng đăng nhập tại trang Tài khoản để tải hoặc lưu hồ sơ.'));
   }, []);
 
   const updateUserProfile = (field: keyof UserProfile, value: string) => {

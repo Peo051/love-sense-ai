@@ -25,6 +25,9 @@ export default function Navbar() {
           <Link href="/privacy" className="rounded-md px-3 py-2 hover:bg-rose-50 hover:text-rose-700">
             Riêng tư
           </Link>
+          <Link href="/auth" className="rounded-md px-3 py-2 hover:bg-rose-50 hover:text-rose-700">
+            Tài khoản
+          </Link>
         </div>
       </nav>
     </header>

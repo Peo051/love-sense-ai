@@ -1,6 +1,8 @@
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
+  AuthToken,
+  AuthUser,
   ConsentSettings,
   HistoryItem,
   HistoryListResponse,
@@ -9,6 +11,44 @@ import type {
 } from './types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
+
+function getStoredToken() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function saveAuthToken(token: string) {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, token);
+  }
+}
+
+export function clearAuthToken() {
+  if (typeof window !== 'undefined') {
+    window.localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+}
+
+export function hasAuthToken() {
+  return Boolean(getStoredToken());
+}
+
+function buildHeaders(init?: RequestInit) {
+  const token = getStoredToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+}
 
 async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
   if (!response.ok) {
@@ -32,13 +72,41 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
 async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage = 'Không thể xử lý yêu cầu.') {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
+    headers: buildHeaders(init),
   });
 
   return parseJsonResponse<T>(response, fallbackMessage);
+}
+
+export async function registerUser(email: string, password: string): Promise<AuthUser> {
+  return requestJson<AuthUser>(
+    '/api/register',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email, password }),
+    },
+    'Không thể đăng ký tài khoản.'
+  );
+}
+
+export async function loginUser(email: string, password: string): Promise<AuthToken> {
+  const formData = new URLSearchParams();
+  formData.set('username', email);
+  formData.set('password', password);
+
+  const response = await fetch(`${API_BASE_URL}/api/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData,
+  });
+
+  const token = await parseJsonResponse<AuthToken>(response, 'Không thể đăng nhập.');
+  saveAuthToken(token.access_token);
+  return token;
+}
+
+export async function getCurrentUser(): Promise<AuthUser> {
+  return requestJson<AuthUser>('/api/me', undefined, 'Không thể tải thông tin tài khoản.');
 }
 
 export async function analyzeEmotion(payload: AnalyzeRequest): Promise<AnalyzeResponse> {
@@ -53,7 +121,7 @@ export async function analyzeEmotion(payload: AnalyzeRequest): Promise<AnalyzeRe
 }
 
 export async function getProfile(): Promise<ProfileResponse> {
-  return requestJson<ProfileResponse>('/api/profile', undefined, 'Không thể tải hồ sơ.');
+  return requestJson<ProfileResponse>('/api/profile', undefined, 'Vui lòng đăng nhập để tải hồ sơ.');
 }
 
 export async function saveProfile(profile: ProfilePayload): Promise<ProfileResponse> {
@@ -63,7 +131,7 @@ export async function saveProfile(profile: ProfilePayload): Promise<ProfileRespo
       method: 'POST',
       body: JSON.stringify(profile),
     },
-    'Không thể lưu hồ sơ.'
+    'Vui lòng đăng nhập để lưu hồ sơ.'
   );
 }
 
@@ -72,7 +140,7 @@ export async function deleteProfile(): Promise<void> {
 }
 
 export async function getHistory(): Promise<HistoryListResponse> {
-  return requestJson<HistoryListResponse>('/api/history', undefined, 'Không thể tải lịch sử phân tích.');
+  return requestJson<HistoryListResponse>('/api/history', undefined, 'Vui lòng đăng nhập để tải lịch sử phân tích.');
 }
 
 export async function getHistoryDetail(id: string): Promise<HistoryItem> {
@@ -88,7 +156,7 @@ export async function clearHistory(): Promise<void> {
 }
 
 export async function getConsent(): Promise<ConsentSettings> {
-  return requestJson<ConsentSettings>('/api/consent', undefined, 'Không thể tải cài đặt quyền riêng tư.');
+  return requestJson<ConsentSettings>('/api/consent', undefined, 'Vui lòng đăng nhập để tải cài đặt quyền riêng tư.');
 }
 
 export async function saveConsent(consent: ConsentSettings): Promise<ConsentSettings> {
