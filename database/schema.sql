@@ -98,11 +98,19 @@ CREATE TRIGGER update_preferences_updated_at
 CREATE TABLE analysis_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    message TEXT NOT NULL,
+    chat_text TEXT,
     emotion VARCHAR(50) NOT NULL,
     confidence DECIMAL(3, 2) CHECK (confidence >= 0 AND confidence <= 1),
+    summary TEXT,
+    context_note TEXT,
     suggested_reply TEXT,
+    warning TEXT,
     emotion_scores JSONB,
+    save_input BOOLEAN NOT NULL DEFAULT FALSE,
+    save_result BOOLEAN NOT NULL DEFAULT FALSE,
+    consent_type VARCHAR(80) DEFAULT 'analysis_history',
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    accepted_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -111,9 +119,38 @@ CREATE INDEX idx_analysis_sessions_created_at ON analysis_sessions(created_at DE
 CREATE INDEX idx_analysis_sessions_emotion ON analysis_sessions(emotion);
 CREATE INDEX idx_analysis_sessions_emotion_scores ON analysis_sessions USING GIN (emotion_scores);
 
+-- Consent settings table
+CREATE TABLE consents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    save_input BOOLEAN NOT NULL DEFAULT FALSE,
+    save_result BOOLEAN NOT NULL DEFAULT FALSE,
+    consent_type VARCHAR(80) NOT NULL DEFAULT 'analysis_history',
+    is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    accepted_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_consent_type UNIQUE (user_id, consent_type)
+);
+
+CREATE INDEX idx_consents_user_id ON consents(user_id);
+CREATE INDEX idx_consents_type ON consents(consent_type);
+
+CREATE TRIGGER update_consents_updated_at
+    BEFORE UPDATE ON consents
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- Add comments
 COMMENT ON TABLE users IS 'User accounts';
 COMMENT ON TABLE profiles IS 'User profile information';
 COMMENT ON TABLE partner_profiles IS 'Partner profile information';
 COMMENT ON TABLE preferences IS 'User preferences and settings';
 COMMENT ON TABLE analysis_sessions IS 'History of emotion analysis sessions';
+COMMENT ON TABLE consents IS 'User consent settings for saving analysis results and chat content';
+COMMENT ON COLUMN analysis_sessions.chat_text IS 'Original chat text. Must stay NULL unless save_input consent is accepted.';
+COMMENT ON COLUMN analysis_sessions.save_input IS 'Whether user explicitly allowed saving original chat text.';
+COMMENT ON COLUMN analysis_sessions.save_result IS 'Whether user allowed saving analysis result.';
+COMMENT ON COLUMN analysis_sessions.consent_type IS 'Consent category used when saving this record.';
+COMMENT ON COLUMN analysis_sessions.is_accepted IS 'Whether consent was accepted when this record was saved.';
+COMMENT ON COLUMN analysis_sessions.accepted_at IS 'Timestamp when consent was accepted.';

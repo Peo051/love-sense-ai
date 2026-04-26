@@ -1,111 +1,73 @@
-# Love Emotion Web 💕
+# Love Emotion Web
 
-Ứng dụng web phân tích cảm xúc trong các cuộc trò chuyện tình yêu sử dụng AI.
+Love Emotion Web là web app hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm. Ứng dụng chỉ phân tích nội dung người dùng nhập thủ công, không đọc trộm tin nhắn, không kết luận chắc chắn cảm xúc của người khác và không lưu nội dung chat mặc định.
 
-## Tính năng
+## Hiện có
 
-- 🎯 Phân tích cảm xúc từ tin nhắn tiếng Việt
-- 💬 Đề xuất câu trả lời phù hợp
-- 📊 Biểu đồ cảm xúc chi tiết
-- 📝 Lưu lịch sử phân tích
-- 👤 Quản lý profile người dùng và người yêu
-- 🔒 Bảo mật và riêng tư
+- Frontend Next.js: `/`, `/analyze`, `/profile`, `/history`, `/privacy`.
+- Backend FastAPI: `/health`, `/api/analyze`, `/api/profile`, `/api/history`, `/api/consent`, `/api/user-data`.
+- Mock AI response có cảnh báo an toàn.
+- Hồ sơ cá nhân hóa và lịch sử phân tích dùng in-memory store cho giai đoạn sau MVP.
+- Consent rõ ràng: lưu kết quả và lưu nội dung chat là hai lựa chọn riêng.
+- Test frontend cho form `/analyze`.
+- Test backend cho analyze, safety, profile, history và consent.
 
-## Công nghệ
+## Cấu trúc
 
-- **Frontend:** Next.js 14, React, TypeScript, Tailwind CSS
-- **Backend:** FastAPI, Python, SQLAlchemy
-- **AI Service:** FastAPI, Python, NLP
-- **Database:** PostgreSQL
-- **Authentication:** JWT
-
-## Cấu trúc dự án
-
-```
+```text
 love-emotion-web/
-├── frontend/          # Next.js frontend
-├── backend/           # FastAPI backend API
-├── ai-service/        # AI emotion analysis service
-├── database/          # Database schema & migrations
-├── docs/              # Documentation
+├── frontend/      # Next.js + TypeScript + Tailwind CSS
+├── backend/       # FastAPI + Pydantic
+├── ai-service/    # Thử nghiệm AI service, chưa cần cho MVP
+├── database/      # Schema/migrations chuẩn bị cho PostgreSQL
+├── docs/          # Tài liệu dự án
 └── README.md
 ```
 
-## Quick Start
-
-### Yêu cầu
-
-- Python 3.10 hoặc 3.11 (⚠️ KHÔNG dùng 3.13)
-- Node.js 18+
-- PostgreSQL 14+ (optional)
-
-### Setup nhanh với scripts
+## Chạy backend
 
 ```powershell
-# Setup Backend
-.\setup-backend.ps1
-
-# Setup AI Service  
-.\setup-ai-service.ps1
-
-# Setup Frontend
-.\setup-frontend.ps1
-```
-
-### Hoặc setup thủ công
-
-Xem hướng dẫn chi tiết trong [SETUP.md](SETUP.md)
-
-## Chạy ứng dụng
-
-Mở 3 terminal riêng biệt:
-
-**Terminal 1 - Backend:**
-```bash
 cd backend
 venv\Scripts\activate
+pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
 
-**Terminal 2 - AI Service:**
-```bash
-cd ai-service
-venv\Scripts\activate
-uvicorn app.main:app --reload --port 8001
-```
+Kiểm tra: `http://localhost:8000/health`
 
-**Terminal 3 - Frontend:**
-```bash
+## Chạy frontend
+
+```powershell
 cd frontend
+npm install
 npm run dev
 ```
 
-## Truy cập
+Mở: `http://localhost:3000/analyze`
 
-- 🌐 Frontend: http://localhost:3000
-- 📡 Backend API: http://localhost:8000/docs
-- 🤖 AI Service: http://localhost:8001/docs
+## Test
 
-## Lỗi thường gặp
+Backend:
 
-### Python 3.13 không tương thích
-Dùng Python 3.10 hoặc 3.11
+```powershell
+cd backend
+venv\Scripts\activate
+python -m pytest tests
+```
 
-### psql không tìm thấy
-Cài đặt PostgreSQL và thêm vào PATH
+Frontend:
 
-### uvicorn không tìm thấy
-Đảm bảo đã activate virtual environment
+```powershell
+cd frontend
+npm run test
+npm run typecheck
+npm run build
+npm audit
+```
 
-Xem thêm trong [SETUP.md](SETUP.md)
+## Tài liệu
 
-## Documentation
-
-- [Setup Guide](SETUP.md) - Hướng dẫn cài đặt chi tiết
-- [Backend README](backend/README.md) - Backend API documentation
-- [AI Service README](ai-service/README.md) - AI service documentation
-- [Database README](database/README.md) - Database schema & migrations
-
-## License
-
-MIT License
+- [Testing Guide](docs/TESTING.md)
+- [Project Guide](docs/PROJECT_GUIDE.md)
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [Roadmap](docs/ROADMAP.md)

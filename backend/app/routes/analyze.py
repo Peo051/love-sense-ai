@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.schemas.analyze_schema import AnalyzeRequest, AnalyzeResponse
 from app.services.ai_service import AIService
+from app.services.memory_store import ConsentService, HistoryService
 from app.services.preprocessing import preprocess_text
 from app.services.safety_filter import SafetyFilter
 
@@ -22,10 +23,22 @@ async def analyze_emotion(request: AnalyzeRequest):
                 detail="Nội dung này không phù hợp với mục tiêu phân tích an toàn của ứng dụng.",
             )
 
-        # MVP chưa lưu nội dung chat mặc định.
-        # Khi làm lịch sử thật, chỉ lưu nếu người dùng bật save_input và có cơ chế đồng ý rõ ràng.
         ai_service = AIService()
-        return await ai_service.analyze_emotion(cleaned_text, request.profile_context)
+        result = await ai_service.analyze_emotion(cleaned_text, request.profile_context)
+
+        # Không lưu mặc định. Chỉ lưu khi người dùng bật checkbox đồng ý trong request.
+        ConsentService.accept_analysis_consent(
+            save_input=request.save_input,
+            save_result=request.save_result or request.save_input,
+        )
+        HistoryService.save_analysis(
+            chat_text=cleaned_text,
+            result=result,
+            save_input=request.save_input,
+            save_result=request.save_result or request.save_input,
+        )
+
+        return result
     except HTTPException:
         raise
     except Exception as exc:

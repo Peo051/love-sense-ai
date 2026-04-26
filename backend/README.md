@@ -1,48 +1,55 @@
 # Love Emotion Backend
 
-Backend API cho ứng dụng Love Emotion.
+Backend FastAPI cho Love Emotion Web.
 
 ## Công nghệ
 
 - FastAPI
-- PostgreSQL
-- SQLAlchemy
 - Pydantic
+- Uvicorn
+- Pytest
+
+Database thật chưa bắt buộc. Các module Profile, History và Consent hiện dùng in-memory store để phát triển sau MVP.
 
 ## Cài đặt
 
-```bash
-# Tạo virtual environment
+```powershell
 python -m venv venv
-
-# Kích hoạt virtual environment
-# Windows
 venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-
-# Cài đặt dependencies
 pip install -r requirements.txt
 ```
 
 ## Chạy server
 
-```bash
+```powershell
 uvicorn app.main:app --reload --port 8000
 ```
 
-API sẽ chạy tại http://localhost:8000
+API chạy tại `http://localhost:8000`.
 
-## API Documentation
+## Endpoint chính
 
-Swagger UI: http://localhost:8000/docs
-ReDoc: http://localhost:8000/redoc
+- `GET /health`
+- `GET /api/health`
+- `POST /api/analyze`
+- `GET|POST|DELETE /api/profile`
+- `GET /api/history`
+- `GET|DELETE /api/history/{id}`
+- `DELETE /api/history`
+- `GET|POST /api/consent`
+- `DELETE /api/user-data`
 
-## Cấu trúc
+Swagger UI: `http://localhost:8000/docs`
 
-- `app/routes/` - API endpoints
-- `app/schemas/` - Pydantic schemas
-- `app/models/` - Database models
-- `app/services/` - Business logic
-- `app/core/` - Core configuration
-- `app/utils/` - Utility functions
+## Quy tắc lưu dữ liệu
+
+- Không lưu nội dung chat mặc định.
+- `save_result=true` chỉ lưu kết quả tổng hợp.
+- `save_input=true` mới lưu `chat_text`.
+- `history_enabled=false` trong consent sẽ chặn lưu lịch sử.
+
+## Test
+
+```powershell
+python -m pytest tests
+```

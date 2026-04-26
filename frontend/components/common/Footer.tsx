@@ -2,19 +2,12 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-100 mt-16">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center">
-          <p className="text-gray-600">
-            © 2026 Love Emotion. All rights reserved.
-          </p>
-          
-          <div className="flex gap-4">
-            <Link href="/privacy" className="text-gray-600 hover:text-pink-600">
-              Chính sách bảo mật
-            </Link>
-          </div>
-        </div>
+    <footer className="mt-14 border-t border-rose-100 bg-white">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+        <p>© 2026 Love Emotion. Kết quả chỉ mang tính tham khảo.</p>
+        <Link href="/privacy" className="font-medium text-rose-700 hover:text-rose-800">
+          Chính sách riêng tư
+        </Link>
       </div>
     </footer>
   );
