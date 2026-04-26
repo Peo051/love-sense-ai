@@ -1,12 +1,28 @@
+from app.core.config import settings
+from app.core.exceptions import AIServiceException
 from app.schemas.analyze_schema import AnalyzeResponse
-
-
-WARNING_MESSAGE = "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp."
+from app.services.analysis_policy import WARNING_MESSAGE
+from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 
 
 class AIService:
+    def __init__(self, llm_client: OpenAICompatibleLLMClient | None = None):
+        self.llm_client = llm_client or OpenAICompatibleLLMClient()
+
     async def analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
-        """Sinh kết quả mock cho MVP, chưa gọi LLM thật để tránh phụ thuộc API key."""
+        if self._should_use_mock():
+            return self._mock_analyze_emotion(chat_text, profile_context)
+
+        try:
+            return await self.llm_client.analyze_emotion(chat_text, profile_context)
+        except LLMClientError as exc:
+            raise AIServiceException(str(exc)) from exc
+
+    def _should_use_mock(self) -> bool:
+        return settings.LLM_MOCK_MODE or settings.LLM_PROVIDER.lower() in {"", "mock", "none"}
+
+    def _mock_analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
+        """Sinh kết quả mock để test ổn định khi chưa bật LLM thật."""
         text_lower = chat_text.lower()
         context_lower = profile_context.lower()
 

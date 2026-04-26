@@ -66,7 +66,7 @@ Trả về user hiện tại theo token.
 
 ## POST /api/analyze
 
-Phân tích mock đoạn chat tình cảm. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token và có consent hợp lệ.
+Phân tích đoạn chat tình cảm. Mặc định backend dùng mock; khi `LLM_MOCK_MODE=false`, backend gọi provider tương thích OpenAI Chat Completions theo cấu hình `LLM_*` như 9router. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token và có consent hợp lệ.
 
 Request:
 
