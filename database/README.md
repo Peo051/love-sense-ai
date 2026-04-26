@@ -1,8 +1,20 @@
 # Love Emotion Database
 
-Database chưa bắt buộc cho MVP hiện tại. Backend đang dùng in-memory store để phát triển nhanh các module Profile, History và Consent. Khi chuyển sang PostgreSQL/Supabase, chạy các migration theo thứ tự.
+Database chính là PostgreSQL hoặc Supabase. Backend dùng SQLAlchemy async và driver `asyncpg`.
 
-## Chạy migrations
+## Setup Mới
+
+Nếu tạo database mới, chạy schema đầy đủ:
+
+```powershell
+psql -U postgres -d loveemotion -f schema.sql
+```
+
+Với Supabase, mở SQL Editor và chạy nội dung `schema.sql`, hoặc dùng connection string trong `DATABASE_URL`.
+
+## Chạy Migrations
+
+Nếu muốn chạy theo từng bước:
 
 ```powershell
 psql -U postgres -d loveemotion -f migrations/001_create_users.sql
@@ -11,19 +23,29 @@ psql -U postgres -d loveemotion -f migrations/003_create_partner_profiles.sql
 psql -U postgres -d loveemotion -f migrations/004_create_preferences.sql
 psql -U postgres -d loveemotion -f migrations/005_create_analysis_sessions.sql
 psql -U postgres -d loveemotion -f migrations/006_add_consent_and_privacy_controls.sql
+psql -U postgres -d loveemotion -f migrations/007_add_auth_scoped_models.sql
 ```
 
-## Consent fields
+`007_add_auth_scoped_models.sql` đồng bộ schema với SQLAlchemy models hiện tại và thêm các field cần cho auth/user-scoped data.
 
-Các trường bắt buộc cho cơ chế đồng ý lưu/xóa dữ liệu:
+## Bảng Chính
 
-- `save_input`: người dùng có đồng ý lưu nội dung chat gốc không.
-- `save_result`: người dùng có đồng ý lưu kết quả phân tích không.
-- `consent_type`: loại đồng ý, ví dụ `analysis_history` hoặc `analysis_submission`.
+- `users`: tài khoản auth đơn giản.
+- `profiles`: hồ sơ người dùng, một bản ghi cho mỗi user.
+- `partner_profiles`: hồ sơ người yêu, một bản ghi cho mỗi user.
+- `consents`: cài đặt quyền riêng tư và đồng ý lưu dữ liệu theo user.
+- `analysis_sessions`: lịch sử phân tích theo user.
+
+## Consent Fields
+
+- `history_enabled`: user có bật lưu lịch sử không.
+- `save_input`: user có đồng ý lưu nội dung chat gốc không.
+- `save_result`: user có đồng ý lưu kết quả tổng hợp không.
+- `consent_type`: loại đồng ý, ví dụ `privacy_settings` hoặc `analysis_submission`.
 - `is_accepted`: trạng thái đồng ý.
-- `accepted_at`: thời điểm người dùng đồng ý.
+- `accepted_at`: thời điểm user đồng ý.
 
-## Quy tắc lưu chat
+## Quy Tắc Lưu Chat
 
 - Không lưu `chat_text` mặc định.
 - Chỉ lưu `chat_text` khi `save_input = true`, `is_accepted = true` và `accepted_at` có giá trị.
