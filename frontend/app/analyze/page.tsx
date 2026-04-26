@@ -16,11 +16,15 @@ export default function AnalyzePage() {
   const handleAnalyze = async (payload: AnalyzeRequest) => {
     setIsLoading(true);
     setErrorMessage('');
+    setResult(null); // Clear previous result
 
     try {
+      console.log('[Analyze] Sending request:', payload);
       const analysis = await analyzeEmotion(payload);
+      console.log('[Analyze] Received response:', analysis);
       setResult(analysis);
     } catch (error) {
+      console.error('[Analyze] Error:', error);
       setResult(null);
       setErrorMessage(error instanceof Error ? error.message : 'Không thể phân tích đoạn chat lúc này.');
     } finally {
