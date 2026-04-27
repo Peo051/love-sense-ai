@@ -39,6 +39,8 @@ uvicorn app.main:app --reload --port 8000
 
 Nếu chưa có PostgreSQL/Supabase ở máy dev, giữ mặc định `DATABASE_URL=sqlite+aiosqlite:///./love_emotion_dev.db`; backend sẽ tự tạo bảng khi `APP_ENV=development`. Khi dùng PostgreSQL hoặc Supabase, cấu hình `DATABASE_URL` trong `backend/.env` và chạy schema/migrations trong `database/`. App tự chuyển `postgresql://` hoặc `postgres://` thành driver async `postgresql+asyncpg://`.
 
+Production phải đặt `APP_ENV=production`, `FRONTEND_URL`, `DATABASE_URL` PostgreSQL/Supabase và `SECRET_KEY` thật. Nếu thiếu `DATABASE_URL` production, backend sẽ báo lỗi cấu hình thay vì tự dùng SQLite dev fallback.
+
 Để bật 9router local, đặt trong `backend/.env`:
 
 ```text
@@ -47,6 +49,9 @@ LLM_BASE_URL=http://localhost:20128/v1
 LLM_API_KEY=
 LLM_MODEL=api_models_all
 LLM_MOCK_MODE=false
+LLM_TIMEOUT_SECONDS=30
+RATE_LIMIT_MAX_REQUESTS=20
+RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 Kiểm tra: `http://localhost:8000/health`
@@ -116,4 +121,5 @@ npm audit
 - [Testing Guide](docs/TESTING.md)
 - [Project Guide](docs/PROJECT_GUIDE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)
