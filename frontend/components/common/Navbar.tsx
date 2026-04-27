@@ -20,7 +20,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/90 shadow-sm shadow-rose-100/40 backdrop-blur-xl">
       <nav aria-label="Điều hướng chính" className="mx-auto max-w-7xl px-3 min-[390px]:px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 items-center justify-between gap-4">
           <Link
@@ -36,7 +36,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-2xl border border-rose-100 bg-white/85 p-1 text-sm font-medium text-slate-700 shadow-sm shadow-rose-100/50 md:flex">
+          <div className="hidden items-center gap-1 rounded-2xl border border-rose-100 bg-white/85 p-1 text-sm font-medium text-slate-700 shadow-sm shadow-rose-100/50 ring-1 ring-white/70 md:flex">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (

@@ -16,10 +16,11 @@ export default function HeroVisual() {
         <div className="pointer-events-none absolute -right-6 bottom-16 h-32 w-32 rounded-full bg-teal-300/25 blur-3xl" />
         <div className="pointer-events-none absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-200/20 blur-3xl" />
 
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-rose-200/70 backdrop-blur">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-rose-200/70 ring-1 ring-white/80 backdrop-blur">
           <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-rose-300/70 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/70 to-transparent" />
 
-          <div className="mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
+          <div className="relative mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
             <div className="min-w-0">
               <p className="text-sm font-semibold text-slate-950">Bản xem trước phân tích</p>
               <p className="text-xs text-slate-500">Nhập thủ công, không lưu mặc định</p>
@@ -30,7 +31,7 @@ export default function HeroVisual() {
             </Badge>
           </div>
 
-          <div className="grid gap-4">
+          <div className="relative grid gap-4">
             <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Mock chat</p>
