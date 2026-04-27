@@ -19,6 +19,8 @@ def test_analyze_emotion():
     data = response.json()
     assert data["overall_emotion"] == "mệt mỏi / né tránh nhẹ"
     assert data["confidence"] == 0.72
+    assert data["authenticated"] is False
+    assert data["saved_to_history"] is False
     assert "emotion_distribution" in data
     assert data["warning"] == "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp."
 

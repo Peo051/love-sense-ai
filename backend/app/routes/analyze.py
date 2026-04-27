@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
-from app.core.auth import get_optional_user_from_token, optional_oauth2_scheme
 from app.core.exceptions import AIServiceException
 from app.database.connection import get_db
+from app.deps.auth import CurrentUser, get_optional_user
 from app.schemas.analyze_schema import AnalyzeRequest, AnalyzeResponse
 from app.services.ai_service import AIService
 from app.services.db_store import ConsentRepository, HistoryRepository
@@ -19,7 +19,7 @@ router = APIRouter()
 async def analyze_emotion(
     http_request: Request,
     request: AnalyzeRequest,
-    token: str | None = Depends(optional_oauth2_scheme),
+    current_user: CurrentUser | None = Depends(get_optional_user),
     db: AsyncSession = Depends(get_db),
 ):
     try:
@@ -34,7 +34,6 @@ async def analyze_emotion(
                 detail="Nội dung này không phù hợp với mục tiêu phân tích an toàn của ứng dụng.",
             )
 
-        current_user = await get_optional_user_from_token(token, db)
         rate_limit_key = _build_rate_limit_key(http_request, current_user.id if current_user else None)
         rate_limit = analyze_rate_limiter.check(
             rate_limit_key,
@@ -52,6 +51,7 @@ async def analyze_emotion(
         result = await ai_service.analyze_emotion(cleaned_text, request.profile_context)
 
         # Analyze luôn dùng được không cần đăng nhập; chỉ lưu lịch sử khi có user và request có consent lưu.
+        saved_to_history = False
         if current_user and (request.save_input or request.save_result):
             await ConsentRepository.accept_analysis_consent(
                 db,
@@ -59,7 +59,7 @@ async def analyze_emotion(
                 save_input=request.save_input,
                 save_result=request.save_result or request.save_input,
             )
-            await HistoryRepository.save_analysis(
+            saved_item = await HistoryRepository.save_analysis(
                 db,
                 current_user.id,
                 chat_text=cleaned_text,
@@ -67,8 +67,14 @@ async def analyze_emotion(
                 save_input=request.save_input,
                 save_result=request.save_result or request.save_input,
             )
+            saved_to_history = saved_item is not None
 
-        return result
+        return result.model_copy(
+            update={
+                "authenticated": current_user is not None,
+                "saved_to_history": saved_to_history,
+            }
+        )
     except HTTPException:
         raise
     except AIServiceException as exc:

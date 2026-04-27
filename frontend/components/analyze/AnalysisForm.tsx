@@ -99,7 +99,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
         <FieldLabel
           htmlFor="chat_text"
           label="Đoạn chat cần phân tích"
-          hint="Ứng dụng chỉ xử lý nội dung bạn nhập thủ công, không tự đọc tin nhắn từ nền tảng khác."
+          hint="Ứng dụng chỉ xử lý nội dung bạn nhập thủ công, không tự truy cập tin nhắn từ nền tảng khác."
         >
           <textarea
             id="chat_text"

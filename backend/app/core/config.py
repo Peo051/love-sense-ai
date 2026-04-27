@@ -1,9 +1,9 @@
-from pydantic import AliasChoices, Field, model_validator
+from pydantic import AliasChoices, Field, ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 DEFAULT_FRONTEND_URL = "http://localhost:3000"
-DEFAULT_ALLOWED_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
+DEFAULT_ALLOWED_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000,https://love-sense-ai.vercel.app"
 DEFAULT_DATABASE_URL = "sqlite+aiosqlite:///./love_emotion_dev.db"
 
 
@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     database_url: str = DEFAULT_DATABASE_URL
     database_auto_create: bool = True
     ai_service_url: str = "http://localhost:8001"
+    firebase_service_account_json: str = ""
 
     llm_provider: str = "mock"
     llm_base_url: str = "http://localhost:20128/v1"
@@ -61,6 +62,13 @@ class Settings(BaseSettings):
     secret_key: str = "dev-only-change-me"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
+
+    @field_validator("database_auto_create", "llm_mock_mode", mode="before")
+    @classmethod
+    def use_default_for_blank_boolean(cls, value, info: ValidationInfo):
+        if value == "":
+            return cls.model_fields[info.field_name].default
+        return value
 
     @model_validator(mode="after")
     def validate_production_settings(self):

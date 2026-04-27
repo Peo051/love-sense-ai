@@ -2,10 +2,10 @@
 
 Base URL local: `http://localhost:8000`
 
-Các endpoint profile, history, consent và delete data yêu cầu header:
+Các endpoint profile, history, consent và delete data yêu cầu Bearer token. Token có thể là legacy JWT nội bộ ở môi trường dev hoặc Firebase ID Token khi đăng nhập Google:
 
 ```http
-Authorization: Bearer <access_token>
+Authorization: Bearer <firebase_id_token>
 ```
 
 ## GET /health
@@ -62,11 +62,24 @@ Response:
 
 ### GET /api/me
 
-Trả về user hiện tại theo token.
+Trả về user hiện tại theo token. Endpoint này bắt buộc đăng nhập và không trả thông tin nhạy cảm.
+
+Response:
+
+```json
+{
+  "id": "internal-user-uuid",
+  "uid": "firebase-uid-or-internal-user-id",
+  "email": "user@example.com",
+  "name": "User Name",
+  "picture": "https://...",
+  "is_active": true
+}
+```
 
 ## POST /api/analyze
 
-Phân tích đoạn chat tình cảm. Mặc định backend dùng mock; khi `LLM_MOCK_MODE=false`, backend gọi provider tương thích OpenAI Chat Completions theo cấu hình `LLM_*` như 9router. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token và có consent hợp lệ.
+Phân tích đoạn chat tình cảm. Mặc định backend dùng mock; khi `LLM_MOCK_MODE=false`, backend gọi provider tương thích OpenAI Chat Completions theo cấu hình `LLM_*` như 9router. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token hợp lệ và có consent lưu dữ liệu.
 
 Backend không log API key, token hoặc `chat_text`. Nếu LLM timeout, lỗi tạm thời hoặc trả lỗi provider, backend retry theo cấu hình rồi fallback mock response an toàn cùng schema.
 
@@ -119,11 +132,13 @@ Response:
   ],
   "uncertainty_reasons": ["Chỉ dựa trên vài câu chat nên chưa thể kết luận chắc chắn."],
   "input_quality": "medium",
-  "reply_style": "nhẹ nhàng, cho không gian, không hỏi dồn"
+  "reply_style": "nhẹ nhàng, cho không gian, không hỏi dồn",
+  "authenticated": true,
+  "saved_to_history": true
 }
 ```
 
-Các field `tone`, `evidence`, `uncertainty_reasons`, `input_quality`, `reply_style` là phần mở rộng tương thích ngược. Frontend có thể dùng để hiển thị căn cứ phân tích và cảnh báo khi input đến từ OCR hoặc còn thiếu dữ liệu. `evidence` dùng object `{quote,label,reason}` để mỗi nhận định quan trọng có câu chat làm căn cứ.
+Các field `tone`, `evidence`, `uncertainty_reasons`, `input_quality`, `reply_style`, `authenticated`, `saved_to_history` là phần mở rộng tương thích ngược. Frontend có thể dùng để hiển thị căn cứ phân tích, trạng thái lưu lịch sử và cảnh báo khi input đến từ OCR hoặc còn thiếu dữ liệu. `evidence` dùng object `{quote,label,reason}` để mỗi nhận định quan trọng có câu chat làm căn cứ.
 
 Lỗi thường gặp:
 

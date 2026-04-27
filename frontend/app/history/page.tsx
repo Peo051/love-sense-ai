@@ -5,6 +5,7 @@ import { Search, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
+import AuthRequiredState, { AuthLoadingState } from '@/components/auth/AuthRequiredState';
 import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
@@ -12,6 +13,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { EmptyState, LoadingState } from '@/components/common/StateBlocks';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { clearHistory, deleteHistoryItem, getHistory } from '@/lib/api';
 import type { HistoryItem } from '@/lib/types';
 import { inputClassName } from '@/lib/ui';
@@ -31,6 +33,7 @@ function summarize(text: string, length = 130) {
 }
 
 export default function HistoryPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
@@ -59,6 +62,11 @@ export default function HistoryPage() {
   );
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
     getHistory()
       .then((history) => {
         setItems(history.items);
@@ -66,7 +74,7 @@ export default function HistoryPage() {
       })
       .catch((error) => setErrorMessage(error instanceof Error ? error.message : 'Không thể tải lịch sử.'))
       .finally(() => setIsLoading(false));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) {
@@ -125,6 +133,15 @@ export default function HistoryPage() {
         }
       />
 
+      {authLoading ? (
+        <AuthLoadingState />
+      ) : !isAuthenticated ? (
+        <AuthRequiredState
+          title="Đăng nhập để xem lịch sử"
+          description="Lịch sử phân tích chỉ được lưu và hiển thị theo tài khoản đã đăng nhập. Bạn vẫn có thể phân tích thử ở trang Phân tích."
+        />
+      ) : (
+        <>
       {statusMessage && <SuccessAlert>{statusMessage}</SuccessAlert>}
       {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
@@ -259,6 +276,8 @@ export default function HistoryPage() {
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmDelete}
       />
+        </>
+      )}
     </PageShell>
   );
 }

@@ -28,6 +28,7 @@ database/migrations/005_create_analysis_sessions.sql
 database/migrations/006_add_consent_and_privacy_controls.sql
 database/migrations/007_add_auth_scoped_models.sql
 database/migrations/008_harden_user_scoped_persistence.sql
+database/migrations/009_add_firebase_uid_to_users.sql
 ```
 
 4. Lấy connection string PostgreSQL từ Supabase và đặt vào `DATABASE_URL` trên backend hosting.
@@ -59,6 +60,7 @@ DATABASE_AUTO_CREATE=false
 SECRET_KEY=<strong-random-secret>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+FIREBASE_SERVICE_ACCOUNT_JSON=<set-in-hosting-secret-store>
 ```
 
 CORS:
@@ -124,9 +126,26 @@ Biến môi trường production:
 
 ```text
 NEXT_PUBLIC_API_URL=https://<backend-app-domain>
+NEXT_PUBLIC_API_BASE_URL=https://<backend-app-domain>
+NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web client value>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<project-id>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<project>.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<sender-id>
+NEXT_PUBLIC_FIREBASE_APP_ID=<app-id>
 ```
 
 Không đưa `LLM_API_KEY`, `DATABASE_URL`, token hoặc secret vào frontend. Mọi biến `NEXT_PUBLIC_*` đều có thể bị trình duyệt nhìn thấy.
+
+## Firebase Authentication
+
+1. Firebase Console -> Authentication -> Sign-in method -> enable Google provider.
+2. Authentication -> Settings -> Authorized domains:
+   - `localhost`
+   - production frontend domain
+3. Vercel nhận Firebase Web SDK config qua `NEXT_PUBLIC_FIREBASE_*`.
+4. Render nhận Firebase Admin credential JSON qua `FIREBASE_SERVICE_ACCOUNT_JSON`.
+5. Backend map Firebase uid vào `users.firebase_uid`, sau đó dùng `users.id` nội bộ để scope profile/history/consent.
 
 ## Checklist Production Env
 
@@ -140,6 +159,7 @@ Backend:
 - `SECRET_KEY`
 - `ALGORITHM=HS256`
 - `ACCESS_TOKEN_EXPIRE_MINUTES`
+- `FIREBASE_SERVICE_ACCOUNT_JSON`
 - `LLM_PROVIDER`
 - `LLM_BASE_URL`
 - `LLM_API_KEY`
@@ -155,12 +175,20 @@ Backend:
 Frontend:
 
 - `NEXT_PUBLIC_API_URL`
+- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
 
 ## Security Và Privacy
 
 - Không commit `.env`, `.env.local`, API key, token hoặc secret.
 - Không hard-code domain production trong source code.
 - Không đưa `LLM_API_KEY` vào frontend.
+- Không đưa Firebase Admin credential vào frontend.
 - Không lưu `chat_text` mặc định.
 - Chỉ lưu `chat_text` khi user bật `save_input=true`.
 - Profile, history và consent luôn scoped theo `user_id`.
@@ -200,7 +228,7 @@ Kiểm tra staged diff không chứa `.env`, API key, token hoặc secret trư�
 ## Manual Smoke Test Sau Deploy
 
 1. Mở frontend deploy URL.
-2. Đăng ký/đăng nhập tại `/auth`.
+2. Đăng nhập Google tại `/login`.
 3. Vào `/analyze`, nhập đoạn chat thủ công và phân tích.
 4. Thử upload ảnh chat: OCR local phải tạo bản nháp review; AI Vision chỉ gửi ảnh khi user tick consent riêng.
 5. Tick lưu kết quả, không tick lưu nội dung chat, rồi kiểm tra `/history` không có `chat_text`.
@@ -212,5 +240,6 @@ Kiểm tra staged diff không chứa `.env`, API key, token hoặc secret trư�
 
 - [Setup Guide](../SETUP.md)
 - [API Documentation](API_DOCUMENTATION.md)
+- [Firebase Auth Guide](AUTH_FIREBASE.md)
 - [Privacy Design](PRIVACY_DESIGN.md)
 - [Testing Guide](TESTING.md)

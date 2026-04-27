@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Info, Save, Trash2, UserRound, UsersRound } from 'lucide-react';
 
 import { ErrorAlert, InfoAlert, SuccessAlert } from '@/components/common/Alerts';
+import AuthRequiredState, { AuthLoadingState } from '@/components/auth/AuthRequiredState';
 import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
@@ -11,6 +12,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import FieldLabel from '@/components/common/FieldLabel';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { deleteProfile, getProfile, saveProfile } from '@/lib/api';
 import type { PartnerProfile, ProfilePayload, UserProfile } from '@/lib/types';
 import { inputClassName, textareaClassName } from '@/lib/ui';
@@ -39,6 +41,7 @@ const emptyPartnerProfile: PartnerProfile = {
 };
 
 export default function ProfilePage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile>(emptyUserProfile);
   const [partnerProfile, setPartnerProfile] = useState<PartnerProfile>(emptyPartnerProfile);
   const [statusMessage, setStatusMessage] = useState('');
@@ -48,13 +51,17 @@ export default function ProfilePage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     getProfile()
       .then((profile) => {
         setUserProfile(profile.user_profile);
         setPartnerProfile(profile.partner_profile);
       })
-      .catch(() => setErrorMessage('Vui lòng đăng nhập tại trang Tài khoản để tải hoặc lưu hồ sơ.'));
-  }, []);
+      .catch(() => setErrorMessage('Vui lòng đăng nhập để tải hoặc lưu hồ sơ.'));
+  }, [authLoading, isAuthenticated]);
 
   const updateUserProfile = (field: keyof UserProfile, value: string) => {
     setUserProfile((current) => ({ ...current, [field]: value }));
@@ -114,6 +121,15 @@ export default function ProfilePage() {
         action={<Badge tone="amber">Không dùng chiều cao/cân nặng để suy luận</Badge>}
       />
 
+      {authLoading ? (
+        <AuthLoadingState />
+      ) : !isAuthenticated ? (
+        <AuthRequiredState
+          title="Đăng nhập để quản lý hồ sơ"
+          description="Hồ sơ cá nhân hóa được lưu theo từng tài khoản. Bạn cần đăng nhập Google trước khi xem hoặc chỉnh sửa hồ sơ."
+        />
+      ) : (
+        <>
       <InfoAlert>
         <span className="inline-flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
@@ -274,6 +290,8 @@ export default function ProfilePage() {
         onCancel={() => setIsDeleteDialogOpen(false)}
         onConfirm={handleDeleteProfile}
       />
+        </>
+      )}
     </PageShell>
   );
 }

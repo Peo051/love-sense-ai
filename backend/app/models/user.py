@@ -16,6 +16,7 @@ class User(Base):
 
     id = Column(Uuid(as_uuid=False), primary_key=True, default=generate_uuid, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
+    firebase_uid = Column(String(128), unique=True, index=True, nullable=True)
     hashed_password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

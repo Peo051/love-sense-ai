@@ -57,6 +57,14 @@ class AnalyzeResponse(BaseModel):
         default=None,
         description="Phong cách phản hồi nên dùng dựa trên sắc thái hội thoại.",
     )
+    authenticated: bool = Field(
+        default=False,
+        description="True nếu request có token đăng nhập hợp lệ.",
+    )
+    saved_to_history: bool = Field(
+        default=False,
+        description="True nếu kết quả đã được lưu vào lịch sử theo consent của user.",
+    )
 
     @field_validator("evidence", mode="before")
     @classmethod

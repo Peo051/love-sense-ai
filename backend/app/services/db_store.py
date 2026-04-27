@@ -286,6 +286,11 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
+    async def get_by_firebase_uid(db: AsyncSession, firebase_uid: str) -> User | None:
+        result = await db.execute(select(User).where(User.firebase_uid == firebase_uid))
+        return result.scalar_one_or_none()
+
+    @staticmethod
     async def get_by_id(db: AsyncSession, user_id: str) -> User | None:
         result = await db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
@@ -293,6 +298,30 @@ class UserRepository:
     @staticmethod
     async def create_user(db: AsyncSession, *, email: str, hashed_password: str) -> User:
         user = User(email=email.lower(), hashed_password=hashed_password)
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+        return user
+
+    @staticmethod
+    async def get_or_create_firebase_user(db: AsyncSession, *, firebase_uid: str, email: str) -> User:
+        existing_by_uid = await UserRepository.get_by_firebase_uid(db, firebase_uid)
+        if existing_by_uid:
+            return existing_by_uid
+
+        normalized_email = email.lower()
+        existing_by_email = await UserRepository.get_by_email(db, normalized_email)
+        if existing_by_email:
+            existing_by_email.firebase_uid = firebase_uid
+            await db.commit()
+            await db.refresh(existing_by_email)
+            return existing_by_email
+
+        user = User(
+            email=normalized_email,
+            firebase_uid=firebase_uid,
+            hashed_password="firebase-auth-managed-user",
+        )
         db.add(user)
         await db.commit()
         await db.refresh(user)

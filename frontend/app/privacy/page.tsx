@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { Database, FileX2, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react';
 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
+import AuthRequiredState, { AuthLoadingState } from '@/components/auth/AuthRequiredState';
 import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { clearHistory, deleteProfile, deleteUserData, getConsent, saveConsent } from '@/lib/api';
 import type { ConsentSettings } from '@/lib/types';
 
@@ -43,6 +45,7 @@ const deleteDialogCopy: Record<Exclude<PendingPrivacyDelete, null>, { title: str
 };
 
 export default function PrivacyPage() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [settings, setSettings] = useState<ConsentSettings>(defaultConsent);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -51,10 +54,14 @@ export default function PrivacyPage() {
   const [pendingDelete, setPendingDelete] = useState<PendingPrivacyDelete>(null);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) {
+      return;
+    }
+
     getConsent()
       .then((consent) => setSettings(consent))
       .catch(() => setErrorMessage('Không thể tải cài đặt quyền riêng tư.'));
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const persistSettings = async (nextSettings: ConsentSettings) => {
     setIsSaving(true);
@@ -121,6 +128,15 @@ export default function PrivacyPage() {
         action={<Badge tone="teal">Không ép consent</Badge>}
       />
 
+      {authLoading ? (
+        <AuthLoadingState />
+      ) : !isAuthenticated ? (
+        <AuthRequiredState
+          title="Đăng nhập để quản lý dữ liệu"
+          description="Cài đặt consent, lịch sử, hồ sơ và thao tác xóa dữ liệu được gắn với tài khoản. Vui lòng đăng nhập trước khi quản lý dữ liệu cá nhân."
+        />
+      ) : (
+        <>
       {statusMessage && <SuccessAlert>{statusMessage}</SuccessAlert>}
       {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
@@ -221,6 +237,8 @@ export default function PrivacyPage() {
         onCancel={() => setPendingDelete(null)}
         onConfirm={confirmDelete}
       />
+        </>
+      )}
     </PageShell>
   );
 }
