@@ -22,7 +22,7 @@ export default function Card({
   return (
     <section
       className={cn(
-        'rounded-2xl border border-rose-100/80 bg-white/95 p-5 shadow-sm shadow-rose-100/60 backdrop-blur',
+        'rounded-2xl border border-rose-100/80 bg-white/95 p-5 shadow-[0_14px_45px_rgba(244,63,94,0.06)] ring-1 ring-white/70 backdrop-blur transition-shadow duration-200 hover:shadow-[0_18px_55px_rgba(244,63,94,0.08)]',
         className
       )}
     >

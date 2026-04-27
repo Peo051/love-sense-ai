@@ -61,7 +61,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
             id="chat_text"
             value={chatText}
             onChange={(event) => setChatText(event.target.value)}
-            className={`${textareaClassName} min-h-72`}
+            className={`${textareaClassName} min-h-44 sm:min-h-72`}
             placeholder="Dán đoạn hội thoại ngắn tại đây. Không cần thông tin cá nhân."
           />
         </FieldLabel>
@@ -80,7 +80,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
             id="profile_context"
             value={profileContext}
             onChange={(event) => setProfileContext(event.target.value)}
-            className={`${textareaClassName} min-h-36`}
+            className={`${textareaClassName} min-h-28 sm:min-h-36`}
             placeholder="Ví dụ: Người ấy thường im lặng khi mệt, không thích bị hỏi dồn..."
           />
         </FieldLabel>
@@ -102,7 +102,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
               className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
             />
             <span>
-              <span className="flex items-center gap-2 font-semibold text-slate-950">
+              <span className="flex items-start gap-2 font-semibold text-slate-950 sm:items-center">
                 <History className="h-4 w-4 text-rose-600" aria-hidden="true" />
                 Lưu kết quả phân tích vào lịch sử
               </span>
@@ -124,7 +124,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
               className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
             />
             <span>
-              <span className="flex items-center gap-2 font-semibold text-amber-950">
+              <span className="flex items-start gap-2 font-semibold text-amber-950 sm:items-center">
                 <Save className="h-4 w-4 text-amber-700" aria-hidden="true" />
                 Lưu nội dung chat gốc
               </span>

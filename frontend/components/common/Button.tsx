@@ -29,9 +29,10 @@ export default function Button({
     lg: 'min-h-12 px-6 py-3 text-base',
   };
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: 'bg-rose-600 text-white shadow-sm shadow-rose-200/80 hover:-translate-y-px hover:bg-rose-700 focus:ring-rose-500',
+    primary:
+      'bg-gradient-to-b from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200/80 hover:-translate-y-px hover:from-rose-600 hover:to-rose-700 focus:ring-rose-500',
     secondary:
-      'border border-rose-100 bg-white text-slate-800 shadow-sm hover:-translate-y-px hover:border-rose-200 hover:bg-rose-50 focus:ring-rose-300',
+      'border border-rose-100 bg-white/95 text-slate-800 shadow-sm shadow-rose-100/60 hover:-translate-y-px hover:border-rose-200 hover:bg-rose-50 focus:ring-rose-300',
     danger:
       'border border-red-200 bg-red-50 text-red-800 shadow-sm hover:-translate-y-px hover:bg-red-100 focus:ring-red-300',
     ghost: 'bg-transparent text-slate-700 hover:bg-rose-50 hover:text-rose-700 focus:ring-rose-300',
