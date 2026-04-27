@@ -126,12 +126,3 @@ async def get_optional_user(
         return await _resolve_current_user(credentials.credentials, db)
     except HTTPException:
         return None
-
-
-async def get_optional_user_from_token(token: str | None, db: AsyncSession) -> CurrentUser | None:
-    if not token:
-        return None
-    try:
-        return await _resolve_current_user(token, db)
-    except HTTPException:
-        return None

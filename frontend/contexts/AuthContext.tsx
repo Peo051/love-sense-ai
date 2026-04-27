@@ -4,7 +4,7 @@ import { getIdToken, onAuthStateChanged, type User } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { auth } from '@/lib/firebase';
-import { clearAuthToken, hasAuthToken, saveAuthToken, setAuthTokenProvider } from '@/lib/api';
+import { clearAuthToken, hasAuthToken, setAuthTokenProvider } from '@/lib/api';
 
 interface AuthContextValue {
   user: User | null;
@@ -39,9 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
 
-    const token = await getIdToken(currentUser, true);
-    saveAuthToken(token);
-    return token;
+    return getIdToken(currentUser, true);
   }, []);
 
   useEffect(() => {
@@ -58,14 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(nextUser);
 
-      try {
-        if (nextUser) {
-          const token = await getIdToken(nextUser, true);
-          saveAuthToken(token);
-        } else {
-          clearAuthToken();
-        }
-      } catch {
+      if (!nextUser) {
         clearAuthToken();
       }
 
