@@ -2,6 +2,7 @@ import unicodedata
 
 from app.core.config import settings
 from app.schemas.analyze_schema import AnalyzeResponse, EvidenceItem
+from app.services.analysis_output_validator import validate_analysis_output
 from app.services.analysis_policy import WARNING_MESSAGE
 from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 
@@ -12,12 +13,15 @@ class AIService:
 
     async def analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
         if self._should_use_mock():
-            return self._mock_analyze_emotion(chat_text, profile_context)
+            result = self._mock_analyze_emotion(chat_text, profile_context)
+            return validate_analysis_output(result, chat_text, profile_context)
 
         try:
-            return await self.llm_client.analyze_emotion(chat_text, profile_context)
+            result = await self.llm_client.analyze_emotion(chat_text, profile_context)
         except LLMClientError:
-            return self._mock_analyze_emotion(chat_text, profile_context)
+            result = self._mock_analyze_emotion(chat_text, profile_context)
+
+        return validate_analysis_output(result, chat_text, profile_context)
 
     def _should_use_mock(self) -> bool:
         return settings.llm_mock_mode or settings.llm_provider.lower() in {"", "mock", "none"}
