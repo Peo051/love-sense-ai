@@ -71,7 +71,13 @@ export default function HistoryPage() {
           <p className="text-sm font-semibold uppercase text-rose-700">Lịch sử phân tích</p>
           <h1 className="mt-2 text-3xl font-bold text-slate-950">Các lần phân tích đã được bạn đồng ý lưu</h1>
         </div>
-        <Button type="button" variant="secondary" disabled={items.length === 0} onClick={handleClearHistory}>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={items.length === 0}
+          onClick={handleClearHistory}
+          aria-label="Xóa toàn bộ lịch sử phân tích"
+        >
           <Trash2 className="h-4 w-4" aria-hidden="true" />
           Xóa toàn bộ lịch sử
         </Button>
@@ -127,7 +133,12 @@ export default function HistoryPage() {
                     {selectedItem.chat_text ?? 'Không lưu vì bạn chưa đồng ý lưu nội dung chat.'}
                   </p>
                 </div>
-                <Button type="button" variant="secondary" onClick={() => handleDeleteItem(selectedItem.id)}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => handleDeleteItem(selectedItem.id)}
+                  aria-label="Xóa lịch sử này"
+                >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
                   Xóa lịch sử này
                 </Button>

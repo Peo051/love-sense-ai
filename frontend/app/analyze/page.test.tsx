@@ -110,6 +110,24 @@ describe('AnalyzePage', () => {
     expect(screen.getByText(/kết quả chỉ mang tính tham khảo/i)).toBeInTheDocument();
   });
 
+  it('sends save_result without save_input when only history checkbox is selected', async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockFetchOnce(mockAnalyzeResponse);
+    render(<AnalyzePage />);
+
+    await user.click(screen.getAllByRole('checkbox')[0]);
+    await user.click(screen.getByRole('button', { name: /phân tích/i }));
+
+    const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(requestBody).toEqual(
+      expect.objectContaining({
+        save_result: true,
+        save_input: false,
+      })
+    );
+    expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
+  });
+
   it('shows a friendly API error and keeps the user input', async () => {
     const user = userEvent.setup();
     mockFetchOnce({ detail: 'Backend đang bận, vui lòng thử lại sau.' }, false);

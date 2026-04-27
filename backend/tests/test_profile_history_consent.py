@@ -14,6 +14,32 @@ def register_and_login(client, email: str | None = None):
     return {"Authorization": f"Bearer {token}"}
 
 
+def sample_profile_payload(nickname: str = "An"):
+    return {
+        "user_profile": {
+            "nickname": nickname,
+            "primary_language": "Tiếng Việt",
+            "communication_style": "Nhẹ nhàng",
+            "relationship_status": "Đang tìm hiểu",
+        },
+        "partner_profile": {
+            "nickname": "Bình",
+            "likes": "Nhạc acoustic",
+            "dislikes": "Bị hỏi dồn",
+            "texting_style": "Trả lời chậm khi bận",
+            "when_happy": "Nhắn nhiều hơn",
+            "when_sad": "Ít nói",
+            "when_angry": "Cần không gian riêng",
+            "likes_checkins": True,
+            "dislikes_repeated_questions": True,
+            "height_cm": 165,
+            "weight_kg": 55,
+            "appearance": "",
+            "private_notes": "Không dùng chiều cao/cân nặng để suy luận cảm xúc.",
+        },
+    }
+
+
 def test_consent_defaults_and_update(client, auth_headers):
     response = client.get("/api/consent", headers=auth_headers)
     assert response.status_code == 200
@@ -41,29 +67,7 @@ def test_profile_save_and_delete(client, auth_headers):
     response = client.post(
         "/api/profile",
         headers=auth_headers,
-        json={
-            "user_profile": {
-                "nickname": "An",
-                "primary_language": "Tiếng Việt",
-                "communication_style": "Nhẹ nhàng",
-                "relationship_status": "Đang tìm hiểu",
-            },
-            "partner_profile": {
-                "nickname": "Bình",
-                "likes": "Nhạc acoustic",
-                "dislikes": "Bị hỏi dồn",
-                "texting_style": "Trả lời chậm khi bận",
-                "when_happy": "Nhắn nhiều hơn",
-                "when_sad": "Ít nói",
-                "when_angry": "Cần không gian riêng",
-                "likes_checkins": True,
-                "dislikes_repeated_questions": True,
-                "height_cm": 165,
-                "weight_kg": 55,
-                "appearance": "",
-                "private_notes": "Không dùng chiều cao/cân nặng để suy luận cảm xúc.",
-            },
-        },
+        json=sample_profile_payload(),
     )
 
     assert response.status_code == 200
@@ -171,6 +175,31 @@ def test_analyze_saves_result_without_original_chat_when_allowed(client, auth_he
     assert items[0]["chat_text"] is None
 
 
+def test_clear_history_removes_history_but_keeps_profile(client, auth_headers):
+    client.post("/api/profile", headers=auth_headers, json=sample_profile_payload())
+
+    for chat_text in ["Em mệt thôi.", "Hôm nay em cần yên tĩnh."]:
+        response = client.post(
+            "/api/analyze",
+            headers=auth_headers,
+            json={
+                "chat_text": chat_text,
+                "profile_context": "",
+                "save_input": False,
+                "save_result": True,
+            },
+        )
+        assert response.status_code == 200
+
+    history_response = client.get("/api/history", headers=auth_headers)
+    assert len(history_response.json()["items"]) == 2
+
+    clear_response = client.delete("/api/history", headers=auth_headers)
+    assert clear_response.status_code == 200
+    assert client.get("/api/history", headers=auth_headers).json()["items"] == []
+    assert client.get("/api/profile", headers=auth_headers).json()["user_profile"]["nickname"] == "An"
+
+
 def test_analyze_saves_original_chat_only_with_explicit_consent(client, auth_headers):
     response = client.post(
         "/api/analyze",
@@ -227,6 +256,8 @@ def test_each_user_only_sees_own_history(client):
 
 
 def test_delete_history_item_and_all_user_data(client, auth_headers):
+    client.post("/api/profile", headers=auth_headers, json=sample_profile_payload())
+
     client.post(
         "/api/analyze",
         headers=auth_headers,
@@ -259,3 +290,4 @@ def test_delete_history_item_and_all_user_data(client, auth_headers):
     assert clear_response.status_code == 200
     assert client.get("/api/history", headers=auth_headers).json()["items"] == []
     assert client.get("/api/consent", headers=auth_headers).json()["is_accepted"] is False
+    assert client.get("/api/profile", headers=auth_headers).json()["user_profile"]["nickname"] == ""

@@ -135,15 +135,20 @@ export default function PrivacyPage() {
               Các thao tác xóa bên dưới áp dụng cho dữ liệu thuộc tài khoản đang đăng nhập. Ứng dụng không xóa dữ liệu
               của tài khoản khác.
             </p>
-            <Button type="button" variant="secondary" onClick={handleClearHistory}>
+            <Button type="button" variant="secondary" onClick={handleClearHistory} aria-label="Xóa lịch sử phân tích">
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Xóa lịch sử phân tích
             </Button>
-            <Button type="button" variant="secondary" onClick={handleDeleteProfile}>
+            <Button type="button" variant="secondary" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Xóa hồ sơ cá nhân hóa
             </Button>
-            <Button type="button" variant="secondary" onClick={handleDeleteAllUserData}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleDeleteAllUserData}
+              aria-label="Xóa toàn bộ dữ liệu cá nhân"
+            >
               <Trash2 className="h-4 w-4" aria-hidden="true" />
               Xóa toàn bộ dữ liệu cá nhân
             </Button>
