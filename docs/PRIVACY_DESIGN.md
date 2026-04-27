@@ -1,6 +1,6 @@
 # Privacy Design
 
-Love Sense AI ưu tiên phân tích do người dùng chủ động nhập, không đọc trộm Zalo, Messenger, SMS, notification hoặc danh bạ.
+Love Sense AI ưu tiên phân tích do người dùng chủ động nhập, không tự truy cập Zalo, Messenger, SMS, notification hoặc danh bạ.
 
 ## Dữ Liệu Có Thể Lưu
 

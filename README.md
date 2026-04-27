@@ -1,173 +1,230 @@
 # Love Sense AI
 
-Love Sense AI là web app hỗ trợ phân tích sắc thái hội thoại tình cảm theo hướng privacy-first. Người dùng chủ động nhập đoạn chat hoặc tải ảnh chụp hội thoại để OCR, kiểm tra lại nội dung, rồi nhận phân tích tham khảo và gợi ý phản hồi nhẹ nhàng.
+**Love Sense AI** là web app hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm, có cá nhân hóa theo hồ sơ người dùng và gợi ý phản hồi văn minh. Ứng dụng được thiết kế theo hướng privacy-first: người dùng chủ động nhập hoặc tải nội dung, kết quả chỉ mang tính tham khảo và không thay thế giao tiếp trực tiếp.
 
-Ứng dụng không tự truy cập tin nhắn, không kết luận chắc chắn cảm xúc của người khác, không đưa ra lời khuyên thao túng và không lưu nội dung chat mặc định.
+![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
+![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi)
+![Firebase Auth](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=111827)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?logo=postgresql&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-Frontend-000000?logo=vercel)
+![Render](https://img.shields.io/badge/Render-Backend-46E3B7?logo=render&logoColor=111827)
 
 ## Live Demo
 
-- Frontend: https://love-sense-ai.vercel.app
-- Backend API docs: https://love-sense-ai.onrender.com/docs
-- Local frontend mặc định: `http://localhost:3000`
-- Local backend mặc định: `http://localhost:8000`
+| Thành phần | Link |
+| --- | --- |
+| Frontend | https://love-sense-ai.vercel.app |
+| Backend API Docs | https://love-sense-ai.onrender.com/docs |
 
-## Screenshot
+## Ảnh Minh Họa
 
 Ảnh dưới đây dùng dữ liệu minh họa, không phải nội dung chat thật của người dùng.
 
 ![Love Sense AI landing page](docs/assets/love-sense-ai-home.png)
 
+## Giới Thiệu Đề Tài
+
+Trong giao tiếp qua tin nhắn, người dùng thường khó nhận biết sắc thái như mệt mỏi, né tránh nhẹ, giận dỗi, trêu đùa hoặc quan tâm. Việc hiểu sai ngữ cảnh có thể dẫn đến phản hồi căng thẳng hoặc thiếu tinh tế.
+
+Love Sense AI được xây dựng để hỗ trợ người dùng nhìn lại đoạn hội thoại một cách bình tĩnh hơn:
+
+- Phân tích sắc thái hội thoại dựa trên nội dung người dùng cung cấp.
+- Gợi ý phản hồi nhẹ nhàng, tôn trọng và không thao túng cảm xúc.
+- Cho phép bổ sung hồ sơ cá nhân hóa để kết quả bớt máy móc.
+- Hỗ trợ OCR ảnh chụp hội thoại, nhưng luôn yêu cầu người dùng review/chỉnh sửa trước khi phân tích.
+- Lưu lịch sử và hồ sơ khi người dùng đăng nhập, có consent rõ ràng.
+
+Phạm vi của ứng dụng là **hỗ trợ tham khảo**. App không tự truy cập tin nhắn, không đọc dữ liệu từ Zalo/Messenger/SMS/notification và không kết luận chắc chắn cảm xúc thật của người khác.
+
 ## Tính Năng Chính
 
-- Phân tích sắc thái hội thoại từ đoạn chat người dùng nhập thủ công.
-- OCR ảnh chụp đoạn chat trên trình duyệt, có bước review/chỉnh sửa trước khi phân tích.
-- AI Vision OCR tùy chọn, chỉ chạy khi người dùng đồng ý gửi ảnh đến AI provider.
-- Gợi ý phản hồi nhẹ nhàng, tôn trọng, không thao túng.
-- Hồ sơ cá nhân hóa cho phong cách giao tiếp và bối cảnh quan hệ.
-- Lịch sử phân tích có consent: lưu kết quả và lưu chat gốc là hai lựa chọn riêng.
-- Trang privacy để xóa lịch sử, hồ sơ hoặc toàn bộ dữ liệu của user hiện tại.
-- Auth email/password với Bearer JWT.
-- Dữ liệu profile/history/consent được scope theo `user_id`.
-- Output validator, fallback mock an toàn, rate limit cơ bản và benchmark regression cho chất lượng phân tích.
+| Nhóm tính năng | Mô tả |
+| --- | --- |
+| Phân tích sắc thái hội thoại | Nhận diện cảm xúc tổng quan, độ tin cậy, phân bố cảm xúc, bằng chứng và điểm cần thận trọng. |
+| OCR upload/review text | Tải ảnh chụp đoạn chat, trích xuất chữ, review và chỉnh sửa trước khi phân tích. |
+| AI Vision OCR tùy chọn | Chỉ gửi ảnh đến AI provider khi người dùng tick consent riêng. Backend không lưu ảnh. |
+| Hồ sơ cá nhân hóa | Lưu phong cách giao tiếp, bối cảnh quan hệ và ghi chú riêng để gợi ý phù hợp hơn. |
+| Gợi ý phản hồi | Đưa ra câu trả lời nhẹ nhàng, tôn trọng, không gây áp lực. |
+| Lịch sử phân tích | Lưu kết quả theo tài khoản khi người dùng bật consent lưu lịch sử. |
+| Xóa dữ liệu | Xóa lịch sử, hồ sơ hoặc toàn bộ dữ liệu cá nhân của user hiện tại. |
+| Firebase Google Login | Đăng nhập Google, frontend lấy Firebase ID Token, backend verify bằng Firebase Admin SDK. |
+| Demo mode | Khách chưa đăng nhập vẫn dùng thử `/analyze`, nhưng không lưu history/profile. |
 
-## Tech Stack
+## Tài Khoản Và Phân Quyền
 
-Frontend:
+| Vai trò | Quyền sử dụng |
+| --- | --- |
+| Khách chưa đăng nhập | Dùng thử `/analyze`; không lưu lịch sử, không lưu hồ sơ, không truy cập dữ liệu cá nhân. |
+| User đã đăng nhập Google | Lưu/xem/xóa profile, history, consent settings và user data của chính tài khoản đó. |
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- React Testing Library + Vitest
-- Tesseract.js cho OCR local
-
-Backend:
-
-- FastAPI
-- Pydantic / pydantic-settings
-- SQLAlchemy async
-- PostgreSQL/Supabase trong production
-- SQLite fallback cho development/test khi được cấu hình
-- Uvicorn
-
-AI:
-
-- LLM provider tương thích OpenAI Chat Completions
-- 9Router/OpenRouter-compatible configuration qua `LLM_*`
-- Mock mode mặc định an toàn cho test và demo nội bộ
-- AI Vision OCR qua endpoint `/api/ocr/vision` khi có consent riêng
-
-## API Overview
-
-Production API docs có tại:
-
-https://love-sense-ai.onrender.com/docs
-
-Các endpoint chính:
-
-- `GET /health`
-- `GET /api/health`
-- `POST /api/register`
-- `POST /api/token`
-- `GET /api/me`
-- `POST /api/analyze`
-- `POST /api/ocr/vision`
-- `GET/PUT/DELETE /api/profile`
-- `GET/DELETE /api/history`
-- `DELETE /api/history/{id}`
-- `GET/POST /api/consent`
-- `DELETE /api/user-data`
-
-Chi tiết request/response nằm trong [API Documentation](docs/API_DOCUMENTATION.md).
-
-## Firebase Login
-
-Love Sense AI hỗ trợ Google Login bằng Firebase Authentication:
-
-1. Frontend gọi Firebase Web SDK để đăng nhập Google.
-2. Firebase trả ID Token cho user đang đăng nhập.
-3. Frontend gửi token đến backend qua:
+Các API bảo vệ dữ liệu sử dụng header:
 
 ```http
 Authorization: Bearer <firebase_id_token>
 ```
 
-4. Backend FastAPI dùng Firebase Admin SDK để verify token.
-5. Backend map `firebase_uid` sang `users.id` nội bộ để profile, history và consent vẫn được scope theo user.
+Backend verify token, map `firebase_uid` sang `users.id` nội bộ và luôn lọc dữ liệu theo user hiện tại.
 
-User chưa đăng nhập vẫn dùng được `/api/analyze` để demo, nhưng không được lưu profile/history. Các route profile, history, consent và delete-data yêu cầu đăng nhập.
+## Kiến Trúc Hệ Thống
 
-### Cấu Hình Firebase Console
-
-1. Tạo Firebase project cho Love Sense AI.
-2. Vào Authentication -> Sign-in method.
-3. Bật Google provider.
-4. Vào Authentication -> Settings -> Authorized domains.
-5. Thêm:
-   - `localhost`
-   - `love-sense-ai.vercel.app`
-6. Vào Project settings -> General -> Web apps để lấy Firebase Web SDK config.
-7. Vào Project settings -> Service accounts để tạo service account JSON cho backend. Không commit JSON này.
-
-### Vercel Env
-
-Đặt trong project frontend trên Vercel:
-
-```text
-NEXT_PUBLIC_API_URL=https://love-sense-ai.onrender.com
-NEXT_PUBLIC_API_BASE_URL=https://love-sense-ai.onrender.com
-NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web client value>
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=<project-id>
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<project>.appspot.com
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<sender-id>
-NEXT_PUBLIC_FIREBASE_APP_ID=<app-id>
+```mermaid
+flowchart LR
+  User[User] --> FE[Next.js Frontend]
+  FE -->|Manual text / OCR reviewed text| API[FastAPI Backend]
+  FE -->|Google Login| Firebase[Firebase Authentication]
+  Firebase -->|Firebase ID Token| FE
+  FE -->|Authorization: Bearer token| API
+  API -->|Verify token| FirebaseAdmin[Firebase Admin SDK]
+  API --> DB[(PostgreSQL / Supabase)]
+  API --> LLM[LLM Provider hoặc Mock Mode]
+  LLM --> API
+  API --> FE
 ```
 
-Các biến `NEXT_PUBLIC_FIREBASE_*` là client config public của Firebase Web SDK, không phải backend secret.
-
-### Render Env
-
-Đặt trong backend service trên Render:
+Pipeline phân tích:
 
 ```text
-APP_ENV=production
-FRONTEND_URL=https://love-sense-ai.vercel.app
-ALLOWED_ORIGINS=https://love-sense-ai.vercel.app
-DATABASE_URL=<Supabase PostgreSQL connection string>
-SECRET_KEY=<strong random value>
-FIREBASE_SERVICE_ACCOUNT_JSON=<service account JSON string>
-LLM_MOCK_MODE=false
+User nhập hoặc review đoạn chat
+→ Frontend gửi /api/analyze
+→ Backend validate + safety filter
+→ LLM service hoặc mock mode
+→ Output validator
+→ Response JSON chuẩn
+→ Lưu history nếu user đăng nhập và có consent
 ```
 
-Không đưa `FIREBASE_SERVICE_ACCOUNT_JSON` vào frontend, GitHub, README hoặc log.
+## Tech Stack
 
-## Privacy Note
+| Lớp | Công nghệ |
+| --- | --- |
+| Frontend | Next.js App Router, React, TypeScript, Tailwind CSS |
+| UI/Test Frontend | Vitest, React Testing Library, lucide-react |
+| OCR Frontend | Tesseract.js, OCR review UX |
+| Backend | FastAPI, Pydantic, pydantic-settings, Uvicorn |
+| Auth | Firebase Authentication, Firebase Admin SDK, legacy JWT dev compatibility |
+| Database | PostgreSQL/Supabase, SQLAlchemy async, migrations SQL |
+| AI | OpenAI-compatible LLM provider, 9Router/OpenRouter-compatible config, mock mode |
+| Deploy | Vercel frontend, Render backend |
+| Verification | pytest, `npm run test`, typecheck, build, audit |
 
-Love Sense AI được thiết kế để giảm rủi ro xử lý dữ liệu nhạy cảm:
+## Cấu Trúc Thư Mục
 
-- Không lưu `chat_text` mặc định.
-- `save_result=true` chỉ lưu kết quả tổng hợp nếu user bật lưu lịch sử.
-- `save_input=true` mới cho phép lưu nội dung chat gốc.
-- Ảnh OCR không được lưu mặc định.
-- AI Vision chỉ gửi ảnh lên backend/provider khi user tick consent riêng.
-- Không log API key, token, ảnh/base64 hoặc nội dung chat nhạy cảm.
-- User có thể xóa lịch sử, hồ sơ hoặc toàn bộ dữ liệu trong trang `/privacy`.
-- Kết quả luôn chỉ mang tính tham khảo và không thay thế giao tiếp trực tiếp.
+```text
+love-sense-ai/
+├── frontend/
+│   ├── app/                 # Next.js App Router pages
+│   ├── components/          # Shared UI, auth, analyze, home components
+│   ├── contexts/            # AuthContext
+│   ├── lib/                 # API client, Firebase, OCR helpers, types
+│   └── styles/
+├── backend/
+│   ├── app/
+│   │   ├── core/            # config, Firebase init, security
+│   │   ├── deps/            # auth dependencies
+│   │   ├── routes/          # FastAPI routers
+│   │   ├── schemas/         # Pydantic schemas
+│   │   ├── services/        # AI, DB repositories, validation, OCR vision
+│   │   └── models/          # SQLAlchemy models
+│   └── tests/
+├── database/
+│   ├── migrations/
+│   └── schema.sql
+├── docs/
+│   ├── AUTH_FIREBASE.md
+│   ├── DEMO_SCRIPT.md
+│   ├── API_DOCUMENTATION.md
+│   └── assets/love-sense-ai-home.png
+├── SETUP.md
+└── README.md
+```
 
-## Chạy Backend Local
+## Cài Đặt Local
+
+1. Clone repo:
+
+```powershell
+git clone https://github.com/Peo051/love-sense-ai.git
+cd love-sense-ai
+```
+
+2. Tạo env backend:
 
 ```powershell
 cd backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
 copy .env.example .env
-uvicorn app.main:app --reload --port 8000
 ```
 
-Nếu chưa có PostgreSQL/Supabase ở máy dev, có thể dùng SQLite development fallback theo cấu hình `.env.example`. Production phải đặt `APP_ENV=production`, `DATABASE_URL` PostgreSQL/Supabase và `SECRET_KEY` thật.
+3. Tạo env frontend:
 
-## Chạy Frontend Local
+```powershell
+cd ..\frontend
+copy .env.example .env.local
+```
+
+4. Điền Firebase Web SDK config vào `frontend/.env.local` nếu cần test Google Login.
+
+5. Điền `FIREBASE_SERVICE_ACCOUNT_JSON` trong `backend/.env` nếu cần test API yêu cầu đăng nhập bằng Firebase ID Token.
+
+## Cấu Hình Firebase
+
+Trong Firebase Console:
+
+1. Tạo project Firebase.
+2. Vào **Authentication -> Sign-in method**.
+3. Bật **Google provider**.
+4. Vào **Authentication -> Settings -> Authorized domains**.
+5. Thêm domain:
+   - `localhost`
+   - `love-sense-ai.vercel.app`
+6. Vào **Project settings -> General -> Web apps** để lấy Firebase Web SDK config cho frontend.
+7. Vào **Project settings -> Service accounts** để tạo service account JSON cho backend.
+
+Không commit service account JSON. Production nên lưu JSON này trong Render Environment hoặc secret manager.
+
+## Biến Môi Trường
+
+### Frontend `.env.local`
+
+```text
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+### Backend `.env`
+
+```text
+APP_ENV=development
+FRONTEND_URL=http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,https://love-sense-ai.vercel.app
+DATABASE_URL=sqlite+aiosqlite:///./love_emotion_dev.db
+DATABASE_AUTO_CREATE=true
+SECRET_KEY=change-this-for-local-dev
+FIREBASE_SERVICE_ACCOUNT_JSON=
+
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=
+LLM_MODEL=openai/gpt-4o-mini
+LLM_MOCK_MODE=false
+LLM_TIMEOUT_SECONDS=30
+LLM_MAX_RETRIES=2
+LLM_RETRY_BASE_DELAY_SECONDS=0.25
+VISION_MODEL=openai/gpt-4o-mini
+RATE_LIMIT_MAX_REQUESTS=20
+RATE_LIMIT_WINDOW_SECONDS=60
+```
+
+Production phải dùng PostgreSQL/Supabase thật cho `DATABASE_URL`, `SECRET_KEY` mạnh và `FIREBASE_SERVICE_ACCOUNT_JSON` từ Firebase service account. Khi cần test local ổn định không gọi provider thật, có thể đặt `LLM_MOCK_MODE=true`.
+
+## Chạy Project Local
+
+Frontend:
 
 ```powershell
 cd frontend
@@ -181,76 +238,215 @@ Mở:
 http://localhost:3000
 ```
 
-Frontend đọc backend URL qua:
-
-```text
-NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
-```
-
-## Database
-
-Setup database mới:
-
-```powershell
-cd database
-psql -U postgres -d loveemotion -f schema.sql
-```
-
-Hoặc chạy migration theo thứ tự:
-
-```powershell
-psql -U postgres -d loveemotion -f migrations/001_create_users.sql
-psql -U postgres -d loveemotion -f migrations/002_create_profiles.sql
-psql -U postgres -d loveemotion -f migrations/003_create_partner_profiles.sql
-psql -U postgres -d loveemotion -f migrations/004_create_preferences.sql
-psql -U postgres -d loveemotion -f migrations/005_create_analysis_sessions.sql
-psql -U postgres -d loveemotion -f migrations/006_add_consent_and_privacy_controls.sql
-psql -U postgres -d loveemotion -f migrations/007_add_auth_scoped_models.sql
-psql -U postgres -d loveemotion -f migrations/008_harden_user_scoped_persistence.sql
-```
-
-## Test
-
 Backend:
 
 ```powershell
 cd backend
+python -m venv venv
 venv\Scripts\activate
-venv\Scripts\python.exe -m pytest tests
+python -m pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
 ```
+
+Kiểm tra:
+
+```text
+http://localhost:8000/health
+http://localhost:8000/docs
+```
+
+## API Chính
+
+| Method | Endpoint | Auth | Mục đích |
+| --- | --- | --- | --- |
+| `GET` | `/` | Không | Root health/message. |
+| `GET` | `/health` | Không | Health check production/local. |
+| `GET` | `/api/me` | Bắt buộc | Trả user hiện tại theo Firebase ID Token hoặc legacy JWT dev. |
+| `POST` | `/api/analyze` | Tùy chọn | Phân tích đoạn chat; guest dùng được nhưng không lưu history. |
+| `POST` | `/api/ocr/vision` | Consent riêng | OCR bằng AI Vision khi user đồng ý gửi ảnh. |
+| `GET` | `/api/profile` | Bắt buộc | Lấy hồ sơ cá nhân hóa của user hiện tại. |
+| `POST` | `/api/profile` | Bắt buộc | Tạo/cập nhật hồ sơ cá nhân hóa. |
+| `DELETE` | `/api/profile` | Bắt buộc | Xóa hồ sơ cá nhân hóa. |
+| `GET` | `/api/history` | Bắt buộc | Lấy lịch sử phân tích của user hiện tại. |
+| `GET` | `/api/history/{id}` | Bắt buộc | Xem chi tiết một lịch sử thuộc user hiện tại. |
+| `DELETE` | `/api/history/{id}` | Bắt buộc | Xóa một lịch sử thuộc user hiện tại. |
+| `DELETE` | `/api/history` | Bắt buộc | Xóa toàn bộ lịch sử của user hiện tại. |
+| `GET` | `/api/consent` | Bắt buộc | Lấy cài đặt consent. |
+| `POST` | `/api/consent` | Bắt buộc | Lưu cài đặt consent. |
+| `DELETE` | `/api/user-data` | Bắt buộc | Xóa profile, history và consent của user hiện tại. |
+
+Chi tiết request/response nằm trong [docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md).
+
+## Flow Đăng Nhập
+
+1. User bấm **Tiếp tục với Google** tại `/login`.
+2. Firebase Authentication mở Google popup.
+3. Sau khi đăng nhập, frontend nhận Firebase user.
+4. Frontend lấy Firebase ID Token bằng `getIdToken()`.
+5. API client gửi token qua `Authorization: Bearer <firebase_id_token>`.
+6. Backend verify token bằng Firebase Admin SDK.
+7. Backend map `firebase_uid` với `users.id` nội bộ.
+8. Backend xử lý profile/history/consent theo `users.id` hiện tại.
+
+Nếu user chưa đăng nhập, frontend vẫn cho dùng thử `/analyze`. Backend sẽ trả `authenticated=false` và không lưu history.
+
+## Privacy Note
+
+Love Sense AI xử lý dữ liệu theo nguyên tắc tối thiểu:
+
+- App không tự truy cập tin nhắn của người dùng.
+- Người dùng tự nhập hoặc tải nội dung cần phân tích.
+- Ảnh OCR không được lưu mặc định.
+- Chat của khách chưa đăng nhập không được lưu vào history.
+- Nội dung chat gốc chỉ lưu khi user đăng nhập và bật `save_input=true`.
+- Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.
+- Không nên dùng app để giám sát, kiểm soát hoặc kết luận chắc chắn về người khác.
+- User có thể xóa lịch sử, hồ sơ hoặc toàn bộ dữ liệu cá nhân tại `/privacy`.
+
+## Demo Script
+
+Kịch bản demo 3 phút nằm tại [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+
+Tóm tắt luồng demo:
+
+1. Đăng nhập Google.
+2. Nhập thủ công hoặc upload ảnh đoạn chat.
+3. Review/chỉnh sửa text OCR.
+4. Phân tích sắc thái hội thoại.
+5. Xem kết quả và lưu history khi có consent.
+6. Mở `/history` để xem lại.
+7. Mở `/privacy` để xóa dữ liệu demo.
+
+## Deploy
+
+### Frontend: Vercel
+
+- Root/source directory: `frontend/`
+- Build command: `npm run build`
+- Framework: Next.js
+- Env cần có:
+
+```text
+NEXT_PUBLIC_API_URL=https://love-sense-ai.onrender.com
+NEXT_PUBLIC_API_BASE_URL=https://love-sense-ai.onrender.com
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+### Backend: Render
+
+- Root/source directory: `backend/`
+- Build command: `python -m pip install -r requirements.txt`
+- Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- Env cần có:
+
+```text
+APP_ENV=production
+FRONTEND_URL=https://love-sense-ai.vercel.app
+ALLOWED_ORIGINS=https://love-sense-ai.vercel.app
+DATABASE_URL=<postgresql-or-supabase-url>
+DATABASE_AUTO_CREATE=false
+SECRET_KEY=<strong-random-secret>
+FIREBASE_SERVICE_ACCOUNT_JSON=<firebase-service-account-json-string>
+LLM_MOCK_MODE=false
+LLM_PROVIDER=<provider>
+LLM_BASE_URL=<provider-base-url>
+LLM_API_KEY=<provider-api-key>
+LLM_MODEL=<model-name>
+```
+
+### Database: PostgreSQL/Supabase
+
+- Tạo database PostgreSQL.
+- Chạy `database/schema.sql` nếu setup mới.
+- Nếu database đã tồn tại, chạy migration theo thứ tự trong `database/migrations/`.
+
+### Firebase Console
+
+- Bật Google provider.
+- Thêm authorized domains.
+- Kiểm tra service account backend thuộc đúng Firebase project.
+
+## Test / Build
 
 Frontend:
 
 ```powershell
 cd frontend
+npm install
 npm run test
 npm run typecheck
 npm run build
 npm audit
 ```
 
-## Demo
+Backend:
 
-Kịch bản demo 3 phút nằm tại [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+```powershell
+cd backend
+python -m pip install -r requirements.txt
+python -c "from app.main import app; print('backend import ok')"
+python -m compileall app
+python -m pytest tests
+```
 
-Luồng demo khuyến nghị:
+## Migration Database
 
-1. Đăng ký hoặc đăng nhập tài khoản demo.
-2. Vào `/analyze`, tải ảnh chat minh họa hoặc nhập đoạn chat mẫu.
-3. Review nội dung OCR trước khi phân tích.
-4. Tick lưu kết quả vào history, không tick lưu chat gốc để minh họa privacy default.
-5. Xem `/history`.
-6. Vào `/privacy` và xóa dữ liệu demo.
+Migration Firebase Auth mới:
 
-## Tài Liệu
+```text
+database/migrations/009_add_firebase_uid_to_users.sql
+```
 
-- [Demo Script](docs/DEMO_SCRIPT.md)
-- [Setup Guide](SETUP.md)
-- [Testing Guide](docs/TESTING.md)
-- [Project Guide](docs/PROJECT_GUIDE.md)
-- [API Documentation](docs/API_DOCUMENTATION.md)
+Migration này thêm cột `firebase_uid` vào bảng `users` và tạo index tương ứng. Cần chạy migration này trên production database trước khi dùng Firebase Google Login đầy đủ.
+
+Ví dụ:
+
+```powershell
+psql -U postgres -d loveemotion -f database/migrations/009_add_firebase_uid_to_users.sql
+```
+
+## Troubleshooting
+
+| Lỗi | Nguyên nhân thường gặp | Cách xử lý |
+| --- | --- | --- |
+| `auth/unauthorized-domain` | Domain frontend chưa được thêm trong Firebase Authorized domains. | Thêm `localhost`, `love-sense-ai.vercel.app` hoặc preview domain đang dùng. |
+| `Missing FIREBASE_SERVICE_ACCOUNT_JSON` | Backend production thiếu Firebase Admin credential. | Đặt env trên Render, restart service. |
+| `Invalid or expired authentication token` | Token hết hạn, sai project Firebase hoặc header thiếu `Bearer`. | Đăng nhập lại, kiểm tra frontend config và service account cùng project. |
+| CORS blocked `Authorization` header | Backend chưa cho frontend origin hoặc header. | Kiểm tra `FRONTEND_URL`, `ALLOWED_ORIGINS`; backend đang dùng `allow_headers=["*"]`. |
+| `LLM_MOCK_MODE` boolean parse error | Env boolean để rỗng hoặc sai format. | Dùng `true`/`false`; backend đã có default an toàn cho giá trị rỗng. |
+| Render deploy fail do thiếu env | `APP_ENV=production` yêu cầu `DATABASE_URL`, `SECRET_KEY`, `FRONTEND_URL`. | Bổ sung env production trên Render. |
+| Vercel env chưa áp dụng | Thêm env nhưng chưa redeploy. | Redeploy frontend sau khi cập nhật env. |
+
+## Roadmap
+
+- Fine-tune hoặc đánh giá model tiếng Việt chuyên sâu hơn.
+- Cải thiện OCR cho ảnh nền phức tạp, chữ nhỏ, emoji và teencode.
+- Dashboard xu hướng cảm xúc theo thời gian.
+- Export báo cáo PDF từ lịch sử phân tích.
+- Hỗ trợ đa ngôn ngữ.
+- Phiên bản mobile app sau web.
+
+## Thành Viên / Tác Giả
+
+- Tác giả: Trần Dương Gia Bảo
+- Mục đích: Nghiên cứu ứng dụng AI trong giao tiếp số.
+
+## License
+
+This project is for educational/demo purposes. Nếu repo public và cần dùng lâu dài, có thể bổ sung MIT License hoặc license phù hợp với yêu cầu môn học.
+
+## Tài Liệu Liên Quan
+
 - [Firebase Auth Guide](docs/AUTH_FIREBASE.md)
+- [Demo Script](docs/DEMO_SCRIPT.md)
+- [API Documentation](docs/API_DOCUMENTATION.md)
 - [Privacy Design](docs/PRIVACY_DESIGN.md)
 - [OCR and Vision Plan](docs/OCR_AND_VISION_PLAN.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
-- [Roadmap](docs/ROADMAP.md)
+- [Testing Guide](docs/TESTING.md)
+- [Project Guide](docs/PROJECT_GUIDE.md)

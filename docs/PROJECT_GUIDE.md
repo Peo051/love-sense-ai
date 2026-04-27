@@ -14,7 +14,7 @@ Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn h�
 
 ## Nguyên Tắc An Toàn
 
-- Không đọc trộm Zalo, Messenger, SMS, thông báo hoặc danh bạ.
+- Không tự truy cập Zalo, Messenger, SMS, thông báo hoặc danh bạ.
 - Không kết luận chắc chắn cảm xúc, hành vi hoặc lòng chung thủy của người khác.
 - Không đưa lời khuyên thao túng cảm xúc.
 - Không lưu nội dung chat mặc định.

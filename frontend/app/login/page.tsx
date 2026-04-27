@@ -9,6 +9,7 @@ import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import PageShell from '@/components/common/PageShell';
+import GoogleLogo from '@/components/auth/GoogleLogo';
 import { useAuth } from '@/contexts/AuthContext';
 import { loginWithGoogle } from '@/lib/auth';
 
@@ -73,8 +74,8 @@ export default function LoginPage() {
               onClick={handleGoogleLogin}
               aria-label="Tiếp tục với Google"
             >
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-sm font-extrabold text-rose-600">
-                G
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm" aria-hidden="true">
+                <GoogleLogo className="h-5 w-5" />
               </span>
               {isSubmitting ? 'Đang đăng nhập' : 'Tiếp tục với Google'}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
