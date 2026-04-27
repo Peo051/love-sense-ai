@@ -1,7 +1,7 @@
 import unicodedata
 
 from app.core.config import settings
-from app.schemas.analyze_schema import AnalyzeResponse
+from app.schemas.analyze_schema import AnalyzeResponse, EvidenceItem
 from app.services.analysis_policy import WARNING_MESSAGE
 from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 
@@ -89,10 +89,14 @@ class AIService:
                 overall_emotion="khó chịu nhẹ / giận dỗi",
                 confidence=0.68,
                 emotion_distribution={
-                    "khó_chịu_nhẹ": 0.34,
-                    "giận_dỗi": 0.28,
-                    "né_tránh": 0.18,
-                    "trung_lập": 0.20,
+                    "than_mat": 0.0,
+                    "treu_dua": 0.0,
+                    "quan_tam": 0.0,
+                    "met_moi": 0.0,
+                    "ne_tranh": 0.18,
+                    "kho_chiu": 0.62,
+                    "trung_lap": 0.20,
+                    "chua_du_du_lieu": 0.0,
                 },
                 summary=(
                     "Một số câu có sắc thái cụt, buông xuôi hoặc phản ứng phòng thủ nhẹ. "
@@ -104,7 +108,12 @@ class AIService:
                 ),
                 warning=WARNING_MESSAGE,
                 tone="khó chịu nhẹ / giận dỗi",
-                evidence=self._extract_evidence(chat_text, sulking_keywords),
+                evidence=self._extract_evidence(
+                    chat_text,
+                    sulking_keywords,
+                    label="khó chịu nhẹ / giận dỗi",
+                    reason="Câu có sắc thái buông xuôi hoặc phòng thủ nhẹ, nên phản hồi bình tĩnh và tránh hỏi dồn.",
+                ),
                 uncertainty_reasons=[
                     *ocr_uncertainty,
                     "Các câu ngắn hoặc buông xuôi có thể bị hiểu nhầm nếu thiếu ngữ cảnh trước đó.",
@@ -118,10 +127,15 @@ class AIService:
                 overall_emotion="buồn / cần được lắng nghe",
                 confidence=0.7,
                 emotion_distribution={
-                    "buồn": 0.36,
-                    "mệt_mỏi": 0.22,
-                    "lo_lắng": 0.18,
-                    "trung_lập": 0.24,
+                    "than_mat": 0.0,
+                    "treu_dua": 0.0,
+                    "quan_tam": 0.12,
+                    "met_moi": 0.22,
+                    "ne_tranh": 0.0,
+                    "kho_chiu": 0.0,
+                    "trung_lap": 0.30,
+                    "chua_du_du_lieu": 0.0,
+                    "buon": 0.36,
                 },
                 summary=(
                     "Đoạn chat có thể cho thấy người kia đang buồn hoặc cần được lắng nghe nhẹ nhàng. "
@@ -134,7 +148,12 @@ class AIService:
                 ),
                 warning=WARNING_MESSAGE,
                 tone="buồn / cần được lắng nghe",
-                evidence=self._extract_evidence(chat_text, sadness_keywords),
+                evidence=self._extract_evidence(
+                    chat_text,
+                    sadness_keywords,
+                    label="buồn / cần được lắng nghe",
+                    reason="Câu chứa tín hiệu buồn hoặc hụt hẫng, phù hợp với phản hồi lắng nghe.",
+                ),
                 uncertainty_reasons=[
                     *ocr_uncertainty,
                     "Chỉ dựa trên vài câu chữ nên chưa thể biết chắc nguyên nhân cảm xúc.",
@@ -148,10 +167,14 @@ class AIService:
                 overall_emotion="ấm áp / tích cực",
                 confidence=0.74,
                 emotion_distribution={
-                    "yêu_thương": 0.38,
-                    "vui_vẻ": 0.28,
-                    "quan_tâm": 0.18,
-                    "trung_lập": 0.16,
+                    "than_mat": 0.38,
+                    "treu_dua": 0.16,
+                    "quan_tam": 0.24,
+                    "met_moi": 0.0,
+                    "ne_tranh": 0.0,
+                    "kho_chiu": 0.0,
+                    "trung_lap": 0.22,
+                    "chua_du_du_lieu": 0.0,
                 },
                 summary=(
                     "Đoạn chat có nhiều tín hiệu tích cực và gần gũi. "
@@ -164,7 +187,12 @@ class AIService:
                 ),
                 warning=WARNING_MESSAGE,
                 tone="ấm áp / tích cực",
-                evidence=self._extract_evidence(chat_text, affectionate_keywords),
+                evidence=self._extract_evidence(
+                    chat_text,
+                    affectionate_keywords,
+                    label="thân mật / quan tâm",
+                    reason="Câu có từ thân mật hoặc quan tâm rõ, không nên gộp vào trung lập thuần.",
+                ),
                 uncertainty_reasons=[
                     *ocr_uncertainty,
                     "Một vài từ thân mật có thể mang sắc thái đùa tùy thói quen nhắn tin của hai người.",
@@ -177,10 +205,14 @@ class AIService:
             overall_emotion="trung lập / chưa đủ dữ liệu",
             confidence=0.56,
             emotion_distribution={
-                "trung_lập": 0.42,
-                "lo_lắng": 0.2,
-                "mệt_mỏi": 0.18,
-                "quan_tâm": 0.2,
+                "than_mat": 0.0,
+                "treu_dua": 0.0,
+                "quan_tam": 0.20,
+                "met_moi": 0.18,
+                "ne_tranh": 0.0,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.42,
+                "chua_du_du_lieu": 0.20,
             },
             summary=(
                 "Đoạn chat chưa có đủ dấu hiệu rõ ràng để phân loại cảm xúc mạnh. "
@@ -193,7 +225,13 @@ class AIService:
             ),
             warning=WARNING_MESSAGE,
             tone="chưa đủ dữ liệu rõ ràng",
-            evidence=self._extract_evidence(chat_text, ["ok", "uh", "ừ", "vang", "ừm"], limit=2),
+            evidence=self._extract_evidence(
+                chat_text,
+                ["ok", "uh", "ừ", "vang", "ừm"],
+                label="thiếu dữ liệu",
+                reason="Câu quá ngắn nên không đủ căn cứ để phân loại sắc thái mạnh.",
+                limit=2,
+            ),
             uncertainty_reasons=[
                 *ocr_uncertainty,
                 "Đoạn chat chưa có đủ dấu hiệu rõ để phân loại sắc thái mạnh.",
@@ -215,10 +253,14 @@ class AIService:
             overall_emotion="thân mật / trêu đùa / quan tâm",
             confidence=0.76 if input_quality != "low" else 0.62,
             emotion_distribution={
-                "thân_mật": 0.34,
-                "trêu_đùa": 0.28,
-                "quan_tâm": 0.24,
-                "trung_lập": 0.14,
+                "than_mat": 0.34,
+                "treu_dua": 0.28,
+                "quan_tam": 0.24,
+                "met_moi": 0.0,
+                "ne_tranh": 0.0,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.14,
+                "chua_du_du_lieu": 0.0,
             },
             summary=(
                 "Đoạn chat có nhiều tín hiệu gần gũi và trêu đùa nhẹ, nhất là các cách gọi thân mật, "
@@ -231,7 +273,12 @@ class AIService:
             ),
             warning=WARNING_MESSAGE,
             tone="thân mật, trêu đùa nhẹ, có quan tâm",
-            evidence=self._extract_evidence(chat_text, evidence_keywords),
+            evidence=self._extract_evidence(
+                chat_text,
+                evidence_keywords,
+                label="thân mật / trêu đùa / quan tâm",
+                reason="Câu có từ thân mật, lời chúc hoặc cách đùa nhẹ cho thấy sắc thái gần gũi.",
+            ),
             uncertainty_reasons=[
                 *uncertainty_reasons,
                 "Teencode, emoji hoặc câu đùa riêng của hai người có thể cần bạn chỉnh lại nếu OCR nhận sai.",
@@ -253,10 +300,15 @@ class AIService:
             overall_emotion="mệt mỏi / né tránh nhẹ",
             confidence=0.72,
             emotion_distribution={
-                "mệt_mỏi": 0.35,
-                "né_tránh": 0.25,
-                "buồn": 0.20,
-                "trung_lập": 0.20,
+                "than_mat": 0.0,
+                "treu_dua": 0.0,
+                "quan_tam": 0.0,
+                "met_moi": 0.35,
+                "ne_tranh": 0.25,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.20,
+                "chua_du_du_lieu": 0.0,
+                "buon": 0.20,
             },
             summary=(
                 "Đoạn chat có thể cho thấy người kia đang mệt hoặc chưa muốn trao đổi nhiều. "
@@ -269,7 +321,12 @@ class AIService:
             ),
             warning=WARNING_MESSAGE,
             tone="mệt mỏi / cần khoảng lặng",
-            evidence=self._extract_evidence(chat_text, evidence_keywords),
+            evidence=self._extract_evidence(
+                chat_text,
+                evidence_keywords,
+                label="mệt mỏi / né tránh nhẹ",
+                reason="Câu cho thấy người nói mệt hoặc muốn lùi lại khỏi cuộc trò chuyện lúc đó.",
+            ),
             uncertainty_reasons=[
                 *uncertainty_reasons,
                 "Các câu như 'không sao' hoặc 'mai nói' có thể là mệt thật, cũng có thể là chưa muốn nói lúc đó.",
@@ -289,9 +346,14 @@ class AIService:
             overall_emotion="chưa đủ dữ liệu",
             confidence=0.28,
             emotion_distribution={
-                "chưa_đủ_dữ_liệu": 0.52,
-                "trung_lập": 0.32,
-                "không_chắc_chắn": 0.16,
+                "than_mat": 0.0,
+                "treu_dua": 0.0,
+                "quan_tam": 0.0,
+                "met_moi": 0.0,
+                "ne_tranh": 0.0,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.32,
+                "chua_du_du_lieu": 0.68,
             },
             summary=(
                 "Đoạn chat quá ngắn nên chưa đủ căn cứ để nhận diện sắc thái cảm xúc rõ ràng. "
@@ -335,8 +397,16 @@ class AIService:
         )
         return " ".join(without_accents.split())
 
-    def _extract_evidence(self, chat_text: str, keywords: list[str], limit: int = 4) -> list[str]:
-        evidence: list[str] = []
+    def _extract_evidence(
+        self,
+        chat_text: str,
+        keywords: list[str],
+        *,
+        label: str,
+        reason: str,
+        limit: int = 4,
+    ) -> list[EvidenceItem]:
+        evidence: list[EvidenceItem] = []
         normalized_keywords = [self._normalize_for_matching(keyword) for keyword in keywords]
 
         for line in chat_text.splitlines():
@@ -346,7 +416,7 @@ class AIService:
 
             normalized_line = self._normalize_for_matching(cleaned_line)
             if any(keyword and keyword in normalized_line for keyword in normalized_keywords):
-                evidence.append(cleaned_line)
+                evidence.append(EvidenceItem(quote=cleaned_line, label=label, reason=reason))
 
             if len(evidence) >= limit:
                 break

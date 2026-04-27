@@ -7,7 +7,7 @@ import httpx
 from pydantic import ValidationError
 
 from app.core.config import settings
-from app.schemas.analyze_schema import AnalyzeResponse
+from app.schemas.analyze_schema import AnalyzeResponse, EvidenceItem
 from app.schemas.ocr_schema import VisionOcrResponse
 from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 
@@ -167,7 +167,8 @@ class OpenAICompatibleLLMClient:
             "Hãy phân tích đoạn chat sau và trả về JSON đúng schema.\n"
             "Yêu cầu quan trọng:\n"
             "- Dựa trên câu chữ trong đoạn chat, không suy đoán quá mức.\n"
-            "- Trích tối đa 4 câu làm bằng chứng trong field evidence.\n"
+            "- Trích tối đa 4 câu làm bằng chứng trong field evidence theo dạng {quote,label,reason}.\n"
+            "- Phân biệt trung lập thật với thiếu dữ liệu; không gom thân mật/trêu đùa/quan tâm vào trung lập.\n"
             "- Nếu đoạn chat đến từ OCR hoặc có thể sai nhận diện, thêm uncertainty_reasons và giảm confidence phù hợp.\n"
             "- Nếu có dấu hiệu thân mật/trêu đùa/quan tâm rõ ràng, hãy phản ánh sắc thái đó thay vì trả trung lập thuần.\n"
             "- Không kết luận chắc chắn cảm xúc hoặc ý định của người khác.\n\n"
@@ -236,7 +237,7 @@ class OpenAICompatibleLLMClient:
             emotion: min(1.0, max(0.0, float(score)))
             for emotion, score in result.emotion_distribution.items()
         }
-        evidence = self._normalize_string_list(result.evidence, limit=4)
+        evidence = self._normalize_evidence_list(result.evidence, limit=4)
         uncertainty_reasons = self._normalize_string_list(result.uncertainty_reasons, limit=4)
         input_quality = result.input_quality.strip().lower() if result.input_quality else "medium"
         if input_quality not in {"good", "medium", "low"}:
@@ -271,5 +272,16 @@ class OpenAICompatibleLLMClient:
             cleaned = value.strip()
             if cleaned:
                 cleaned_values.append(cleaned)
+
+        return cleaned_values[:limit]
+
+    def _normalize_evidence_list(self, values: list[EvidenceItem], *, limit: int) -> list[EvidenceItem]:
+        cleaned_values: list[EvidenceItem] = []
+        for value in values:
+            quote = value.quote.strip()
+            label = value.label.strip() or "tín hiệu hội thoại"
+            reason = value.reason.strip() or "Câu này được dùng làm căn cứ tham khảo cho phân tích."
+            if quote:
+                cleaned_values.append(EvidenceItem(quote=quote, label=label, reason=reason))
 
         return cleaned_values[:limit]

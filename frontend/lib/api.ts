@@ -4,6 +4,7 @@ import type {
   AuthToken,
   AuthUser,
   ConsentSettings,
+  EvidenceItem,
   HistoryItem,
   HistoryListResponse,
   ProfilePayload,
@@ -187,6 +188,41 @@ function normalizeStringList(value: unknown, limit = 4): string[] {
     .slice(0, limit);
 }
 
+function normalizeEvidenceList(value: unknown, limit = 4): EvidenceItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (typeof item === 'string') {
+        const quote = item.trim();
+        return quote
+          ? {
+              quote,
+              label: 'tín hiệu hội thoại',
+              reason: 'Câu này được dùng làm căn cứ tham khảo cho phân tích.',
+            }
+          : null;
+      }
+
+      if (isRecord(item) && typeof item.quote === 'string' && item.quote.trim()) {
+        return {
+          quote: item.quote.trim(),
+          label: typeof item.label === 'string' && item.label.trim() ? item.label.trim() : 'tín hiệu hội thoại',
+          reason:
+            typeof item.reason === 'string' && item.reason.trim()
+              ? item.reason.trim()
+              : 'Câu này được dùng làm căn cứ tham khảo cho phân tích.',
+        };
+      }
+
+      return null;
+    })
+    .filter((item): item is EvidenceItem => item !== null)
+    .slice(0, limit);
+}
+
 function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
   const data = isRecord(value) ? value : {};
   const confidence = typeof data.confidence === 'number' && Number.isFinite(data.confidence) ? data.confidence : 0;
@@ -216,7 +252,7 @@ function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
         ? data.warning
         : SAFE_ANALYZE_WARNING,
     tone: typeof data.tone === 'string' && data.tone.trim() ? data.tone : null,
-    evidence: normalizeStringList(data.evidence),
+    evidence: normalizeEvidenceList(data.evidence),
     uncertainty_reasons: normalizeStringList(data.uncertainty_reasons),
     input_quality: inputQuality,
     reply_style: typeof data.reply_style === 'string' && data.reply_style.trim() ? data.reply_style : null,
