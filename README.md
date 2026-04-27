@@ -404,6 +404,21 @@ database/migrations/009_add_firebase_uid_to_users.sql
 
 Migration này thêm cột `firebase_uid` vào bảng `users` và tạo index tương ứng. Cần chạy migration này trên production database trước khi dùng Firebase Google Login đầy đủ.
 
+Nếu production chưa chạy migration này, request có Firebase token có thể lỗi:
+
+```text
+column users.firebase_uid does not exist
+```
+
+Kiểm tra nhanh trên PostgreSQL/Supabase:
+
+```sql
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name = 'users'
+  AND column_name = 'firebase_uid';
+```
+
 Ví dụ:
 
 ```powershell
@@ -417,6 +432,7 @@ psql -U postgres -d loveemotion -f database/migrations/009_add_firebase_uid_to_u
 | `auth/unauthorized-domain` | Domain frontend chưa được thêm trong Firebase Authorized domains. | Thêm `localhost`, `love-sense-ai.vercel.app` hoặc preview domain đang dùng. |
 | `Missing FIREBASE_SERVICE_ACCOUNT_JSON` | Backend production thiếu Firebase Admin credential. | Đặt env trên Render, restart service. |
 | `Invalid or expired authentication token` | Token hết hạn, sai project Firebase hoặc header thiếu `Bearer`. | Đăng nhập lại, kiểm tra frontend config và service account cùng project. |
+| `column users.firebase_uid does not exist` | Production database chưa chạy migration Firebase Auth. | Chạy `database/migrations/009_add_firebase_uid_to_users.sql`, restart backend và test lại `/api/analyze`. |
 | CORS blocked `Authorization` header | Backend chưa cho frontend origin hoặc header. | Kiểm tra `FRONTEND_URL`, `ALLOWED_ORIGINS`; backend đang dùng `allow_headers=["*"]`. |
 | `LLM_MOCK_MODE` boolean parse error | Env boolean để rỗng hoặc sai format. | Dùng `true`/`false`; backend đã có default an toàn cho giá trị rỗng. |
 | Render deploy fail do thiếu env | `APP_ENV=production` yêu cầu `DATABASE_URL`, `SECRET_KEY`, `FRONTEND_URL`. | Bổ sung env production trên Render. |
