@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Database, FileX2, ShieldCheck, Trash2 } from 'lucide-react';
+import { Database, FileX2, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react';
 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
 import { clearHistory, deleteProfile, deleteUserData, getConsent, saveConsent } from '@/lib/api';
 import type { ConsentSettings } from '@/lib/types';
+
+type PendingPrivacyDelete = 'history' | 'profile' | 'all' | null;
 
 const defaultConsent: ConsentSettings = {
   history_enabled: true,
@@ -21,11 +24,31 @@ const defaultConsent: ConsentSettings = {
   accepted_at: null,
 };
 
+const deleteDialogCopy: Record<Exclude<PendingPrivacyDelete, null>, { title: string; description: string; label: string }> = {
+  history: {
+    title: 'Xóa lịch sử phân tích?',
+    description: 'Thao tác này xóa toàn bộ lịch sử phân tích đã lưu của tài khoản hiện tại. Hồ sơ cá nhân hóa vẫn được giữ lại.',
+    label: 'Xóa lịch sử phân tích',
+  },
+  profile: {
+    title: 'Xóa hồ sơ cá nhân hóa?',
+    description: 'Thao tác này xóa hồ sơ của bạn và hồ sơ người ấy. Lịch sử phân tích không bị xóa trong thao tác này.',
+    label: 'Xóa hồ sơ cá nhân hóa',
+  },
+  all: {
+    title: 'Xóa toàn bộ dữ liệu cá nhân?',
+    description: 'Thao tác này xóa hồ sơ, lịch sử và cài đặt riêng tư của tài khoản hiện tại. Dữ liệu đã xóa không thể khôi phục.',
+    label: 'Xóa toàn bộ dữ liệu cá nhân',
+  },
+};
+
 export default function PrivacyPage() {
   const [settings, setSettings] = useState<ConsentSettings>(defaultConsent);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PendingPrivacyDelete>(null);
 
   useEffect(() => {
     getConsent()
@@ -53,59 +76,48 @@ export default function PrivacyPage() {
     }
   };
 
-  const handleDeleteProfile = async () => {
-    await runDestructiveAction(
-      deleteProfile,
-      'Đã xóa hồ sơ cá nhân hóa.',
-      'Bạn có chắc muốn xóa hồ sơ cá nhân hóa của tài khoản hiện tại không?'
-    );
-  };
-
-  const handleClearHistory = async () => {
-    await runDestructiveAction(
-      clearHistory,
-      'Đã xóa lịch sử phân tích.',
-      'Bạn có chắc muốn xóa toàn bộ lịch sử phân tích của tài khoản hiện tại không?'
-    );
-  };
-
-  const handleDeleteAllUserData = async () => {
-    await runDestructiveAction(
-      async () => {
-        await deleteUserData();
-        setSettings(defaultConsent);
-      },
-      'Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.',
-      'Bạn có chắc muốn xóa toàn bộ hồ sơ, lịch sử và cài đặt riêng tư của tài khoản hiện tại không?'
-    );
-  };
-
-  const runDestructiveAction = async (
-    action: () => Promise<void>,
-    successMessage: string,
-    confirmationMessage: string
-  ) => {
-    if (!window.confirm(confirmationMessage)) {
+  const confirmDelete = async () => {
+    if (!pendingDelete) {
       return;
     }
 
     setStatusMessage('');
     setErrorMessage('');
+    setIsDeleting(true);
 
     try {
-      await action();
-      setStatusMessage(successMessage);
+      if (pendingDelete === 'history') {
+        await clearHistory();
+        setStatusMessage('Đã xóa lịch sử phân tích.');
+      }
+
+      if (pendingDelete === 'profile') {
+        await deleteProfile();
+        setStatusMessage('Đã xóa hồ sơ cá nhân hóa.');
+      }
+
+      if (pendingDelete === 'all') {
+        await deleteUserData();
+        setSettings(defaultConsent);
+        setStatusMessage('Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.');
+      }
+
+      setPendingDelete(null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Không thể xóa dữ liệu.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
+  const dialogCopy = pendingDelete ? deleteDialogCopy[pendingDelete] : null;
+
   return (
-    <PageShell size="normal" className="space-y-8">
+    <PageShell size="normal" className="space-y-8 pb-12">
       <SectionHeader
         eyebrow="Quyền riêng tư"
         title="Kiểm soát dữ liệu được lưu và xóa"
-        description="Bạn luôn có quyền chọn dữ liệu nào được lưu. Nội dung chat không được lưu mặc định và không bị ẩn tùy chọn consent."
+        description="Bạn luôn có quyền chọn dữ liệu nào được lưu. Nội dung chat không được lưu mặc định và tùy chọn consent luôn hiển thị rõ."
         action={<Badge tone="teal">Không ép consent</Badge>}
       />
 
@@ -119,12 +131,14 @@ export default function PrivacyPage() {
               label="Bật lưu lịch sử"
               description="Khi tắt, backend sẽ không lưu lịch sử phân tích dù request có yêu cầu lưu."
               checked={settings.history_enabled}
+              disabled={isSaving}
               onChange={(checked) => persistSettings({ ...settings, history_enabled: checked })}
             />
             <PrivacyToggle
               label="Bật lưu kết quả phân tích"
               description="Cho phép lưu cảm xúc tổng quan, độ tin cậy, tóm tắt, gợi ý và cảnh báo."
               checked={settings.save_result}
+              disabled={isSaving}
               onChange={(checked) =>
                 persistSettings({
                   ...settings,
@@ -137,6 +151,7 @@ export default function PrivacyPage() {
               label="Bật lưu nội dung chat"
               description="Chỉ nên bật khi bạn thật sự muốn xem lại đoạn chat gốc trong lịch sử."
               checked={settings.save_input}
+              disabled={isSaving}
               onChange={(checked) =>
                 persistSettings({
                   ...settings,
@@ -145,7 +160,7 @@ export default function PrivacyPage() {
                 })
               }
             />
-            <Button type="button" disabled={isSaving} onClick={() => persistSettings(settings)}>
+            <Button type="button" disabled={isSaving} isLoading={isSaving} onClick={() => persistSettings(settings)}>
               {isSaving ? 'Đang lưu' : 'Lưu cài đặt'}
             </Button>
           </div>
@@ -160,20 +175,24 @@ export default function PrivacyPage() {
             </div>
           </Card>
 
-          <Card title="Xóa dữ liệu" description="Các thao tác này chỉ áp dụng cho dữ liệu của tài khoản đang đăng nhập.">
+          <Card
+            title="Xóa dữ liệu"
+            description="Các thao tác này chỉ áp dụng cho dữ liệu của tài khoản đang đăng nhập và luôn cần xác nhận."
+            className="border-red-100"
+          >
             <div className="grid gap-3">
-              <Button type="button" variant="danger" onClick={handleClearHistory} aria-label="Xóa lịch sử phân tích">
+              <Button type="button" variant="danger" onClick={() => setPendingDelete('history')} aria-label="Xóa lịch sử phân tích">
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Xóa lịch sử phân tích
               </Button>
-              <Button type="button" variant="danger" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
+              <Button type="button" variant="danger" onClick={() => setPendingDelete('profile')} aria-label="Xóa hồ sơ cá nhân hóa">
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Xóa hồ sơ cá nhân hóa
               </Button>
               <Button
                 type="button"
                 variant="danger"
-                onClick={handleDeleteAllUserData}
+                onClick={() => setPendingDelete('all')}
                 aria-label="Xóa toàn bộ dữ liệu cá nhân"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -183,6 +202,16 @@ export default function PrivacyPage() {
           </Card>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={dialogCopy?.title ?? ''}
+        description={dialogCopy?.description ?? ''}
+        confirmLabel={dialogCopy?.label ?? 'Xóa dữ liệu'}
+        isBusy={isDeleting}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </PageShell>
   );
 }
@@ -191,17 +220,19 @@ interface PrivacyToggleProps {
   label: string;
   description: string;
   checked: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }
 
-function PrivacyToggle({ label, description, checked, onChange }: PrivacyToggleProps) {
+function PrivacyToggle({ label, description, checked, disabled = false, onChange }: PrivacyToggleProps) {
   return (
-    <label className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm shadow-rose-50">
+    <label className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm shadow-rose-50 transition hover:border-rose-200">
       <input
         type="checkbox"
         checked={checked}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 h-4 w-4 rounded border-rose-300 text-rose-600 focus:ring-rose-500"
+        className="mt-1 h-4 w-4 rounded border-rose-300 text-rose-600 focus:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
       />
       <span>
         <span className="block text-sm font-semibold text-slate-950">{label}</span>
@@ -211,7 +242,7 @@ function PrivacyToggle({ label, description, checked, onChange }: PrivacyToggleP
   );
 }
 
-function PrivacyInfo({ icon: Icon, text }: { icon: typeof Database; text: string }) {
+function PrivacyInfo({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="flex gap-3 rounded-2xl bg-slate-50 px-4 py-3">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
