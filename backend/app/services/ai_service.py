@@ -43,6 +43,28 @@ class AIService:
         teasing_keywords = ["nho", "ca dut", "mong du", "duoc hong", "hihi", "haha", "hehe", "troll"]
         fatigue_keywords = ["met", "khong sao", "hoi la", "im lang", "nghi", "duoi", "mai noi", "noi sau"]
         sadness_keywords = ["buon", "tui", "khoc", "co don", "that vong"]
+        anxiety_keywords = [
+            "lo qua",
+            "so",
+            "bat an",
+            "khong yen tam",
+            "sao lau tra loi",
+            "co sao khong",
+            "em co on khong",
+            "hoi hop",
+        ]
+        care_keywords = [
+            "an chua",
+            "uong nuoc",
+            "di duong can than",
+            "ve den nha",
+            "bao anh",
+            "bao em",
+            "giu suc khoe",
+            "nghi som",
+            "em on khong",
+            "anh o day",
+        ]
         sulking_keywords = [
             "gian",
             "buc",
@@ -59,6 +81,8 @@ class AIService:
         teasing_score = self._keyword_score(normalized_text, teasing_keywords)
         fatigue_score = self._keyword_score(normalized_text, fatigue_keywords)
         sadness_score = self._keyword_score(normalized_text, sadness_keywords)
+        anxiety_score = self._keyword_score(normalized_text, anxiety_keywords)
+        care_score = self._keyword_score(normalized_text, care_keywords)
         sulking_score = self._keyword_score(normalized_text, sulking_keywords)
 
         if self._is_insufficient_input(normalized_text):
@@ -120,6 +144,26 @@ class AIService:
                 ],
                 input_quality=input_quality,
                 reply_style="bình tĩnh, không tranh cãi, không hỏi dồn",
+            )
+
+        if anxiety_score:
+            return self._anxiety_response(
+                chat_text,
+                profile_context,
+                context_lower,
+                input_quality,
+                ocr_uncertainty,
+                anxiety_keywords,
+            )
+
+        if care_score:
+            return self._care_response(
+                chat_text,
+                profile_context,
+                context_lower,
+                input_quality,
+                ocr_uncertainty,
+                care_keywords,
             )
 
         if sadness_score:
@@ -285,6 +329,97 @@ class AIService:
             ],
             input_quality=input_quality,
             reply_style="ấm áp, vui nhẹ, không phân tích quá nặng",
+        )
+
+    def _anxiety_response(
+        self,
+        chat_text: str,
+        profile_context: str,
+        context_lower: str,
+        input_quality: str,
+        uncertainty_reasons: list[str],
+        evidence_keywords: list[str],
+    ) -> AnalyzeResponse:
+        return AnalyzeResponse(
+            overall_emotion="lo lắng / cần trấn an nhẹ",
+            confidence=0.66 if input_quality != "low" else 0.52,
+            emotion_distribution={
+                "than_mat": 0.0,
+                "treu_dua": 0.0,
+                "quan_tam": 0.18,
+                "met_moi": 0.0,
+                "ne_tranh": 0.0,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.18,
+                "chua_du_du_lieu": 0.0,
+                "lo_lang": 0.64,
+            },
+            summary=(
+                "Đoạn chat có dấu hiệu lo lắng hoặc cần được trấn an nhẹ. "
+                "Không đủ dữ liệu để kết luận nguyên nhân, nhưng nên phản hồi rõ ràng và bình tĩnh."
+            ),
+            context_note=self._build_context_note(profile_context, context_lower),
+            suggested_reply=(
+                "Anh đây rồi, xin lỗi vì để em lo. Anh vẫn ổn, cảm ơn em đã quan tâm nha."
+            ),
+            warning=WARNING_MESSAGE,
+            tone="lo lắng / cần trấn an nhẹ",
+            evidence=self._extract_evidence(
+                chat_text,
+                evidence_keywords,
+                label="lo lắng",
+                reason="Câu thể hiện sự bất an, chờ phản hồi hoặc muốn biết người kia có ổn không.",
+            ),
+            uncertainty_reasons=[
+                *uncertainty_reasons,
+                "Lo lắng có thể đến từ bối cảnh ngoài đoạn chat, nên không kết luận nguyên nhân.",
+            ],
+            input_quality=input_quality,
+            reply_style="trấn an rõ ràng, trả lời ngắn gọn, không trách ngược",
+        )
+
+    def _care_response(
+        self,
+        chat_text: str,
+        profile_context: str,
+        context_lower: str,
+        input_quality: str,
+        uncertainty_reasons: list[str],
+        evidence_keywords: list[str],
+    ) -> AnalyzeResponse:
+        return AnalyzeResponse(
+            overall_emotion="quan tâm / dịu dàng",
+            confidence=0.7 if input_quality != "low" else 0.55,
+            emotion_distribution={
+                "than_mat": 0.12,
+                "treu_dua": 0.0,
+                "quan_tam": 0.58,
+                "met_moi": 0.0,
+                "ne_tranh": 0.0,
+                "kho_chiu": 0.0,
+                "trung_lap": 0.30,
+                "chua_du_du_lieu": 0.0,
+            },
+            summary=(
+                "Đoạn chat nghiêng về sự quan tâm và nhắc nhở nhẹ nhàng. "
+                "Đây là tín hiệu giao tiếp tích cực, nhưng vẫn chỉ nên đọc như tham khảo."
+            ),
+            context_note=self._build_context_note(profile_context, context_lower),
+            suggested_reply="Cảm ơn em nha, anh sẽ chú ý hơn. Em cũng nghỉ ngơi và giữ sức khỏe nhé.",
+            warning=WARNING_MESSAGE,
+            tone="quan tâm, dịu dàng",
+            evidence=self._extract_evidence(
+                chat_text,
+                evidence_keywords,
+                label="quan tâm",
+                reason="Câu có nội dung hỏi thăm, nhắc nghỉ ngơi hoặc dặn an toàn.",
+            ),
+            uncertainty_reasons=[
+                *uncertainty_reasons,
+                "Một số câu hỏi thăm có thể là thói quen giao tiếp, không nên suy diễn sâu hơn.",
+            ],
+            input_quality=input_quality,
+            reply_style="đón nhận, cảm ơn, đáp lại nhẹ nhàng",
         )
 
     def _fatigue_response(
