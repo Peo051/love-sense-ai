@@ -24,6 +24,11 @@
   - Security checklist
   - Commit details
 
+- **[ANALYSIS_QUALITY_BENCHMARK.md](ANALYSIS_QUALITY_BENCHMARK.md)** - Synthetic regression benchmark for emotion analysis quality.
+  - Expected/disallowed label checks
+  - Confidence range checks
+  - Safety note that benchmark cases are not ground truth
+
 - **[PRIVACY_DESIGN.md](PRIVACY_DESIGN.md)** - Thiết kế consent, lưu/xóa dữ liệu và logging an toàn.
 
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Checklist biến môi trường, database, test/build và deploy demo.

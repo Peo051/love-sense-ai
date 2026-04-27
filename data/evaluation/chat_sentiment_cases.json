@@ -1,0 +1,162 @@
+[
+  {
+    "id": "affection_teasing_01",
+    "chat_text": "A: anh iu ngủ ngon nhó\nB: yeuemm 🥺",
+    "expected_labels": ["than_mat", "quan_tam"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.85],
+    "notes": "Synthetic affectionate slang, not a real user conversation."
+  },
+  {
+    "id": "affection_teasing_02",
+    "chat_text": "A: Không thích ngủ ngon\nB: Thích ngủ cà dựt cà dựt\nB: Ngủ bị mộng du qua ôm bé được hong",
+    "expected_labels": ["than_mat", "treu_dua"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.85],
+    "notes": "Synthetic playful teasing with affectionate wording."
+  },
+  {
+    "id": "affection_teasing_03",
+    "chat_text": "A: nhớ bé quá\nB: hôm nay cho anh ôm một cái nha",
+    "expected_labels": ["than_mat", "quan_tam"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.85],
+    "notes": "Synthetic intimate wording; benchmark should not classify it as plain neutral."
+  },
+  {
+    "id": "fatigue_avoidance_01",
+    "chat_text": "A: Em sao vậy?\nB: Em mệt thôi.\nB: Mai nói nha.",
+    "expected_labels": ["met_moi", "ne_tranh"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu"],
+    "expected_confidence_range": [0.6, 0.82],
+    "notes": "Synthetic fatigue with light postponement."
+  },
+  {
+    "id": "fatigue_avoidance_02",
+    "chat_text": "A: Anh gọi được không?\nB: Giờ em hơi đuối.\nB: Cho em nghỉ xíu nha.",
+    "expected_labels": ["met_moi", "ne_tranh"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu"],
+    "expected_confidence_range": [0.6, 0.82],
+    "notes": "Synthetic fatigue and need for space."
+  },
+  {
+    "id": "fatigue_avoidance_03",
+    "chat_text": "A: Sao trả lời ngắn vậy?\nB: Không sao đâu.\nB: Em hơi mệt, nói sau nha.",
+    "expected_labels": ["met_moi", "ne_tranh"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu"],
+    "expected_confidence_range": [0.6, 0.82],
+    "notes": "Synthetic fatigue with 'không sao' and delayed talk."
+  },
+  {
+    "id": "sulking_irritation_01",
+    "chat_text": "B: ừ sao cũng được\nB: anh muốn làm gì thì làm",
+    "expected_labels": ["kho_chiu"],
+    "disallowed_labels": ["than_mat", "treu_dua", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.78],
+    "notes": "Synthetic sulking phrasing; should not be treated as neutral only."
+  },
+  {
+    "id": "sulking_irritation_02",
+    "chat_text": "A: Anh giải thích được không?\nB: Thôi khỏi.\nB: Em không muốn nói nữa.",
+    "expected_labels": ["kho_chiu", "ne_tranh"],
+    "disallowed_labels": ["than_mat", "treu_dua", "quan_tam"],
+    "expected_confidence_range": [0.55, 0.78],
+    "notes": "Synthetic irritation with withdrawal."
+  },
+  {
+    "id": "sulking_irritation_03",
+    "chat_text": "B: Đừng hỏi nữa.\nB: Em đang khó chịu.",
+    "expected_labels": ["kho_chiu"],
+    "disallowed_labels": ["than_mat", "treu_dua", "quan_tam"],
+    "expected_confidence_range": [0.55, 0.78],
+    "notes": "Synthetic direct irritation."
+  },
+  {
+    "id": "anxiety_01",
+    "chat_text": "A: Sao lâu trả lời vậy?\nA: Em lo quá.",
+    "expected_labels": ["lo_lang"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.5, 0.78],
+    "notes": "Synthetic worry due to delayed response."
+  },
+  {
+    "id": "anxiety_02",
+    "chat_text": "A: Anh có sao không?\nA: Em cứ thấy bất an.",
+    "expected_labels": ["lo_lang"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.5, 0.78],
+    "notes": "Synthetic anxious check-in."
+  },
+  {
+    "id": "anxiety_03",
+    "chat_text": "A: Em sợ mình nói sai.\nA: Em hơi hồi hộp.",
+    "expected_labels": ["lo_lang"],
+    "disallowed_labels": ["than_mat", "treu_dua", "kho_chiu", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.5, 0.78],
+    "notes": "Synthetic self-focused anxiety."
+  },
+  {
+    "id": "insufficient_01",
+    "chat_text": "ok",
+    "expected_labels": ["chua_du_du_lieu"],
+    "disallowed_labels": ["than_mat", "treu_dua", "met_moi", "kho_chiu", "lo_lang"],
+    "expected_confidence_range": [0.0, 0.4],
+    "notes": "Synthetic very short reply; should lower confidence."
+  },
+  {
+    "id": "insufficient_02",
+    "chat_text": "ừ",
+    "expected_labels": ["chua_du_du_lieu"],
+    "disallowed_labels": ["than_mat", "treu_dua", "met_moi", "kho_chiu", "lo_lang"],
+    "expected_confidence_range": [0.0, 0.4],
+    "notes": "Synthetic single-word reply."
+  },
+  {
+    "id": "insufficient_03",
+    "chat_text": "được",
+    "expected_labels": ["chua_du_du_lieu"],
+    "disallowed_labels": ["than_mat", "treu_dua", "met_moi", "kho_chiu", "lo_lang"],
+    "expected_confidence_range": [0.0, 0.4],
+    "notes": "Synthetic one-word agreement."
+  },
+  {
+    "id": "care_01",
+    "chat_text": "A: Em ăn chưa?\nA: Nhớ uống nước nha.",
+    "expected_labels": ["quan_tam"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.82],
+    "notes": "Synthetic care and daily check-in."
+  },
+  {
+    "id": "care_02",
+    "chat_text": "A: Về đến nhà nhớ báo anh nha.\nA: Đi đường cẩn thận đó.",
+    "expected_labels": ["quan_tam"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.82],
+    "notes": "Synthetic safety-oriented care."
+  },
+  {
+    "id": "care_03",
+    "chat_text": "A: Giữ sức khỏe nha.\nA: Em ổn không?",
+    "expected_labels": ["quan_tam"],
+    "disallowed_labels": ["kho_chiu", "treu_dua", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.55, 0.82],
+    "notes": "Synthetic supportive care with rest suggestion."
+  },
+  {
+    "id": "mixed_care_fatigue_01",
+    "chat_text": "B: Em hơi mệt.\nA: Vậy em nghỉ đi, anh ở đây khi nào em muốn nói.",
+    "expected_labels": ["met_moi", "ne_tranh"],
+    "disallowed_labels": ["kho_chiu", "treu_dua"],
+    "expected_confidence_range": [0.55, 0.82],
+    "notes": "Synthetic mixed fatigue and supportive response."
+  },
+  {
+    "id": "mixed_ocr_teasing_01",
+    "chat_text": "A: anh iu ngủ ngon nhó\nB: ngủ bị mộng du qua ôm bé được hong",
+    "expected_labels": ["than_mat", "treu_dua"],
+    "disallowed_labels": ["kho_chiu", "met_moi", "chua_du_du_lieu"],
+    "expected_confidence_range": [0.5, 0.82],
+    "notes": "Synthetic OCR-like affectionate teasing; confidence should stay moderate."
+  }
+]
