@@ -1,10 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Database, FileX2, ShieldCheck, Trash2 } from 'lucide-react';
 
+import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
+import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import PageShell from '@/components/common/PageShell';
+import SectionHeader from '@/components/common/SectionHeader';
 import { clearHistory, deleteProfile, deleteUserData, getConsent, saveConsent } from '@/lib/api';
 import type { ConsentSettings } from '@/lib/types';
 
@@ -97,29 +101,19 @@ export default function PrivacyPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6 space-y-3">
-        <p className="text-sm font-semibold uppercase text-rose-700">Quyền riêng tư</p>
-        <h1 className="text-3xl font-bold text-slate-950">Kiểm soát lưu và xóa dữ liệu</h1>
-        <p className="max-w-3xl text-sm leading-6 text-slate-600">
-          Bạn không bị ép đồng ý lưu dữ liệu. Nếu tắt lưu lịch sử hoặc không chọn checkbox ở trang phân tích, nội dung
-          chat sẽ không được ghi vào lịch sử.
-        </p>
-      </div>
+    <PageShell size="normal" className="space-y-8">
+      <SectionHeader
+        eyebrow="Quyền riêng tư"
+        title="Kiểm soát dữ liệu được lưu và xóa"
+        description="Bạn luôn có quyền chọn dữ liệu nào được lưu. Nội dung chat không được lưu mặc định và không bị ẩn tùy chọn consent."
+        action={<Badge tone="teal">Không ép consent</Badge>}
+      />
 
-      {statusMessage && (
-        <p role="status" className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
-          {statusMessage}
-        </p>
-      )}
-      {errorMessage && (
-        <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      )}
+      {statusMessage && <SuccessAlert>{statusMessage}</SuccessAlert>}
+      {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Cài đặt lưu dữ liệu">
+      <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <Card title="Cài đặt lưu dữ liệu" description="Các lựa chọn này áp dụng cho tài khoản hiện tại.">
           <div className="space-y-4">
             <PrivacyToggle
               label="Bật lưu lịch sử"
@@ -157,33 +151,39 @@ export default function PrivacyPage() {
           </div>
         </Card>
 
-        <Card title="Xóa dữ liệu">
-          <div className="space-y-4">
-            <p className="text-sm leading-6 text-slate-600">
-              Các thao tác xóa bên dưới áp dụng cho dữ liệu thuộc tài khoản đang đăng nhập. Ứng dụng không xóa dữ liệu
-              của tài khoản khác.
-            </p>
-            <Button type="button" variant="secondary" onClick={handleClearHistory} aria-label="Xóa lịch sử phân tích">
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Xóa lịch sử phân tích
-            </Button>
-            <Button type="button" variant="secondary" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Xóa hồ sơ cá nhân hóa
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleDeleteAllUserData}
-              aria-label="Xóa toàn bộ dữ liệu cá nhân"
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-              Xóa toàn bộ dữ liệu cá nhân
-            </Button>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <Card title="Dữ liệu được lưu khi có consent">
+            <div className="grid gap-3 text-sm text-slate-700">
+              <PrivacyInfo icon={Database} text="Hồ sơ cá nhân hóa, hồ sơ người ấy và cài đặt consent theo user_id." />
+              <PrivacyInfo icon={ShieldCheck} text="Kết quả phân tích chỉ lưu khi bật lưu lịch sử hoặc save_result." />
+              <PrivacyInfo icon={FileX2} text="Nội dung chat gốc không lưu mặc định, chỉ lưu khi save_input=true." />
+            </div>
+          </Card>
+
+          <Card title="Xóa dữ liệu" description="Các thao tác này chỉ áp dụng cho dữ liệu của tài khoản đang đăng nhập.">
+            <div className="grid gap-3">
+              <Button type="button" variant="danger" onClick={handleClearHistory} aria-label="Xóa lịch sử phân tích">
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Xóa lịch sử phân tích
+              </Button>
+              <Button type="button" variant="danger" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Xóa hồ sơ cá nhân hóa
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={handleDeleteAllUserData}
+                aria-label="Xóa toàn bộ dữ liệu cá nhân"
+              >
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Xóa toàn bộ dữ liệu cá nhân
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 
@@ -196,7 +196,7 @@ interface PrivacyToggleProps {
 
 function PrivacyToggle({ label, description, checked, onChange }: PrivacyToggleProps) {
   return (
-    <label className="flex items-start gap-3 rounded-lg border border-rose-100 bg-white px-4 py-3">
+    <label className="flex items-start gap-3 rounded-2xl border border-rose-100 bg-white px-4 py-3 shadow-sm shadow-rose-50">
       <input
         type="checkbox"
         checked={checked}
@@ -208,5 +208,14 @@ function PrivacyToggle({ label, description, checked, onChange }: PrivacyToggleP
         <span className="mt-1 block text-sm leading-6 text-slate-600">{description}</span>
       </span>
     </label>
+  );
+}
+
+function PrivacyInfo({ icon: Icon, text }: { icon: typeof Database; text: string }) {
+  return (
+    <div className="flex gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
+      <p className="leading-6">{text}</p>
+    </div>
   );
 }

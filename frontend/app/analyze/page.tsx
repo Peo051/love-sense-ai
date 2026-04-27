@@ -4,7 +4,10 @@ import { useState } from 'react';
 
 import AnalysisForm from '@/components/analyze/AnalysisForm';
 import AnalysisResultPanel from '@/components/analyze/AnalysisResultPanel';
+import Badge from '@/components/common/Badge';
 import Card from '@/components/common/Card';
+import PageShell from '@/components/common/PageShell';
+import SectionHeader from '@/components/common/SectionHeader';
 import { analyzeEmotion } from '@/lib/api';
 import type { AnalyzeRequest, AnalyzeResponse } from '@/lib/types';
 
@@ -28,26 +31,25 @@ export default function AnalyzePage() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-3xl space-y-3">
-        <p className="text-sm font-semibold uppercase text-rose-700">Love Emotion MVP</p>
-        <h1 className="text-3xl font-bold text-slate-950 sm:text-4xl">Phân tích sắc thái cảm xúc trong đoạn chat</h1>
-        <p className="text-base leading-7 text-slate-600">
-          Nhập đoạn hội thoại và bối cảnh cá nhân hóa để nhận nhận định tham khảo, gợi ý phản hồi nhẹ nhàng và cảnh báo
-          an toàn.
-        </p>
-      </div>
+    <PageShell className="space-y-8">
+      <SectionHeader
+        eyebrow="Phân tích hội thoại"
+        title="Nhập đoạn chat và nhận gợi ý phản hồi an toàn"
+        description="Luồng này chỉ phân tích nội dung bạn nhập thủ công. Ứng dụng không đọc trộm tin nhắn và không lưu chat nếu bạn chưa đồng ý."
+        action={<Badge tone="teal">Mock mode an toàn cho demo</Badge>}
+      />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.9fr)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.92fr)] lg:items-start">
         <Card
           title="Thông tin đầu vào"
-          description="Dữ liệu chỉ được gửi đến backend local để tạo kết quả phân tích. Ứng dụng không lưu nội dung chat mặc định."
+          description="Điền hội thoại và bối cảnh cần thiết. Các tùy chọn lưu dữ liệu luôn tách riêng và mặc định tắt."
+          className="lg:sticky lg:top-24"
         >
           <AnalysisForm isLoading={isLoading} onAnalyze={handleAnalyze} />
         </Card>
 
         <AnalysisResultPanel result={result} error={errorMessage} loading={isLoading} />
       </div>
-    </div>
+    </PageShell>
   );
 }

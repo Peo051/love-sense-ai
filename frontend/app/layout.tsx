@@ -5,8 +5,8 @@ import Navbar from '@/components/common/Navbar';
 import '../styles/globals.css';
 
 export const metadata: Metadata = {
-  title: 'Love Emotion - Phân tích cảm xúc tình cảm',
-  description: 'Ứng dụng web hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm.',
+  title: 'Love Sense AI - Phân tích sắc thái hội thoại',
+  description: 'Ứng dụng hỗ trợ phân tích sắc thái hội thoại và gợi ý phản hồi nhẹ nhàng, ưu tiên quyền riêng tư.',
 };
 
 export default function RootLayout({

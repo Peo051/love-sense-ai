@@ -1,6 +1,8 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost';
+import { cn } from '@/lib/utils';
+
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
@@ -18,11 +20,12 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2';
+    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-offset-2';
   const variantStyles: Record<ButtonVariant, string> = {
-    primary: 'bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus:ring-rose-500',
-    secondary: 'bg-amber-100 text-amber-950 hover:bg-amber-200 focus:ring-amber-400',
-    ghost: 'bg-transparent text-slate-700 hover:bg-white/70 focus:ring-slate-300',
+    primary: 'bg-rose-600 text-white shadow-sm shadow-rose-200 hover:bg-rose-700 focus:ring-rose-500',
+    secondary: 'border border-rose-100 bg-white text-slate-800 shadow-sm hover:border-rose-200 hover:bg-rose-50 focus:ring-rose-300',
+    danger: 'border border-red-200 bg-red-50 text-red-800 hover:bg-red-100 focus:ring-red-300',
+    ghost: 'bg-transparent text-slate-700 hover:bg-rose-50 hover:text-rose-700 focus:ring-rose-300',
   };
 
   return (
@@ -30,9 +33,7 @@ export default function Button({
       type={type}
       disabled={disabled || isLoading}
       aria-busy={isLoading || undefined}
-      className={`${baseStyles} ${variantStyles[variant]} ${
-        disabled || isLoading ? 'cursor-not-allowed opacity-60' : ''
-      } ${className}`}
+      className={cn(baseStyles, variantStyles[variant], disabled || isLoading ? 'cursor-not-allowed opacity-60' : '', className)}
       {...props}
     >
       {children}

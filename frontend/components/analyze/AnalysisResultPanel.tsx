@@ -1,8 +1,9 @@
 'use client';
 
-import { AlertTriangle, HeartHandshake, MessageCircle, ShieldAlert } from 'lucide-react';
+import { MessageCircle, ShieldAlert, TrendingUp } from 'lucide-react';
 
 import Card from '@/components/common/Card';
+import { EmptyState, ErrorState, LoadingState } from '@/components/common/StateBlocks';
 import type { AnalyzeResponse } from '@/lib/types';
 
 type Props = {
@@ -18,43 +19,23 @@ function formatEmotionName(name: string) {
 export default function AnalysisResultPanel({ result = null, error = null, loading = false }: Props) {
   if (loading) {
     return (
-      <Card title="Đang phân tích">
-        <div
-          role="status"
-          aria-live="polite"
-          className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center"
-        >
-          <HeartHandshake className="mb-4 h-10 w-10 animate-pulse text-rose-500" aria-hidden="true" />
-          <p className="max-w-md text-sm leading-6 text-slate-600">
-            Đang gửi đoạn chat đến backend và tạo kết quả phân tích.
-          </p>
-        </div>
-      </Card>
+      <LoadingState
+        title="Đang phân tích hội thoại"
+        description="Backend đang tạo kết quả theo schema an toàn. Nếu LLM gặp lỗi, hệ thống sẽ dùng fallback để không làm gián đoạn trải nghiệm."
+      />
     );
   }
 
   if (error) {
-    return (
-      <Card title="Không thể phân tích" className="border-red-100 bg-red-50">
-        <div role="alert" className="flex gap-3 text-red-800">
-          <AlertTriangle className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
-          <p className="text-sm leading-6">{error}</p>
-        </div>
-      </Card>
-    );
+    return <ErrorState title="Không thể phân tích" description={error} />;
   }
 
   if (!result) {
     return (
-      <Card title="Kết quả phân tích" description="Kết quả sẽ xuất hiện ở đây sau khi gửi đoạn chat.">
-        <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center">
-          <HeartHandshake className="mb-4 h-10 w-10 text-rose-500" aria-hidden="true" />
-          <p className="max-w-md text-sm leading-6 text-slate-600">
-            Nhập đoạn chat và bối cảnh cá nhân hóa để nhận phân tích cảm xúc, gợi ý phản hồi nhẹ nhàng và cảnh báo an
-            toàn.
-          </p>
-        </div>
-      </Card>
+      <EmptyState
+        title="Kết quả sẽ xuất hiện tại đây"
+        description="Nhập đoạn chat và bối cảnh cá nhân hóa để nhận sắc thái tổng quan, độ tin cậy, phân bố cảm xúc và gợi ý phản hồi."
+      />
     );
   }
 
@@ -63,22 +44,26 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
 
   return (
     <div className="space-y-5">
-      <Card title="Kết quả cảm xúc">
+      <Card title="Kết quả cảm xúc" description="Kết quả chỉ nên dùng làm gợi ý để giao tiếp nhẹ nhàng hơn.">
         <div className="space-y-5">
-          <div className="flex flex-col gap-3 rounded-lg bg-rose-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          <div className="grid gap-3 sm:grid-cols-[1fr_150px]">
+            <div className="rounded-2xl bg-rose-50 px-4 py-4">
               <p className="text-sm text-slate-600">Cảm xúc tổng quan</p>
               <p className="mt-1 text-2xl font-bold text-rose-700">{result.overall_emotion}</p>
             </div>
-            <div className="rounded-md bg-white px-4 py-3 text-left shadow-sm sm:text-right">
+            <div className="rounded-2xl bg-slate-50 px-4 py-4">
               <p className="text-sm text-slate-600">Độ tin cậy</p>
-              <p className="text-xl font-bold text-slate-950">{confidencePercent}%</p>
+              <p className="mt-1 text-2xl font-bold text-slate-950">{confidencePercent}%</p>
             </div>
           </div>
 
           <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-950">
+              <TrendingUp className="h-4 w-4 text-teal-600" aria-hidden="true" />
+              Phân bố cảm xúc
+            </div>
             {distributionEntries.map(([emotion, value]) => {
-              const percent = Math.round(value * 100);
+              const percent = Math.max(0, Math.min(100, Math.round(value * 100)));
 
               return (
                 <div key={emotion} className="space-y-1.5">
@@ -105,13 +90,13 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
       </Card>
 
       <Card title="Gợi ý phản hồi">
-        <div className="flex gap-3 rounded-lg bg-teal-50 px-4 py-4 text-teal-950">
+        <div className="flex gap-3 rounded-2xl bg-teal-50 px-4 py-4 text-teal-950">
           <MessageCircle className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm leading-6">{result.suggested_reply}</p>
         </div>
       </Card>
 
-      <Card title="Cảnh báo an toàn" className="border-amber-200 bg-amber-50">
+      <Card title="Cảnh báo an toàn" className="border-amber-200 bg-amber-50/80">
         <div className="flex gap-3 text-amber-950">
           <ShieldAlert className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm leading-6">{result.warning}</p>
