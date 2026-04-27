@@ -23,11 +23,11 @@ export default function Card({
 }: CardProps) {
   const variantClassName = {
     default:
-      'border-2 border-slate-900 bg-white shadow-[6px_6px_0_rgba(17,24,39,0.14)] hover:shadow-[8px_8px_0_rgba(17,24,39,0.18)]',
-    flat: 'border-2 border-slate-900/70 bg-white shadow-none',
+      'border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.06)] hover:shadow-[0_22px_60px_rgba(15,23,42,0.08)]',
+    flat: 'border border-slate-200 bg-white shadow-none',
     artistic:
-      'border-2 border-slate-900 bg-[linear-gradient(135deg,#ffffff_0%,#eff6ff_58%,#ede9fe_100%)] shadow-[8px_8px_0_rgba(17,24,39,0.18)]',
-    dark: 'border-2 border-slate-950 bg-slate-950 text-white shadow-[8px_8px_0_rgba(59,130,246,0.34)]',
+      'border-2 border-slate-900 bg-[linear-gradient(135deg,#ffffff_0%,#fff1f2_58%,#ccfbf1_100%)] shadow-[6px_6px_0_rgba(31,41,55,0.13)]',
+    dark: 'border-2 border-slate-950 bg-slate-950 text-white shadow-[7px_7px_0_rgba(244,63,94,0.22)]',
   }[variant];
 
   return (
@@ -41,7 +41,7 @@ export default function Card({
       {(title || description) && (
         <div className={cn('mb-5 space-y-1.5', headerClassName)}>
           {title && (
-            <h2 className={cn('text-lg font-black tracking-tight', variant === 'dark' ? 'text-white' : 'text-slate-950')}>
+            <h2 className={cn('text-lg font-bold tracking-tight', variant === 'dark' ? 'text-white' : 'text-slate-950')}>
               {title}
             </h2>
           )}

@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { Inter, JetBrains_Mono, Limelight } from 'next/font/google';
+import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 
 import Footer from '@/components/common/Footer';
 import Navbar from '@/components/common/Navbar';
 import { cn } from '@/lib/utils';
 import '../styles/globals.css';
 
-const inter = Inter({
+const beVietnamPro = Be_Vietnam_Pro({
   subsets: ['latin', 'vietnamese'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-body',
   display: 'swap',
 });
 
-const limelight = Limelight({
-  subsets: ['latin'],
-  weight: '400',
+const beVietnamDisplay = Be_Vietnam_Pro({
+  subsets: ['latin', 'vietnamese'],
+  weight: ['700', '800'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -36,7 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="vi" className={cn(inter.variable, limelight.variable, jetBrainsMono.variable)}>
+    <html lang="vi" className={cn(beVietnamPro.variable, beVietnamDisplay.variable, jetBrainsMono.variable)}>
       <body>
         <Navbar />
         <main className="min-h-screen">{children}</main>

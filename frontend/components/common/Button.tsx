@@ -31,12 +31,12 @@ export default function Button({
   };
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
-      'border-slate-950 bg-blue-600 text-white shadow-[5px_5px_0_#111827] hover:-translate-y-0.5 hover:bg-violet-600 focus-visible:ring-blue-200',
+      'border-rose-950 bg-rose-600 text-white shadow-[4px_4px_0_rgba(127,29,29,0.28)] hover:-translate-y-0.5 hover:bg-rose-700 focus-visible:ring-rose-100',
     secondary:
-      'border-slate-950 bg-white text-slate-950 shadow-[4px_4px_0_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:bg-blue-50 focus-visible:ring-blue-200',
+      'border-slate-300 bg-white text-slate-950 shadow-[0_10px_28px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-50 focus-visible:ring-rose-100',
     danger:
       'border-red-950 bg-red-600 text-white shadow-[4px_4px_0_rgba(127,29,29,0.38)] hover:-translate-y-0.5 hover:bg-red-700 focus-visible:ring-red-200',
-    ghost: 'border-transparent bg-transparent text-slate-800 hover:bg-blue-50 hover:text-blue-700 focus-visible:ring-blue-200',
+    ghost: 'border-transparent bg-transparent text-slate-800 hover:bg-rose-50 hover:text-rose-700 focus-visible:ring-rose-100',
   };
 
   return (

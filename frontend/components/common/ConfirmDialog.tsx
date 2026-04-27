@@ -36,7 +36,7 @@ export default function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
         aria-describedby="confirm-dialog-description"
-        className="w-full max-w-md rounded-[24px] border-2 border-slate-950 bg-white p-5 shadow-[10px_10px_0_rgba(17,24,39,0.25)]"
+        className="w-full max-w-md rounded-[24px] border border-slate-200 bg-white p-5 shadow-2xl shadow-slate-950/20"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex gap-3">
@@ -57,7 +57,7 @@ export default function ConfirmDialog({
             onClick={onCancel}
             disabled={isBusy}
             aria-label="Đóng hộp xác nhận"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
