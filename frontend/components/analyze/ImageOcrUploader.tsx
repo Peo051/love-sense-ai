@@ -1,7 +1,17 @@
 'use client';
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, FileImage, Loader2, ShieldCheck, Trash2, WandSparkles } from 'lucide-react';
+import {
+  AlertTriangle,
+  CheckCircle2,
+  FileImage,
+  Image as ImageIcon,
+  Loader2,
+  RefreshCcw,
+  ShieldCheck,
+  Trash2,
+  WandSparkles,
+} from 'lucide-react';
 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Button from '@/components/common/Button';
@@ -11,7 +21,8 @@ import { extractTextFromImage, validateImageFile, type OcrExtractionResult, type
 import { estimateOcrQuality } from '@/lib/ocrPostprocess';
 
 type ImageOcrUploaderProps = {
-  onTextExtracted: (text: string, result: OcrExtractionResult) => void;
+  hasChatText?: boolean;
+  onTextExtracted: (text: string, result: OcrExtractionResult, mode: 'replace' | 'append') => void;
 };
 
 function formatFileSize(bytes: number) {
@@ -32,13 +43,14 @@ function getProgressLabel(status: OcrProgress['status']) {
   return labels[status];
 }
 
-export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderProps) {
+export default function ImageOcrUploader({ hasChatText = false, onTextExtracted }: ImageOcrUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const activeOcrRunRef = useRef(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [progress, setProgress] = useState<OcrProgress>({ status: 'preprocessing', progress: 0 });
   const [ocrResult, setOcrResult] = useState<OcrExtractionResult | null>(null);
+  const [draftText, setDraftText] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [useVisionAi, setUseVisionAi] = useState(false);
   const [visionConsent, setVisionConsent] = useState(false);
@@ -59,6 +71,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setErrorMessage('');
     setSuccessMessage('');
     setOcrResult(null);
+    setDraftText('');
     setProgress({ status: 'preprocessing', progress: 0 });
 
     if (!file) {
@@ -83,6 +96,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setSelectedFile(null);
     setPreviewUrl(null);
     setOcrResult(null);
+    setDraftText('');
     setProgress({ status: 'preprocessing', progress: 0 });
     setIsExtracting(false);
     setVisionConsent(false);
@@ -111,7 +125,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
 
   const applyExtractionResult = (extraction: OcrExtractionResult, message: string) => {
     setOcrResult(extraction);
-    onTextExtracted(extraction.text, extraction);
+    setDraftText(extraction.text);
     setSuccessMessage(message);
   };
 
@@ -165,6 +179,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setErrorMessage('');
     setSuccessMessage('');
     setOcrResult(null);
+    setDraftText('');
     setProgress({ status: 'preprocessing', progress: 0 });
 
     try {
@@ -194,17 +209,29 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     }
   };
 
-  const handleUseExtractedText = () => {
+  const handleUseExtractedText = (mode: 'replace' | 'append' = 'replace') => {
     if (!ocrResult) {
       return;
     }
 
-    onTextExtracted(ocrResult.text, ocrResult);
-    setSuccessMessage('Đã đưa nội dung OCR vào ô đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.');
+    const normalizedDraft = draftText.trim();
+    if (!normalizedDraft) {
+      setErrorMessage('Bản nháp OCR đang trống. Hãy chạy OCR lại hoặc nhập thủ công.');
+      return;
+    }
+
+    onTextExtracted(normalizedDraft, { ...ocrResult, text: normalizedDraft }, mode);
+    setErrorMessage('');
+    setSuccessMessage(
+      mode === 'append'
+        ? 'Đã nối bản nháp OCR vào cuối đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.'
+        : 'Đã dùng bản nháp OCR cho ô đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.'
+    );
   };
 
   const currentPercent = progressPercent(progress.progress);
-  const hasQualityWarnings = Boolean(ocrResult?.quality.warnings.length);
+  const isLowConfidence = Boolean(ocrResult && (ocrResult.confidence < 65 || ocrResult.quality.score < 0.65));
+  const hasQualityWarnings = Boolean(ocrResult && (ocrResult.quality.warnings.length || isLowConfidence));
 
   return (
     <Card
@@ -238,22 +265,51 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
         {previewUrl && selectedFile && (
           <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-950">{selectedFile.name}</p>
-                <p className="mt-1 text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+              <div className="flex min-w-0 gap-3">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
+                  <ImageIcon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-950">{selectedFile.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                </div>
               </div>
               <Button type="button" variant="secondary" size="sm" onClick={clearImage} aria-label="Xóa ảnh đã chọn">
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Xóa ảnh
               </Button>
             </div>
-            <img
-              src={previewUrl}
-              alt="Ảnh chụp đoạn chat đã chọn"
-              className="mt-3 max-h-64 w-full rounded-xl border border-slate-100 object-contain"
-            />
+            <div className="mt-3 overflow-hidden rounded-2xl border border-slate-100 bg-slate-950/5 p-2">
+              <img
+                src={previewUrl}
+                alt="Ảnh chụp đoạn chat đã chọn"
+                className="max-h-80 w-full rounded-xl object-contain"
+              />
+            </div>
           </div>
         )}
+
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+          <p className="font-semibold text-slate-950">Mẹo để OCR chính xác hơn</p>
+          <ul className="mt-2 grid gap-1.5 text-xs leading-5 text-slate-600 sm:grid-cols-2">
+            <li className="flex gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              Cắt sát vùng hội thoại.
+            </li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              Tránh nền quá rối hoặc ảnh bị mờ.
+            </li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              Giữ chữ đủ lớn và rõ nét.
+            </li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              Che thông tin nhạy cảm nếu cần.
+            </li>
+          </ul>
+        </div>
 
         {isExtracting && (
           <div role="status" aria-live="polite" className="rounded-2xl border border-rose-100 bg-white p-4">
@@ -316,6 +372,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
               <div>
                 <p className="font-semibold">OCR có thể chưa chính xác.</p>
                 <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {isLowConfidence && <li>Độ tin cậy OCR thấp, hãy đọc lại từng dòng trước khi phân tích.</li>}
                   {ocrResult?.quality.warnings.map((warning) => <li key={warning}>{warning}</li>)}
                 </ul>
               </div>
@@ -324,23 +381,45 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
         )}
 
         {ocrResult && (
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-slate-950">Bản nháp nội dung trích xuất</h3>
               <p className="text-xs leading-5 text-slate-600">
                 Độ tin cậy OCR tham khảo: <span className="font-semibold text-slate-950">{ocrResult.confidence.toFixed(0)}%</span>.
-                Hãy rà lại dấu, emoji và thứ tự dòng.
+                Hãy rà lại dấu, emoji và thứ tự dòng trước khi dùng nội dung này.
               </p>
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" variant="secondary" size="sm" onClick={handleUseExtractedText}>
-                  Dùng nội dung này
-                </Button>
-                <Button type="button" variant="secondary" size="sm" onClick={handleExtractText} disabled={isExtracting}>
-                  Chạy OCR lại
-                </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={clearImage}>
-                  Xóa ảnh
-                </Button>
-              </div>
+            </div>
+            <label htmlFor="ocr_draft" className="sr-only">
+              Bản nháp nội dung trích xuất
+            </label>
+            <textarea
+              id="ocr_draft"
+              value={draftText}
+              onChange={(event) => setDraftText(event.target.value)}
+              className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+              placeholder="Nội dung OCR sẽ hiển thị tại đây để bạn kiểm tra trước khi phân tích."
+            />
+            <div className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs leading-5 text-teal-900">
+              Đã trích xuất nội dung từ ảnh. Vui lòng kiểm tra và chỉnh sửa trước khi phân tích.
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+              <Button type="button" size="sm" onClick={() => handleUseExtractedText('replace')}>
+                Dùng nội dung này
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace')}>
+                Thay thế đoạn chat hiện tại
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('append')} disabled={!hasChatText}>
+                Nối vào cuối đoạn chat hiện tại
+              </Button>
+              <Button type="button" variant="secondary" size="sm" onClick={handleExtractText} disabled={isExtracting}>
+                <RefreshCcw className="h-4 w-4" aria-hidden="true" />
+                Chạy OCR lại
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={clearImage}>
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                Xóa ảnh
+              </Button>
             </div>
           </div>
         )}

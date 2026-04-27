@@ -18,10 +18,10 @@ const mockAnalyzeResponse = {
   overall_emotion: 'mệt mỏi / né tránh nhẹ',
   confidence: 0.72,
   emotion_distribution: {
-    mệt_mỏi: 0.35,
-    né_tránh: 0.25,
+    'mệt_mỏi': 0.35,
+    'né_tránh': 0.25,
     buồn: 0.2,
-    trung_lập: 0.2,
+    'trung_lập': 0.2,
   },
   summary:
     'Đoạn chat có thể cho thấy người kia đang mệt hoặc chưa muốn trao đổi nhiều. Không đủ dữ liệu để kết luận chắc chắn cảm xúc thật sự.',
@@ -89,7 +89,7 @@ describe('AnalyzePage', () => {
     expect(screen.getByRole('button', { name: /phân tích/i })).toBeInTheDocument();
   });
 
-  it('fills chat text from OCR without auto submit and then submits the extracted text', async () => {
+  it('reviews OCR draft before filling chat text and then submits the extracted text', async () => {
     const user = userEvent.setup();
     const fetchMock = mockFetchOnce(mockAnalyzeResponse);
     const ocrText = 'A: Em sao vậy?\nB: Em mệt thôi.';
@@ -103,7 +103,11 @@ describe('AnalyzePage', () => {
     }));
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
-    expect(await screen.findByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/đã trích xuất nội dung/i)).length).toBeGreaterThanOrEqual(1);
+    expect(await screen.findByLabelText(/bản nháp nội dung trích xuất/i)).toHaveValue(ocrText);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /^dùng nội dung này$/i }));
     expect(chatInput).toHaveValue(ocrText);
     expect(fetchMock).not.toHaveBeenCalled();
 
@@ -121,9 +125,8 @@ describe('AnalyzePage', () => {
     expect(await screen.findByRole('heading', { name: mockAnalyzeResponse.overall_emotion })).toBeInTheDocument();
   });
 
-  it('asks before replacing existing chat text with OCR text', async () => {
+  it('lets the user append OCR text instead of replacing existing chat text', async () => {
     const user = userEvent.setup();
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
     const ocrText = 'A: anh iu ngủ ngon nhó\nB: yeuemm';
     vi.mocked(extractTextFromImage).mockResolvedValueOnce(createOcrResult(ocrText));
     render(<AnalyzePage />);
@@ -134,9 +137,11 @@ describe('AnalyzePage', () => {
     }));
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
-    expect(await screen.findByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
-    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('thay thế nội dung hiện tại'));
-    expect(chatInput).toHaveValue(ocrText);
+    expect((await screen.findAllByText(/đã trích xuất nội dung/i)).length).toBeGreaterThanOrEqual(1);
+    await user.click(screen.getByRole('button', { name: /nối vào cuối đoạn chat hiện tại/i }));
+
+    expect((chatInput as HTMLTextAreaElement).value).toContain('A: Em sao');
+    expect((chatInput as HTMLTextAreaElement).value).toContain(ocrText);
   });
 
   it('does not submit and shows validation when chat text is empty', async () => {
