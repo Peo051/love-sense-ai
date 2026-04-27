@@ -247,12 +247,12 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
       description="Tải ảnh do bạn tự chọn lên, trích xuất chữ trên trình duyệt rồi kiểm tra lại trước khi phân tích."
     >
       <div className="space-y-4">
-        <div className="rounded-2xl border border-dashed border-rose-200 bg-rose-50/45 p-4">
+        <div className="rounded-2xl border-2 border-dashed border-slate-950 bg-blue-50/55 p-4">
           <label
             htmlFor="chat_image"
-            className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl bg-white/75 px-4 py-6 text-center text-sm text-slate-600 transition hover:bg-white focus-within:ring-4 focus-within:ring-rose-100"
+            className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-transparent bg-white/85 px-4 py-6 text-center text-sm text-slate-600 transition hover:-translate-y-0.5 hover:bg-white focus-within:border-slate-950 focus-within:ring-4 focus-within:ring-blue-100"
           >
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-rose-700">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border-2 border-slate-950 bg-blue-100 text-blue-700 shadow-[4px_4px_0_rgba(17,24,39,0.14)]">
               <FileImage className="h-5 w-5" aria-hidden="true" />
             </span>
             <span>
@@ -271,10 +271,10 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
         </div>
 
         {previewUrl && selectedFile && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="rounded-2xl border-2 border-slate-950 bg-white p-3 shadow-[5px_5px_0_rgba(17,24,39,0.12)]">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-700">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-blue-100 text-blue-700">
                   <ImageIcon className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
@@ -287,7 +287,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
                 Xóa ảnh
               </Button>
             </div>
-            <div className="mt-3 overflow-hidden rounded-2xl border border-slate-100 bg-slate-950/5 p-2">
+            <div className="mt-3 overflow-hidden rounded-2xl border-2 border-slate-950 bg-slate-950/5 p-2">
               <img
                 src={previewUrl}
                 alt="Ảnh chụp đoạn chat đã chọn"
@@ -297,37 +297,37 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+        <div className="rounded-2xl border-2 border-slate-950 bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
           <p className="font-semibold text-slate-950">Mẹo để OCR chính xác hơn</p>
           <ul className="mt-2 grid gap-1.5 text-xs leading-5 text-slate-600 sm:grid-cols-2">
             <li className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
               Cắt sát vùng hội thoại.
             </li>
             <li className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
               Tránh nền quá rối hoặc ảnh bị mờ.
             </li>
             <li className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
               Giữ chữ đủ lớn và rõ nét.
             </li>
             <li className="flex gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
               Che thông tin nhạy cảm nếu cần.
             </li>
           </ul>
         </div>
 
         {isExtracting && (
-          <div role="status" aria-live="polite" className="rounded-2xl border border-rose-100 bg-white p-4">
+          <div role="status" aria-live="polite" className="rounded-2xl border-2 border-slate-950 bg-white p-4 shadow-[4px_4px_0_rgba(17,24,39,0.12)]">
             <div className="flex items-center gap-3 text-sm font-semibold text-slate-950">
-              <Loader2 className="h-4 w-4 animate-spin text-rose-600" aria-hidden="true" />
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600" aria-hidden="true" />
               {getProgressLabel(progress.status)}
             </div>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-rose-100">
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-blue-100">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-rose-500 to-teal-500 transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-blue-600 to-violet-500 transition-all duration-300"
                 style={{ width: `${currentPercent}%` }}
               />
             </div>
@@ -338,7 +338,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
         {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
         {successMessage && <SuccessAlert>{successMessage}</SuccessAlert>}
 
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+        <div className="space-y-3 rounded-2xl border-2 border-slate-950 bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
           <label className="flex items-start gap-3">
             <input
               type="checkbox"
@@ -350,7 +350,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
                   setVisionConsent(false);
                 }
               }}
-              className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+              className="mt-1 h-4 w-4 rounded border-slate-900 text-blue-600 focus:ring-blue-500"
             />
             <span>
               <span className="block font-semibold text-slate-950">Dùng AI Vision để trích xuất chính xác hơn</span>
@@ -361,12 +361,12 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
           </label>
 
           {useVisionAi && (
-            <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-amber-950">
+            <label className="flex items-start gap-3 rounded-xl border-2 border-amber-900 bg-amber-50/80 px-3 py-2 text-amber-950">
               <input
                 type="checkbox"
                 checked={visionConsent}
                 onChange={(event) => setVisionConsent(event.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
+                className="mt-1 h-4 w-4 rounded border-amber-900 text-blue-600 focus:ring-blue-500"
               />
               <span>Tôi đồng ý gửi ảnh này đến AI provider để trích xuất nội dung.</span>
             </label>
@@ -374,7 +374,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
         </div>
 
         {hasQualityWarnings && (
-          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm leading-6 text-amber-950">
+          <div role="alert" className="rounded-2xl border-2 border-amber-900 bg-amber-50/85 px-4 py-3 text-sm leading-6 text-amber-950 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
             <div className="flex gap-2">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
               <div>
@@ -389,7 +389,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
         )}
 
         {ocrResult && (
-          <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+          <div className="space-y-3 rounded-2xl border-2 border-slate-950 bg-slate-50/80 p-4 shadow-[5px_5px_0_rgba(17,24,39,0.12)]">
             <div className="space-y-1">
               <h3 className="text-sm font-semibold text-slate-950">Bản nháp nội dung trích xuất</h3>
               <p className="text-xs leading-5 text-slate-600">
@@ -404,10 +404,10 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
               id="ocr_draft"
               value={draftText}
               onChange={(event) => setDraftText(event.target.value)}
-              className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-slate-900 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-rose-300 focus:ring-4 focus:ring-rose-100"
+              className="min-h-36 w-full rounded-xl border-2 border-slate-950 bg-white px-3 py-2 text-sm leading-6 text-slate-950 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
               placeholder="Nội dung OCR sẽ hiển thị tại đây để bạn kiểm tra trước khi phân tích."
             />
-            <div className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs leading-5 text-teal-900">
+            <div className="rounded-xl border-2 border-emerald-900 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-950">
               Đã trích xuất nội dung từ ảnh. Vui lòng kiểm tra và chỉnh sửa trước khi phân tích.
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
@@ -435,9 +435,9 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
           <div
             role="status"
-            className="flex gap-3 rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 text-sm leading-6 text-teal-900"
+            className="flex gap-3 rounded-2xl border-2 border-slate-950 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-950 shadow-[4px_4px_0_rgba(17,24,39,0.1)]"
           >
-            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-teal-700" aria-hidden="true" />
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
             <span>Ảnh chỉ được xử lý trên trình duyệt trong phiên hiện tại và không được lưu mặc định.</span>
           </div>
           <Button
@@ -454,7 +454,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
           </Button>
         </div>
 
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-950">
+        <div className="rounded-2xl border-2 border-amber-900 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-950 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
           <div className="flex gap-2">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
             <p>

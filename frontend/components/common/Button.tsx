@@ -23,20 +23,20 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseStyles =
-    'inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 active:translate-y-0';
+    'inline-flex items-center justify-center gap-2 rounded-xl border-2 font-semibold transition duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2 active:translate-y-0 disabled:shadow-none';
   const sizeStyles: Record<ButtonSize, string> = {
-    sm: 'min-h-9 px-3 py-2 text-xs',
+    sm: 'min-h-11 px-3 py-2 text-xs',
     md: 'min-h-11 px-5 py-2.5 text-sm',
     lg: 'min-h-12 px-6 py-3 text-base',
   };
   const variantStyles: Record<ButtonVariant, string> = {
     primary:
-      'bg-gradient-to-b from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200/80 hover:-translate-y-px hover:from-rose-600 hover:to-rose-700 focus:ring-rose-500',
+      'border-slate-950 bg-blue-600 text-white shadow-[5px_5px_0_#111827] hover:-translate-y-0.5 hover:bg-violet-600 focus-visible:ring-blue-200',
     secondary:
-      'border border-rose-100 bg-white/95 text-slate-800 shadow-sm shadow-rose-100/60 hover:-translate-y-px hover:border-rose-200 hover:bg-rose-50 focus:ring-rose-300',
+      'border-slate-950 bg-white text-slate-950 shadow-[4px_4px_0_rgba(17,24,39,0.18)] hover:-translate-y-0.5 hover:bg-blue-50 focus-visible:ring-blue-200',
     danger:
-      'border border-red-200 bg-red-50 text-red-800 shadow-sm hover:-translate-y-px hover:bg-red-100 focus:ring-red-300',
-    ghost: 'bg-transparent text-slate-700 hover:bg-rose-50 hover:text-rose-700 focus:ring-rose-300',
+      'border-red-950 bg-red-600 text-white shadow-[4px_4px_0_rgba(127,29,29,0.38)] hover:-translate-y-0.5 hover:bg-red-700 focus-visible:ring-red-200',
+    ghost: 'border-transparent bg-transparent text-slate-800 hover:bg-blue-50 hover:text-blue-700 focus-visible:ring-blue-200',
   };
 
   return (

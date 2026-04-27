@@ -56,14 +56,14 @@ export default function AuthPage() {
   return (
     <PageShell size="normal" className="pb-12">
       <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-        <section className="overflow-hidden rounded-[2rem] border border-rose-100 bg-white shadow-sm shadow-rose-100/70">
-          <div className="bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.18),transparent_26rem),linear-gradient(135deg,#fff7f7,#ffffff)] p-6 sm:p-8">
-            <Badge tone="rose">
+        <section className="overflow-hidden rounded-[2rem] border-2 border-slate-950 bg-white shadow-[8px_8px_0_rgba(17,24,39,0.16)]">
+          <div className="bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.2),transparent_26rem),linear-gradient(135deg,#eff6ff,#ffffff,#ede9fe)] p-6 sm:p-8">
+            <Badge tone="teal">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
               Dữ liệu theo từng tài khoản
             </Badge>
             <div className="mt-6 space-y-3">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+              <h1 className="font-display text-4xl font-normal leading-tight text-slate-950 sm:text-5xl">
                 Đăng nhập để quản lý dữ liệu của riêng bạn
               </h1>
               <p className="text-sm leading-6 text-slate-600">
@@ -75,8 +75,8 @@ export default function AuthPage() {
 
           <div className="grid gap-3 p-6 sm:p-8">
             {privacyNotes.map((item) => (
-              <div key={item} className="flex items-center gap-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm text-slate-700">
-                <KeyRound className="h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
+              <div key={item} className="flex items-center gap-3 rounded-2xl border-2 border-slate-950 bg-blue-50 px-4 py-3 text-sm font-medium text-slate-700">
+                <KeyRound className="h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
                 {item}
               </div>
             ))}
@@ -91,7 +91,7 @@ export default function AuthPage() {
               : 'Tạo tài khoản mới, sau đó hệ thống sẽ đăng nhập tự động.'
           }
         >
-          <div className="mb-5 grid grid-cols-2 rounded-2xl border border-rose-100 bg-rose-50/50 p-1">
+          <div className="mb-5 grid grid-cols-2 rounded-2xl border-2 border-slate-950 bg-blue-50/60 p-1">
             {[
               { value: true, label: 'Đăng nhập' },
               { value: false, label: 'Đăng ký' },
@@ -105,8 +105,8 @@ export default function AuthPage() {
                   setErrorMessage('');
                 }}
                 className={cn(
-                  'rounded-xl px-3 py-2 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
-                  isLoginMode === item.value ? 'bg-white text-rose-700 shadow-sm' : 'text-slate-600 hover:text-rose-700'
+                  'rounded-xl px-3 py-2 text-sm font-black transition focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2',
+                  isLoginMode === item.value ? 'bg-white text-blue-700 shadow-[3px_3px_0_rgba(17,24,39,0.14)]' : 'text-slate-600 hover:text-blue-700'
                 )}
               >
                 {item.label}
@@ -156,17 +156,17 @@ export default function AuthPage() {
               {isSubmitting ? 'Đang xử lý' : isLoginMode ? 'Đăng nhập' : 'Đăng ký và đăng nhập'}
             </Button>
 
-            <div className="flex flex-col gap-3 border-t border-rose-100 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t-2 border-slate-950 pt-4 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
                 onClick={handleLogout}
-                className="rounded-md text-left font-medium text-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 hover:text-rose-800"
+                className="rounded-md text-left font-bold text-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2 hover:text-violet-700"
               >
                 Đăng xuất khỏi trình duyệt này
               </button>
               <Link
                 href="/analyze"
-                className="rounded-md font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 hover:text-rose-700"
+                className="rounded-md font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2 hover:text-blue-700"
               >
                 Quay lại phân tích
               </Link>

@@ -140,7 +140,7 @@ export default function HistoryPage() {
           action={
             <Link
               href="/analyze"
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200/80 transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl border-2 border-slate-950 bg-blue-600 px-5 py-2.5 text-sm font-black text-white shadow-[5px_5px_0_#111827] transition hover:-translate-y-0.5 hover:bg-violet-600 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2"
             >
               Phân tích đoạn chat mới
             </Link>
@@ -168,10 +168,10 @@ export default function HistoryPage() {
                   onClick={() => setSelectedId(item.id)}
                   aria-pressed={selectedItem?.id === item.id}
                   className={cn(
-                    'w-full rounded-2xl border px-3 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 min-[390px]:px-4',
+                    'w-full rounded-2xl border-2 px-3 py-3 text-left transition focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2 min-[390px]:px-4',
                     selectedItem?.id === item.id
-                      ? 'border-rose-300 bg-rose-50 shadow-sm shadow-rose-100'
-                      : 'border-slate-100 bg-white hover:-translate-y-px hover:border-rose-200 hover:shadow-sm'
+                      ? 'border-slate-950 bg-blue-50 shadow-[4px_4px_0_rgba(17,24,39,0.16)]'
+                      : 'border-slate-950 bg-white hover:-translate-y-0.5 hover:bg-blue-50/60 hover:shadow-[4px_4px_0_rgba(17,24,39,0.12)]'
                   )}
                 >
                   <div className="flex flex-col gap-2 min-[430px]:flex-row min-[430px]:items-start min-[430px]:justify-between">
@@ -184,7 +184,7 @@ export default function HistoryPage() {
                     </Badge>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">{summarize(item.summary)}</p>
-                  <p className="mt-2 text-sm font-medium text-rose-700">{Math.round(item.confidence * 100)}% tin cậy</p>
+                  <p className="mt-2 font-mono text-sm font-bold text-blue-700">{Math.round(item.confidence * 100)}% tin cậy</p>
                 </button>
               ))}
             </div>
@@ -199,9 +199,28 @@ export default function HistoryPage() {
                 <DetailRow label="Tóm tắt" value={selectedItem.summary} />
                 <DetailRow label="Gợi ý phản hồi" value={selectedItem.suggested_reply} />
                 <DetailRow label="Cảnh báo an toàn" value={selectedItem.warning} />
+                {selectedItem.evidence && selectedItem.evidence.length > 0 ? (
+                  <div>
+                    <p className="font-semibold text-slate-950">Câu làm căn cứ</p>
+                    <div className="mt-2 grid gap-2">
+                      {selectedItem.evidence.map((item, index) => (
+                        <div
+                          key={`${item.quote}-${index}`}
+                          className="rounded-2xl border-2 border-slate-950 bg-blue-50/70 px-4 py-3 shadow-[3px_3px_0_rgba(17,24,39,0.1)]"
+                        >
+                          <p className="font-mono text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+                            {item.label}
+                          </p>
+                          <p className="mt-1 whitespace-pre-line text-slate-900">{item.quote}</p>
+                          <p className="mt-1 text-slate-600">{item.reason}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 <div>
                   <p className="font-semibold text-slate-950">Nội dung chat gốc</p>
-                  <p className="mt-2 rounded-2xl bg-slate-50 px-4 py-3">
+                  <p className="mt-2 rounded-2xl border-2 border-slate-950 bg-slate-50 px-4 py-3">
                     {selectedItem.chat_text ?? 'Không lưu vì bạn chưa đồng ý lưu nội dung chat.'}
                   </p>
                 </div>

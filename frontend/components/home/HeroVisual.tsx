@@ -12,17 +12,17 @@ export default function HeroVisual() {
   return (
     <div className="landing-fade-up landing-fade-delay-1 w-full min-w-0">
       <div className="landing-preview-float relative mx-auto max-w-xl">
-        <div className="pointer-events-none absolute -left-8 top-8 h-28 w-28 rounded-full bg-rose-300/30 blur-3xl" />
-        <div className="pointer-events-none absolute -right-6 bottom-16 h-32 w-32 rounded-full bg-teal-300/25 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-200/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-8 top-8 h-28 w-28 rounded-full bg-blue-400/35 blur-3xl" />
+        <div className="pointer-events-none absolute -right-6 bottom-16 h-32 w-32 rounded-full bg-violet-400/30 blur-3xl" />
+        <div className="pointer-events-none absolute left-1/2 top-1/2 h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rose-200/35 blur-3xl" />
 
-        <div className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-rose-200/70 ring-1 ring-white/80 backdrop-blur">
-          <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-rose-300/70 to-transparent" />
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/70 to-transparent" />
+        <div className="relative overflow-hidden rounded-[2rem] border-2 border-slate-950 bg-white p-4 shadow-[12px_12px_0_rgba(17,24,39,0.18)] ring-1 ring-white/80 backdrop-blur">
+          <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/70 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-blue-50/80 to-transparent" />
 
           <div className="relative mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-950">Bản xem trước phân tích</p>
+              <p className="text-sm font-black text-slate-950">Bản xem trước phân tích</p>
               <p className="text-xs text-slate-500">Nhập thủ công, không lưu mặc định</p>
             </div>
             <Badge tone="teal" className="max-w-full shrink-0 whitespace-normal text-left">
@@ -32,10 +32,10 @@ export default function HeroVisual() {
           </div>
 
           <div className="relative grid gap-4">
-            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+            <div className="rounded-2xl border-2 border-slate-950 bg-slate-50/80 p-4 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Mock chat</p>
-                <span className="hidden rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 shadow-sm min-[390px]:inline-flex">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Mock chat</p>
+                <span className="hidden rounded-full border-2 border-slate-950 bg-white px-2.5 py-1 font-mono text-xs font-bold uppercase text-slate-600 min-[390px]:inline-flex">
                   Manual input
                 </span>
               </div>
@@ -47,13 +47,13 @@ export default function HeroVisual() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border-2 border-slate-950 bg-white p-4 shadow-[5px_5px_0_rgba(17,24,39,0.14)]">
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-600">AI result</p>
+                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-blue-600">AI result</p>
                   <p className="mt-1 break-words text-lg font-bold text-slate-950">mệt mỏi / né tránh nhẹ</p>
                 </div>
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-blue-100 text-blue-600">
                   <Sparkles className="h-5 w-5 animate-pulse" aria-hidden="true" />
                 </span>
               </div>
@@ -65,21 +65,21 @@ export default function HeroVisual() {
                       <span>{bar.label}</span>
                       <span>{bar.value}</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-rose-50">
-                      <div className={`h-full rounded-full bg-gradient-to-r from-rose-500 to-pink-400 ${bar.width}`} />
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className={`h-full rounded-full bg-gradient-to-r from-blue-600 to-violet-500 ${bar.width}`} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="hidden rounded-2xl border border-teal-100 bg-teal-50/80 p-4 sm:block">
+            <div className="hidden rounded-2xl border-2 border-slate-950 bg-emerald-50/90 p-4 shadow-[4px_4px_0_rgba(17,24,39,0.12)] sm:block">
               <div className="flex gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-teal-700 shadow-sm">
+                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-white text-emerald-700">
                   <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-700">Gợi ý phản hồi</p>
+                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Gợi ý phản hồi</p>
                   <p className="mt-2 text-sm leading-6 text-slate-700">
                     “Em nghỉ một chút nha, khi nào muốn nói anh vẫn ở đây nghe em.”
                   </p>
@@ -87,8 +87,8 @@ export default function HeroVisual() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-2xl border border-white bg-white/70 px-4 py-3 text-xs font-semibold text-slate-600 shadow-sm">
-              <ShieldCheck className="h-4 w-4 text-teal-600" aria-hidden="true" />
+            <div className="flex items-center gap-2 rounded-2xl border-2 border-slate-950 bg-white/80 px-4 py-3 text-xs font-bold text-slate-700">
+              <ShieldCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
               Kết quả chỉ mang tính tham khảo và ưu tiên quyền riêng tư.
             </div>
           </div>
@@ -101,7 +101,7 @@ export default function HeroVisual() {
 function ChatLine({ speaker, text, muted = false }: { speaker: string; text: string; muted?: boolean }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white text-xs font-bold text-rose-600 shadow-sm">
+      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 border-slate-950 bg-white font-mono text-xs font-bold text-blue-600">
         {speaker}
       </span>
       <span className={muted ? 'text-slate-500' : 'text-slate-800'}>{text}</span>
