@@ -15,4 +15,12 @@ describe('ocrPostprocess', () => {
     expect(quality.score).toBeLessThan(0.6);
     expect(quality.warnings.join(' ')).toMatch(/quá ít nội dung/i);
   });
+
+  it('preserves affectionate slang words from chat screenshots', () => {
+    const normalized = normalizeOcrText('anh iu ngủ ngon nhó\nNgủ bị mộng du qua ôm bé được hong\nyeuemm 🥺');
+
+    expect(normalized).toContain('anh iu ngủ ngon nhó');
+    expect(normalized).toContain('ôm bé');
+    expect(normalized).toContain('yeuemm');
+  });
 });

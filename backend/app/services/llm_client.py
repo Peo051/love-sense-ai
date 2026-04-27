@@ -164,7 +164,13 @@ class OpenAICompatibleLLMClient:
 
     def _build_user_prompt(self, chat_text: str, profile_context: str) -> str:
         return (
-            "Hãy phân tích đoạn chat sau và trả về JSON đúng schema.\n\n"
+            "Hãy phân tích đoạn chat sau và trả về JSON đúng schema.\n"
+            "Yêu cầu quan trọng:\n"
+            "- Dựa trên câu chữ trong đoạn chat, không suy đoán quá mức.\n"
+            "- Trích tối đa 4 câu làm bằng chứng trong field evidence.\n"
+            "- Nếu đoạn chat đến từ OCR hoặc có thể sai nhận diện, thêm uncertainty_reasons và giảm confidence phù hợp.\n"
+            "- Nếu có dấu hiệu thân mật/trêu đùa/quan tâm rõ ràng, hãy phản ánh sắc thái đó thay vì trả trung lập thuần.\n"
+            "- Không kết luận chắc chắn cảm xúc hoặc ý định của người khác.\n\n"
             f"Đoạn chat:\n{chat_text}\n\n"
             f"Bối cảnh cá nhân hóa:\n{profile_context or 'Không có bối cảnh bổ sung.'}"
         )
@@ -230,6 +236,14 @@ class OpenAICompatibleLLMClient:
             emotion: min(1.0, max(0.0, float(score)))
             for emotion, score in result.emotion_distribution.items()
         }
+        evidence = self._normalize_string_list(result.evidence, limit=4)
+        uncertainty_reasons = self._normalize_string_list(result.uncertainty_reasons, limit=4)
+        input_quality = result.input_quality.strip().lower() if result.input_quality else "medium"
+        if input_quality not in {"good", "medium", "low"}:
+            input_quality = "medium"
+
+        if confidence < 0.45 and not uncertainty_reasons:
+            uncertainty_reasons = ["Đoạn chat còn ít dữ liệu nên cần đọc kết quả ở mức tham khảo."]
 
         # Backend là lớp bảo vệ cuối cùng cho thông điệp an toàn, kể cả khi LLM trả thiếu hoặc sửa cảnh báo.
         warning = result.warning if "tham khảo" in result.warning.lower() else WARNING_MESSAGE
@@ -242,4 +256,20 @@ class OpenAICompatibleLLMClient:
             context_note=result.context_note,
             suggested_reply=result.suggested_reply,
             warning=warning,
+            tone=result.tone,
+            evidence=evidence,
+            uncertainty_reasons=uncertainty_reasons,
+            input_quality=input_quality,
+            reply_style=result.reply_style,
         )
+
+    def _normalize_string_list(self, values: list[str], *, limit: int) -> list[str]:
+        cleaned_values: list[str] = []
+        for value in values:
+            if not isinstance(value, str):
+                continue
+            cleaned = value.strip()
+            if cleaned:
+                cleaned_values.append(cleaned)
+
+        return cleaned_values[:limit]

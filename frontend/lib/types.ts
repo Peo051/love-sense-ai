@@ -13,6 +13,11 @@ export interface AnalyzeResponse {
   context_note: string;
   suggested_reply: string;
   warning: string;
+  tone?: string | null;
+  evidence?: string[];
+  uncertainty_reasons?: string[];
+  input_quality?: 'good' | 'medium' | 'low' | string;
+  reply_style?: string | null;
 }
 
 export interface VisionOcrResponse {
