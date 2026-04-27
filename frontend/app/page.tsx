@@ -59,7 +59,7 @@ export default function HomePage() {
           <LockKeyhole className="mb-4 h-6 w-6 text-teal-600" aria-hidden="true" />
           <h2 className="font-semibold text-slate-950">Không lưu mặc định</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            MVP chỉ gửi dữ liệu đến backend local để trả kết quả mock, chưa có database lịch sử.
+            Chỉ lưu kết quả khi bạn bật lưu lịch sử, và chỉ lưu nội dung chat khi bạn đồng ý rõ ràng.
           </p>
         </div>
         <div className="rounded-lg border border-rose-100 bg-white p-5">

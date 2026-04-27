@@ -1,3 +1,4 @@
+import asyncio
 import json
 from typing import Any
 
@@ -12,9 +13,16 @@ from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 class LLMClientError(Exception):
     """Raised when the configured LLM provider cannot return a valid analysis."""
 
+    def __init__(self, message: str, *, retryable: bool = False):
+        super().__init__(message)
+        self.retryable = retryable
+
 
 class OpenAICompatibleLLMClient:
     """Client tối giản cho các provider tương thích OpenAI Chat Completions như 9router."""
+
+    def __init__(self, transport: httpx.AsyncBaseTransport | None = None):
+        self._transport = transport
 
     async def analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
         self._validate_settings()
@@ -32,8 +40,30 @@ class OpenAICompatibleLLMClient:
             "max_tokens": 900,
         }
 
+        response_body = await self._post_with_retries(payload)
+        return self._parse_response(response_body)
+
+    async def _post_with_retries(self, payload: dict[str, Any]) -> dict[str, Any]:
+        max_retries = max(0, settings.llm_max_retries)
+        total_attempts = max_retries + 1
+
+        for attempt_index in range(total_attempts):
+            try:
+                return await self._post_once(payload)
+            except LLMClientError as exc:
+                is_last_attempt = attempt_index >= total_attempts - 1
+                if is_last_attempt or not exc.retryable:
+                    raise
+
+                delay_seconds = max(0.0, settings.llm_retry_base_delay_seconds) * (2**attempt_index)
+                if delay_seconds > 0:
+                    await asyncio.sleep(delay_seconds)
+
+        raise LLMClientError("Không thể kết nối LLM provider.", retryable=True)
+
+    async def _post_once(self, payload: dict[str, Any]) -> dict[str, Any]:
         try:
-            async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
+            async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds, transport=self._transport) as client:
                 response = await client.post(
                     f"{settings.llm_base_url.rstrip('/')}/chat/completions",
                     headers={
@@ -45,16 +75,19 @@ class OpenAICompatibleLLMClient:
                 response.raise_for_status()
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
-            raise LLMClientError(f"LLM provider trả lỗi HTTP {status_code}.") from exc
-        except httpx.HTTPError as exc:
-            raise LLMClientError("Không thể kết nối LLM provider.") from exc
+            raise LLMClientError(
+                f"LLM provider trả lỗi HTTP {status_code}.",
+                retryable=self._is_retryable_status_code(status_code),
+            ) from exc
+        except httpx.TimeoutException as exc:
+            raise LLMClientError("LLM provider phản hồi quá thời gian chờ.", retryable=True) from exc
+        except httpx.TransportError as exc:
+            raise LLMClientError("Không thể kết nối LLM provider.", retryable=True) from exc
 
         try:
-            response_body = response.json()
+            return response.json()
         except ValueError as exc:
             raise LLMClientError("LLM provider không trả HTTP JSON hợp lệ.") from exc
-
-        return self._parse_response(response_body)
 
     def _validate_settings(self) -> None:
         missing_fields = [
@@ -68,6 +101,9 @@ class OpenAICompatibleLLMClient:
         ]
         if missing_fields:
             raise LLMClientError(f"Thiếu cấu hình LLM: {', '.join(missing_fields)}.")
+
+    def _is_retryable_status_code(self, status_code: int) -> bool:
+        return status_code in {408, 429} or 500 <= status_code <= 599
 
     def _build_user_prompt(self, chat_text: str, profile_context: str) -> str:
         return (

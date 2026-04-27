@@ -18,16 +18,7 @@ export default function AnalyzePage() {
     setErrorMessage(null);
 
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Analyze] submit payload', payload);
-      }
-
       const analysis = await analyzeEmotion(payload);
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Analyze] api result', analysis);
-      }
-
       setResult(analysis);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Không thể phân tích đoạn chat lúc này.');

@@ -44,7 +44,7 @@ Nếu chưa có PostgreSQL/Supabase ở máy dev, giữ mặc định `DATABASE_
 ```text
 LLM_PROVIDER=9router
 LLM_BASE_URL=http://localhost:20128/v1
-LLM_API_KEY=your_9router_api_key_here
+LLM_API_KEY=
 LLM_MODEL=api_models_all
 LLM_MOCK_MODE=false
 ```

@@ -70,12 +70,26 @@ Mặc định backend dùng mock để test ổn định. Để gọi 9router ho
 ```text
 LLM_PROVIDER=9router
 LLM_BASE_URL=http://localhost:20128/v1
-LLM_API_KEY=your_9router_api_key_here
+LLM_API_KEY=
 LLM_MODEL=api_models_all
 LLM_MOCK_MODE=false
+LLM_TIMEOUT_SECONDS=30
+LLM_MAX_RETRIES=2
+LLM_RETRY_BASE_DELAY_SECONDS=0.25
+ANALYZE_RATE_LIMIT_REQUESTS=20
+ANALYZE_RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
-Không commit `.env` hoặc API key thật. Nếu provider lỗi hoặc thiếu cấu hình, `/api/analyze` trả `502` thay vì âm thầm fallback sang mock.
+Không commit `.env` hoặc API key thật. Khi mock mode tắt, backend gọi provider với timeout, retry có kiểm soát cho lỗi tạm thời, rồi fallback mock response an toàn nếu provider vẫn lỗi. Lỗi cấu hình LLM không được log kèm API key.
+
+## Rate Limit
+
+`POST /api/analyze` có in-memory rate limit cho MVP:
+
+- Scope theo `user_id` nếu request có Bearer token hợp lệ.
+- Nếu chưa đăng nhập hoặc token không hợp lệ, scope theo IP client.
+- Mặc định: `ANALYZE_RATE_LIMIT_REQUESTS=20` trong `ANALYZE_RATE_LIMIT_WINDOW_SECONDS=60`.
+- Vượt giới hạn trả `429` và header `Retry-After`.
 
 ## Auth Và Phân Quyền Dữ Liệu
 

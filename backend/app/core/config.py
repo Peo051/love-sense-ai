@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     llm_model: str = "api_models_all"
     llm_mock_mode: bool = True
     llm_timeout_seconds: float = 30.0
+    llm_max_retries: int = 2
+    llm_retry_base_delay_seconds: float = 0.25
+
+    analyze_rate_limit_requests: int = 20
+    analyze_rate_limit_window_seconds: int = 60
 
     secret_key: str = "dev-only-change-me"
     algorithm: str = "HS256"
