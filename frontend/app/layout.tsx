@@ -30,6 +30,15 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'Love Sense AI - Phân tích sắc thái hội thoại',
   description: 'Ứng dụng hỗ trợ phân tích sắc thái hội thoại và gợi ý phản hồi nhẹ nhàng, ưu tiên quyền riêng tư.',
+  icons: {
+    icon: [
+      { url: '/logo.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: '/apple-icon.png',
+  },
 };
 
 export default function RootLayout({
