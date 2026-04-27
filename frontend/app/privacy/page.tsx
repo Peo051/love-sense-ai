@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { Database, FileX2, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react';
@@ -176,7 +176,7 @@ export default function PrivacyPage() {
           </Card>
 
           <Card title="AI Vision consent" description="Ảnh chụp đoạn chat chỉ được gửi đến provider khi bạn bật tùy chọn AI Vision và tick consent riêng trong trang phân tích.">
-            <div className="rounded-2xl border-2 border-slate-950 bg-violet-50 px-4 py-3 text-sm leading-6 text-slate-700 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
+            <div className="rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
               Backend không lưu ảnh, không log ảnh/base64 và frontend vẫn yêu cầu bạn review nội dung OCR trước khi phân tích.
             </div>
           </Card>
@@ -235,13 +235,13 @@ interface PrivacyToggleProps {
 
 function PrivacyToggle({ label, description, checked, disabled = false, onChange }: PrivacyToggleProps) {
   return (
-    <label className="flex items-start gap-3 rounded-2xl border-2 border-slate-950 bg-white px-4 py-3 shadow-[4px_4px_0_rgba(17,24,39,0.1)] transition hover:-translate-y-0.5 hover:bg-blue-50/60">
+    <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-50/60">
       <input
         type="checkbox"
         checked={checked}
         disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 h-4 w-4 rounded border-slate-900 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-1 h-4 w-4 rounded border-slate-900 text-rose-600 focus:ring-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
       />
       <span>
         <span className="block text-sm font-semibold text-slate-950">{label}</span>
@@ -254,7 +254,7 @@ function PrivacyToggle({ label, description, checked, disabled = false, onChange
 function PrivacyInfo({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="flex gap-3 rounded-2xl bg-slate-50 px-4 py-3">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" aria-hidden="true" />
       <p className="leading-6">{text}</p>
     </div>
   );

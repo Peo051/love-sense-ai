@@ -13,7 +13,7 @@ function AlertShell({
   role: 'alert' | 'status';
 }) {
   return (
-    <div role={role} className={cn('flex gap-3 rounded-2xl border-2 px-4 py-3 text-sm leading-6 shadow-[4px_4px_0_rgba(17,24,39,0.1)]', className)}>
+    <div role={role} className={cn('flex gap-3 rounded-2xl border px-4 py-3 text-sm leading-6 shadow-sm', className)}>
       {children}
     </div>
   );
@@ -39,7 +39,7 @@ export function SuccessAlert({ children, className = '' }: { children: ReactNode
 
 export function InfoAlert({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <AlertShell role="status" className={cn('border-blue-900 bg-blue-50 text-slate-950', className)}>
+    <AlertShell role="status" className={cn('border-rose-200 bg-rose-50 text-rose-900', className)}>
       <Info className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
       <div>{children}</div>
     </AlertShell>

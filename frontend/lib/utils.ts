@@ -10,7 +10,7 @@ export function getEmotionColor(emotion: string): string {
   const colors: Record<string, string> = {
     'Hạnh phúc': 'text-yellow-600',
     'Yêu thương': 'text-pink-600',
-    'Quan tâm': 'text-blue-600',
+    'Quan tâm': 'text-teal-700',
     Buồn: 'text-gray-600',
     'Giận dữ': 'text-red-600',
   };

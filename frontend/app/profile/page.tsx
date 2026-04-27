@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
 import { Info, Save, Trash2, UserRound, UsersRound } from 'lucide-react';
@@ -129,7 +129,7 @@ export default function ProfilePage() {
           title="Hồ sơ của bạn"
           description="Thông tin này giúp hệ thống điều chỉnh cách diễn đạt gợi ý cho phù hợp với bạn."
         >
-          <div className="mb-5 flex items-center gap-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+          <div className="mb-5 flex items-center gap-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-rose-700">
             <UserRound className="h-4 w-4" aria-hidden="true" />
             Người dùng hiện tại
           </div>
@@ -159,7 +159,7 @@ export default function ProfilePage() {
           title="Hồ sơ người ấy"
           description="Chỉ nhập những gì bạn thấy cần thiết để cá nhân hóa gợi ý phản hồi. Không cần nhập dữ liệu nhạy cảm."
         >
-          <div className="mb-5 flex items-center gap-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-blue-700">
+          <div className="mb-5 flex items-center gap-3 font-mono text-xs font-bold uppercase tracking-[0.12em] text-rose-700">
             <UsersRound className="h-4 w-4" aria-hidden="true" />
             Bối cảnh giao tiếp
           </div>
@@ -248,7 +248,7 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-slate-950 bg-white/90 p-4 shadow-[5px_5px_0_rgba(17,24,39,0.12)] sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white/90 p-4 shadow-sm sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="danger"
@@ -317,7 +317,7 @@ interface NumberFieldProps {
 function NumberField({ label, value, suffix, onChange }: NumberFieldProps) {
   return (
     <FieldLabel label={label}>
-      <div className="flex rounded-xl border-2 border-slate-950 bg-white transition focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-100">
+      <div className="flex rounded-xl border border-slate-200 bg-white transition focus-within:border-rose-500 focus-within:ring-4 focus-within:ring-rose-100">
         <input
           type="number"
           min="0"
@@ -325,7 +325,7 @@ function NumberField({ label, value, suffix, onChange }: NumberFieldProps) {
           onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
           className="w-full rounded-l-xl px-4 py-3 text-sm outline-none"
         />
-        <span className="border-l-2 border-slate-950 px-3 py-3 text-sm font-bold text-slate-500">{suffix}</span>
+        <span className="border-l border-slate-200 px-3 py-3 text-sm font-bold text-slate-500">{suffix}</span>
       </div>
     </FieldLabel>
   );
@@ -339,12 +339,12 @@ interface CheckboxFieldProps {
 
 function CheckboxField({ label, checked, onChange }: CheckboxFieldProps) {
   return (
-    <label className="flex items-center gap-3 rounded-2xl border-2 border-slate-950 bg-blue-50/70 px-4 py-3 text-sm font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-blue-100/70">
+    <label className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-rose-50/70 px-4 py-3 text-sm font-medium text-slate-800 transition hover:-translate-y-0.5 hover:bg-rose-100/70">
       <input
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 rounded border-slate-900 text-blue-600 focus:ring-blue-500"
+        className="h-4 w-4 rounded border-slate-900 text-rose-600 focus:ring-rose-500"
       />
       {label}
     </label>

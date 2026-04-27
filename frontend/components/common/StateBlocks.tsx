@@ -16,9 +16,9 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <Card className={cn('border-dashed border-slate-950 bg-blue-50/80', className)}>
+    <Card className={cn('border-dashed border-rose-200 bg-rose-50/50', className)}>
       <div className="flex min-h-60 flex-col items-center justify-center px-4 py-10 text-center">
-        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border-2 border-slate-950 bg-white text-blue-600 shadow-[4px_4px_0_rgba(17,24,39,0.16)]">
+        <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-rose-200 bg-white text-rose-600 shadow-sm shadow-rose-100">
           <HeartHandshake className="h-6 w-6" aria-hidden="true" />
         </div>
         <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
@@ -37,11 +37,11 @@ export function LoadingState({ title, description }: { title: string; descriptio
         aria-live="polite"
         className="flex min-h-60 flex-col items-center justify-center px-4 py-10 text-center"
       >
-        <Loader2 className="mb-4 h-8 w-8 animate-spin text-blue-600" aria-hidden="true" />
+        <Loader2 className="mb-4 h-8 w-8 animate-spin text-rose-600" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-600">{description}</p>
         <div className="mt-6 grid w-full max-w-md gap-3">
-          <div className="h-3 animate-pulse rounded-full bg-blue-100" />
+          <div className="h-3 animate-pulse rounded-full bg-rose-100" />
           <div className="h-3 w-5/6 animate-pulse rounded-full bg-slate-100" />
           <div className="h-3 w-3/4 animate-pulse rounded-full bg-slate-100" />
         </div>
