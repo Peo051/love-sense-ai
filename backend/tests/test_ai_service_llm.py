@@ -26,9 +26,14 @@ class FakeLLMClient:
         )
 
 
+class FailingLLMClient:
+    async def analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
+        raise LLMClientError("provider is unavailable")
+
+
 def test_ai_service_uses_mock_by_default(monkeypatch):
-    monkeypatch.setattr(settings, "LLM_MOCK_MODE", True)
-    monkeypatch.setattr(settings, "LLM_PROVIDER", "mock")
+    monkeypatch.setattr(settings, "llm_mock_mode", True)
+    monkeypatch.setattr(settings, "llm_provider", "mock")
     fake_client = FakeLLMClient()
 
     result = asyncio.run(AIService(llm_client=fake_client).analyze_emotion("Em mệt thôi."))
@@ -38,8 +43,8 @@ def test_ai_service_uses_mock_by_default(monkeypatch):
 
 
 def test_ai_service_uses_llm_when_mock_mode_is_disabled(monkeypatch):
-    monkeypatch.setattr(settings, "LLM_MOCK_MODE", False)
-    monkeypatch.setattr(settings, "LLM_PROVIDER", "9router")
+    monkeypatch.setattr(settings, "llm_mock_mode", False)
+    monkeypatch.setattr(settings, "llm_provider", "9router")
     fake_client = FakeLLMClient()
 
     result = asyncio.run(AIService(llm_client=fake_client).analyze_emotion("Tin nhắn cần phân tích."))
@@ -48,10 +53,19 @@ def test_ai_service_uses_llm_when_mock_mode_is_disabled(monkeypatch):
     assert result.overall_emotion == "LLM result"
 
 
+def test_ai_service_falls_back_to_mock_when_llm_fails(monkeypatch):
+    monkeypatch.setattr(settings, "llm_mock_mode", False)
+    monkeypatch.setattr(settings, "llm_provider", "9router")
+
+    result = asyncio.run(AIService(llm_client=FailingLLMClient()).analyze_emotion("Em mệt thôi."))
+
+    assert result.overall_emotion == "mệt mỏi / né tránh nhẹ"
+
+
 def test_llm_client_requires_api_configuration(monkeypatch):
-    monkeypatch.setattr(settings, "LLM_BASE_URL", "http://localhost:20128/v1")
-    monkeypatch.setattr(settings, "LLM_API_KEY", "")
-    monkeypatch.setattr(settings, "LLM_MODEL", "api_models_all")
+    monkeypatch.setattr(settings, "llm_base_url", "http://localhost:20128/v1")
+    monkeypatch.setattr(settings, "llm_api_key", "")
+    monkeypatch.setattr(settings, "llm_model", "api_models_all")
 
     with pytest.raises(LLMClientError, match="LLM_API_KEY"):
         asyncio.run(OpenAICompatibleLLMClient().analyze_emotion("Tin nhắn cần phân tích."))

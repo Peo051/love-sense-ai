@@ -21,7 +21,7 @@ async def _load_user_from_token(token: str, db: AsyncSession) -> User:
     )
 
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         token_data = TokenData(user_id=payload.get("sub"), email=payload.get("email"))
     except JWTError as exc:
         raise credentials_exception from exc
@@ -48,6 +48,13 @@ async def get_optional_current_user(
     token: str | None = Depends(optional_oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ) -> User | None:
+    return await get_optional_user_from_token(token, db)
+
+
+async def get_optional_user_from_token(token: str | None, db: AsyncSession) -> User | None:
     if not token:
         return None
-    return await _load_user_from_token(token, db)
+    try:
+        return await _load_user_from_token(token, db)
+    except HTTPException:
+        return None

@@ -10,12 +10,19 @@ import type {
   ProfileResponse,
 } from './types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'http://127.0.0.1:8000';
 const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
+const SAFE_ANALYZE_WARNING = 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.';
 
-// Debug logging in development
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   console.log('[API] Base URL:', API_BASE_URL);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function getStoredToken() {
@@ -55,52 +62,132 @@ function buildHeaders(init?: RequestInit) {
   return headers;
 }
 
-async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
-  if (!response.ok) {
-    let message = fallbackMessage;
-
-    try {
-      const errorBody = await response.json();
-      if (typeof errorBody.detail === 'string') {
-        message = errorBody.detail;
-      }
-    } catch {
-      // Giữ thông báo mặc định nếu backend không trả JSON hợp lệ.
+async function readResponsePayload(response: Response): Promise<unknown> {
+  if (typeof response.text === 'function') {
+    const text = await response.text();
+    if (!text) {
+      return null;
     }
 
-    throw new Error(message);
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { rawText: text };
+    }
   }
 
-  return response.json();
+  if (typeof response.json === 'function') {
+    try {
+      return await response.json();
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+function getErrorMessage(payload: unknown, fallbackMessage: string) {
+  if (isRecord(payload)) {
+    if (typeof payload.detail === 'string') {
+      return payload.detail;
+    }
+    if (typeof payload.message === 'string') {
+      return payload.message;
+    }
+    if (typeof payload.rawText === 'string' && payload.rawText.trim()) {
+      return payload.rawText;
+    }
+  }
+
+  return fallbackMessage;
+}
+
+async function parseJsonResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
+  const payload = await readResponsePayload(response);
+
+  if (!response.ok) {
+    throw new Error(getErrorMessage(payload, fallbackMessage));
+  }
+
+  if (payload === null) {
+    throw new Error(fallbackMessage);
+  }
+
+  return payload as T;
 }
 
 async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage = 'Không thể xử lý yêu cầu.') {
   try {
     const url = `${API_BASE_URL}${path}`;
-    
-    // Debug logging in development
+
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.log('[API] Request:', init?.method || 'GET', url);
     }
-    
+
     const response = await fetch(url, {
       ...init,
       headers: buildHeaders(init),
     });
 
-    // Debug logging in development
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.log('[API] Response:', response.status, response.statusText);
     }
 
     return parseJsonResponse<T>(response, fallbackMessage);
   } catch (error) {
-    // Debug logging in development
     if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
       console.error('[API] Error:', error);
     }
-    throw error;
+
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(fallbackMessage);
   }
+}
+
+function normalizeEmotionDistribution(value: unknown): Record<string, number> {
+  if (!isRecord(value)) {
+    return { trung_lap: 1 };
+  }
+
+  const distribution = Object.entries(value).reduce<Record<string, number>>((current, [emotion, score]) => {
+    current[emotion] = typeof score === 'number' && Number.isFinite(score) ? score : 0;
+    return current;
+  }, {});
+
+  return Object.keys(distribution).length > 0 ? distribution : { trung_lap: 1 };
+}
+
+function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
+  const data = isRecord(value) ? value : {};
+  const confidence = typeof data.confidence === 'number' && Number.isFinite(data.confidence) ? data.confidence : 0;
+
+  return {
+    overall_emotion:
+      typeof data.overall_emotion === 'string' && data.overall_emotion.trim()
+        ? data.overall_emotion
+        : 'trung lập / chưa đủ dữ liệu',
+    confidence: Math.min(1, Math.max(0, confidence)),
+    emotion_distribution: normalizeEmotionDistribution(data.emotion_distribution),
+    summary:
+      typeof data.summary === 'string' && data.summary.trim()
+        ? data.summary
+        : 'Backend chưa trả tóm tắt đầy đủ. Kết quả chỉ nên dùng để tham khảo.',
+    context_note:
+      typeof data.context_note === 'string' && data.context_note.trim()
+        ? data.context_note
+        : 'Chưa có ghi chú bối cảnh bổ sung.',
+    suggested_reply:
+      typeof data.suggested_reply === 'string' && data.suggested_reply.trim()
+        ? data.suggested_reply
+        : 'Mình có thể nói chuyện thêm khi em sẵn sàng nhé.',
+    warning:
+      typeof data.warning === 'string' && data.warning.trim()
+        ? data.warning
+        : SAFE_ANALYZE_WARNING,
+  };
 }
 
 export async function registerUser(email: string, password: string): Promise<AuthUser> {
@@ -135,7 +222,7 @@ export async function getCurrentUser(): Promise<AuthUser> {
 }
 
 export async function analyzeEmotion(payload: AnalyzeRequest): Promise<AnalyzeResponse> {
-  return requestJson<AnalyzeResponse>(
+  const response = await requestJson<unknown>(
     '/api/analyze',
     {
       method: 'POST',
@@ -143,6 +230,7 @@ export async function analyzeEmotion(payload: AnalyzeRequest): Promise<AnalyzeRe
     },
     'Không thể phân tích đoạn chat lúc này.'
   );
+  return normalizeAnalyzeResponse(response);
 }
 
 export async function getProfile(): Promise<ProfileResponse> {

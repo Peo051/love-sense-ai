@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_optional_current_user
+from app.core.auth import get_optional_user_from_token, optional_oauth2_scheme
 from app.core.exceptions import AIServiceException
 from app.database.connection import get_db
-from app.models.user import User
 from app.schemas.analyze_schema import AnalyzeRequest, AnalyzeResponse
 from app.services.ai_service import AIService
 from app.services.db_store import ConsentRepository, HistoryRepository
@@ -17,7 +16,7 @@ router = APIRouter()
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_emotion(
     request: AnalyzeRequest,
-    current_user: User | None = Depends(get_optional_current_user),
+    token: str | None = Depends(optional_oauth2_scheme),
     db: AsyncSession = Depends(get_db),
 ):
     try:
@@ -35,8 +34,13 @@ async def analyze_emotion(
         ai_service = AIService()
         result = await ai_service.analyze_emotion(cleaned_text, request.profile_context)
 
-        # Analyze vẫn dùng được khi chưa đăng nhập, nhưng chỉ user có token hợp lệ mới có lịch sử riêng.
-        if current_user and (request.save_input or request.save_result):
+        # Analyze luôn dùng được không cần đăng nhập; chỉ lookup user khi request thật sự muốn lưu lịch sử.
+        current_user = (
+            await get_optional_user_from_token(token, db)
+            if (request.save_input or request.save_result)
+            else None
+        )
+        if current_user:
             await ConsentRepository.accept_analysis_consent(
                 db,
                 current_user.id,

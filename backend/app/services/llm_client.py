@@ -20,7 +20,7 @@ class OpenAICompatibleLLMClient:
         self._validate_settings()
 
         payload = {
-            "model": settings.LLM_MODEL,
+            "model": settings.llm_model,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {
@@ -33,11 +33,11 @@ class OpenAICompatibleLLMClient:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=settings.LLM_TIMEOUT_SECONDS) as client:
+            async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds) as client:
                 response = await client.post(
-                    f"{settings.LLM_BASE_URL.rstrip('/')}/chat/completions",
+                    f"{settings.llm_base_url.rstrip('/')}/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {settings.LLM_API_KEY}",
+                        "Authorization": f"Bearer {settings.llm_api_key}",
                         "Content-Type": "application/json",
                     },
                     json=payload,
@@ -60,9 +60,9 @@ class OpenAICompatibleLLMClient:
         missing_fields = [
             field
             for field, value in {
-                "LLM_BASE_URL": settings.LLM_BASE_URL,
-                "LLM_API_KEY": settings.LLM_API_KEY,
-                "LLM_MODEL": settings.LLM_MODEL,
+                "LLM_BASE_URL": settings.llm_base_url,
+                "LLM_API_KEY": settings.llm_api_key,
+                "LLM_MODEL": settings.llm_model,
             }.items()
             if not value
         ]

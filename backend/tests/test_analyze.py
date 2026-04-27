@@ -28,6 +28,22 @@ def test_analyze_empty_message():
     assert response.status_code in [400, 422]
 
 
+def test_analyze_ignores_invalid_optional_auth_token():
+    response = client.post(
+        "/api/analyze",
+        headers={"Authorization": "Bearer invalid-token"},
+        json={
+            "chat_text": "Em mệt thôi.",
+            "profile_context": "",
+            "save_input": False,
+            "save_result": False,
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["overall_emotion"] == "mệt mỏi / né tránh nhẹ"
+
+
 def test_health_root():
     response = client.get("/health")
     assert response.status_code == 200

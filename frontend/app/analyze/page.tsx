@@ -10,22 +10,26 @@ import type { AnalyzeRequest, AnalyzeResponse } from '@/lib/types';
 
 export default function AnalyzePage() {
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAnalyze = async (payload: AnalyzeRequest) => {
     setIsLoading(true);
-    setErrorMessage('');
-    setResult(null); // Clear previous result
+    setErrorMessage(null);
 
     try {
-      console.log('[Analyze] Sending request:', payload);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Analyze] submit payload', payload);
+      }
+
       const analysis = await analyzeEmotion(payload);
-      console.log('[Analyze] Received response:', analysis);
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Analyze] api result', analysis);
+      }
+
       setResult(analysis);
     } catch (error) {
-      console.error('[Analyze] Error:', error);
-      setResult(null);
       setErrorMessage(error instanceof Error ? error.message : 'Không thể phân tích đoạn chat lúc này.');
     } finally {
       setIsLoading(false);
@@ -38,20 +42,20 @@ export default function AnalyzePage() {
         <p className="text-sm font-semibold uppercase text-rose-700">Love Emotion MVP</p>
         <h1 className="text-3xl font-bold text-slate-950 sm:text-4xl">Phân tích sắc thái cảm xúc trong đoạn chat</h1>
         <p className="text-base leading-7 text-slate-600">
-          Nhập đoạn hội thoại và bối cảnh cá nhân hóa để nhận nhận định tham khảo, gợi ý phản hồi nhẹ
-          nhàng và cảnh báo an toàn.
+          Nhập đoạn hội thoại và bối cảnh cá nhân hóa để nhận nhận định tham khảo, gợi ý phản hồi nhẹ nhàng và cảnh báo
+          an toàn.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.9fr)] lg:items-start">
         <Card
           title="Thông tin đầu vào"
-          description="Dữ liệu chỉ được gửi đến backend local để tạo mock response. MVP chưa lưu nội dung chat mặc định."
+          description="Dữ liệu chỉ được gửi đến backend local để tạo kết quả phân tích. Ứng dụng không lưu nội dung chat mặc định."
         >
           <AnalysisForm isLoading={isLoading} onAnalyze={handleAnalyze} />
         </Card>
 
-        <AnalysisResultPanel result={result} errorMessage={errorMessage} />
+        <AnalysisResultPanel result={result} error={errorMessage} loading={isLoading} />
       </div>
     </div>
   );

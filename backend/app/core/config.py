@@ -5,42 +5,36 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
-        extra="ignore"
+        extra="ignore",
     )
 
-    # Application
-    APP_ENV: str = "development"
-    FRONTEND_URL: str = "http://localhost:3000"
-    
-    # API Configuration
-    API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Love Emotion API"
+    app_env: str = "development"
+    frontend_url: str = "http://localhost:3000"
 
-    # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
+    api_v1_str: str = "/api/v1"
+    project_name: str = "Love Emotion API"
+    allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
-    # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost/loveemotion"
-    
-    # AI Service
-    AI_SERVICE_URL: str = "http://localhost:8001"
-    
-    # LLM Configuration
-    LLM_PROVIDER: str = "openai"
-    LLM_BASE_URL: str = ""
-    LLM_API_KEY: str = ""
-    LLM_MODEL: str = "gpt-4o-mini"
-    LLM_MOCK_MODE: bool = True
-    LLM_TIMEOUT_SECONDS: float = 30.0
+    database_url: str = "postgresql://user:password@localhost/loveemotion"
+    ai_service_url: str = "http://localhost:8001"
 
-    # Security
-    SECRET_KEY: str = "dev-only-change-me"
-    ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    llm_provider: str = "mock"
+    llm_base_url: str = "http://localhost:20128/v1"
+    llm_api_key: str = ""
+    llm_model: str = "api_models_all"
+    llm_mock_mode: bool = True
+    llm_timeout_seconds: float = 30.0
+
+    secret_key: str = "dev-only-change-me"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
 
     @property
-    def allowed_origins(self) -> list[str]:
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
+    def cors_origins(self) -> list[str]:
+        origins = [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
+        if self.frontend_url and self.frontend_url not in origins:
+            origins.append(self.frontend_url)
+        return origins
 
 
 settings = Settings()
