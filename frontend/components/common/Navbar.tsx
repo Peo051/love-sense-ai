@@ -1,10 +1,11 @@
 'use client';
 
-import { HeartHandshake, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { LogIn, LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import LogoMark from '@/components/common/LogoMark';
 import { useAuth } from '@/contexts/AuthContext';
 import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -38,9 +39,7 @@ export default function Navbar() {
             className="inline-flex min-w-0 items-center gap-2 rounded-xl text-base font-extrabold text-slate-950 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2"
             onClick={() => setIsOpen(false)}
           >
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-[4px_4px_0_rgba(127,29,29,0.16)] sm:h-10 sm:w-10">
-              <HeartHandshake className="h-5 w-5" aria-hidden="true" />
-            </span>
+            <LogoMark className="h-9 w-9 shrink-0 drop-shadow-[4px_4px_0_rgba(127,29,29,0.14)] sm:h-10 sm:w-10" />
             <span className="truncate">
               Love Sense <span className="text-rose-600">AI</span>
             </span>
