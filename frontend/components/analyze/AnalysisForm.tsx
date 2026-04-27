@@ -4,6 +4,7 @@ import { FormEvent, useState } from 'react';
 import { History, Loader2, LockKeyhole, Save, Send, ShieldCheck } from 'lucide-react';
 
 import { ErrorAlert, InfoAlert } from '@/components/common/Alerts';
+import ImageOcrUploader from '@/components/analyze/ImageOcrUploader';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import FieldLabel from '@/components/common/FieldLabel';
@@ -29,6 +30,26 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
   const [saveInput, setSaveInput] = useState(false);
   const [validationError, setValidationError] = useState('');
 
+  const handleOcrTextExtracted = (text: string) => {
+    const nextText = text.trim();
+    if (!nextText) {
+      return;
+    }
+
+    if (chatText.trim()) {
+      const shouldReplace = window.confirm(
+        'Bạn muốn thay thế nội dung hiện tại bằng văn bản OCR không? Chọn Hủy để thêm vào cuối nội dung hiện có.'
+      );
+
+      if (!shouldReplace) {
+        setChatText((currentText) => `${currentText.trimEnd()}\n\n${nextText}`.trim());
+        return;
+      }
+    }
+
+    setChatText(nextText);
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -48,6 +69,8 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <ImageOcrUploader onTextExtracted={handleOcrTextExtracted} />
+
       <Card
         title="Đoạn chat"
         description="Dán một đoạn hội thoại ngắn để hệ thống phân tích sắc thái. Không cần nhập thông tin cá nhân."
