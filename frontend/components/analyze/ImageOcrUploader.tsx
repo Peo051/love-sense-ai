@@ -6,10 +6,10 @@ import { AlertTriangle, FileImage, Loader2, ShieldCheck, Trash2, WandSparkles } 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
-import { extractTextFromImage, validateImageFile, type OcrProgress } from '@/lib/ocr';
+import { extractTextFromImage, validateImageFile, type OcrExtractionResult, type OcrProgress } from '@/lib/ocr';
 
 type ImageOcrUploaderProps = {
-  onTextExtracted: (text: string) => void;
+  onTextExtracted: (text: string, result: OcrExtractionResult) => void;
 };
 
 function formatFileSize(bytes: number) {
@@ -20,12 +20,23 @@ function progressPercent(progress: number) {
   return Math.round(Math.max(0, Math.min(1, progress)) * 100);
 }
 
+function getProgressLabel(status: OcrProgress['status']) {
+  const labels: Record<OcrProgress['status'], string> = {
+    preprocessing: 'Đang làm rõ ảnh...',
+    recognizing: 'Đang nhận diện chữ...',
+    postprocessing: 'Đang chuẩn hóa kết quả...',
+  };
+
+  return labels[status];
+}
+
 export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const activeOcrRunRef = useRef(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [progress, setProgress] = useState<OcrProgress>({ status: '', progress: 0 });
+  const [progress, setProgress] = useState<OcrProgress>({ status: 'preprocessing', progress: 0 });
+  const [ocrResult, setOcrResult] = useState<OcrExtractionResult | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -43,7 +54,8 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
 
     setErrorMessage('');
     setSuccessMessage('');
-    setProgress({ status: '', progress: 0 });
+    setOcrResult(null);
+    setProgress({ status: 'preprocessing', progress: 0 });
 
     if (!file) {
       return;
@@ -66,7 +78,8 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     activeOcrRunRef.current += 1;
     setSelectedFile(null);
     setPreviewUrl(null);
-    setProgress({ status: '', progress: 0 });
+    setOcrResult(null);
+    setProgress({ status: 'preprocessing', progress: 0 });
     setIsExtracting(false);
     setSuccessMessage('');
     setErrorMessage('');
@@ -87,10 +100,11 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setIsExtracting(true);
     setErrorMessage('');
     setSuccessMessage('');
-    setProgress({ status: 'recognizing text', progress: 0 });
+    setOcrResult(null);
+    setProgress({ status: 'preprocessing', progress: 0 });
 
     try {
-      const extractedText = await extractTextFromImage(selectedFile, (nextProgress) => {
+      const extraction = await extractTextFromImage(selectedFile, (nextProgress) => {
         if (activeOcrRunRef.current === runId) {
           setProgress(nextProgress);
         }
@@ -100,7 +114,8 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
         return;
       }
 
-      onTextExtracted(extractedText);
+      setOcrResult(extraction);
+      onTextExtracted(extraction.text, extraction);
       setSuccessMessage('Đã trích xuất nội dung. Vui lòng kiểm tra và chỉnh sửa lại nếu OCR nhận diện sai.');
     } catch {
       if (activeOcrRunRef.current === runId) {
@@ -113,7 +128,17 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     }
   };
 
+  const handleUseExtractedText = () => {
+    if (!ocrResult) {
+      return;
+    }
+
+    onTextExtracted(ocrResult.text, ocrResult);
+    setSuccessMessage('Đã đưa nội dung OCR vào ô đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.');
+  };
+
   const currentPercent = progressPercent(progress.progress);
+  const hasQualityWarnings = Boolean(ocrResult?.quality.warnings.length);
 
   return (
     <Card
@@ -168,7 +193,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
           <div role="status" aria-live="polite" className="rounded-2xl border border-rose-100 bg-white p-4">
             <div className="flex items-center gap-3 text-sm font-semibold text-slate-950">
               <Loader2 className="h-4 w-4 animate-spin text-rose-600" aria-hidden="true" />
-              Đang nhận diện chữ...
+              {getProgressLabel(progress.status)}
             </div>
             <div className="mt-3 h-2 overflow-hidden rounded-full bg-rose-100">
               <div
@@ -182,6 +207,41 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
 
         {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
         {successMessage && <SuccessAlert>{successMessage}</SuccessAlert>}
+        {hasQualityWarnings && (
+          <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm leading-6 text-amber-950">
+            <div className="flex gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden="true" />
+              <div>
+                <p className="font-semibold">OCR có thể chưa chính xác.</p>
+                <ul className="mt-1 list-disc space-y-1 pl-5">
+                  {ocrResult?.quality.warnings.map((warning) => <li key={warning}>{warning}</li>)}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {ocrResult && (
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-xs leading-5 text-slate-600">
+                Độ tin cậy OCR tham khảo: <span className="font-semibold text-slate-950">{ocrResult.confidence.toFixed(0)}%</span>.
+                Hãy rà lại dấu, emoji và thứ tự dòng.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="secondary" size="sm" onClick={handleUseExtractedText}>
+                  Dùng nội dung này
+                </Button>
+                <Button type="button" variant="secondary" size="sm" onClick={handleExtractText} disabled={isExtracting}>
+                  Chạy OCR lại
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={clearImage}>
+                  Xóa ảnh
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
           <div

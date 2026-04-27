@@ -8,6 +8,7 @@ import ImageOcrUploader from '@/components/analyze/ImageOcrUploader';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import FieldLabel from '@/components/common/FieldLabel';
+import type { OcrExtractionResult } from '@/lib/ocr';
 import type { AnalyzeRequest } from '@/lib/types';
 import { textareaClassName } from '@/lib/ui';
 
@@ -21,6 +22,9 @@ B: Không sao.
 A: Anh thấy em hơi lạ.
 B: Em mệt thôi.`;
 
+const OCR_ANALYSIS_CONTEXT_NOTE =
+  'Nội dung đoạn chat được trích xuất từ ảnh OCR, có thể có lỗi nhận diện. Hãy phân tích thận trọng, không kết luận chắc chắn.';
+
 export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps) {
   const [chatText, setChatText] = useState(SAMPLE_CHAT);
   const [profileContext, setProfileContext] = useState(
@@ -29,25 +33,40 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
   const [saveResult, setSaveResult] = useState(false);
   const [saveInput, setSaveInput] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [lastOcrResult, setLastOcrResult] = useState<OcrExtractionResult | null>(null);
+  const [isChatFromOcr, setIsChatFromOcr] = useState(false);
 
-  const handleOcrTextExtracted = (text: string) => {
+  const handleChatTextChange = (value: string) => {
+    setChatText(value);
+
+    if (!value.trim()) {
+      setLastOcrResult(null);
+      setIsChatFromOcr(false);
+    }
+  };
+
+  const handleOcrTextExtracted = (text: string, result: OcrExtractionResult) => {
     const nextText = text.trim();
     if (!nextText) {
       return;
     }
 
-    if (chatText.trim()) {
+    if (chatText.trim() && chatText.trim() !== nextText) {
       const shouldReplace = window.confirm(
         'Bạn muốn thay thế nội dung hiện tại bằng văn bản OCR không? Chọn Hủy để thêm vào cuối nội dung hiện có.'
       );
 
       if (!shouldReplace) {
         setChatText((currentText) => `${currentText.trimEnd()}\n\n${nextText}`.trim());
+        setLastOcrResult(result);
+        setIsChatFromOcr(true);
         return;
       }
     }
 
     setChatText(nextText);
+    setLastOcrResult(result);
+    setIsChatFromOcr(true);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -58,10 +77,18 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
       return;
     }
 
+    const contextParts = [profileContext.trim()];
+    if (isChatFromOcr) {
+      contextParts.push(OCR_ANALYSIS_CONTEXT_NOTE);
+      if (lastOcrResult?.quality.warnings.length) {
+        contextParts.push(`Cảnh báo OCR: ${lastOcrResult.quality.warnings.join(' ')}`);
+      }
+    }
+
     setValidationError('');
     await onAnalyze({
       chat_text: chatText,
-      profile_context: profileContext,
+      profile_context: contextParts.filter(Boolean).join('\n\n'),
       save_input: saveInput,
       save_result: saveResult || saveInput,
     });
@@ -83,7 +110,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
           <textarea
             id="chat_text"
             value={chatText}
-            onChange={(event) => setChatText(event.target.value)}
+            onChange={(event) => handleChatTextChange(event.target.value)}
             className={`${textareaClassName} min-h-44 sm:min-h-72`}
             placeholder="Dán đoạn hội thoại ngắn tại đây. Không cần thông tin cá nhân."
           />
