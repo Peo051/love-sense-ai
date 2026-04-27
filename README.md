@@ -2,14 +2,21 @@
 
 Love Emotion Web là web app hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm. Ứng dụng chỉ phân tích nội dung người dùng nhập thủ công, không đọc trộm tin nhắn, không kết luận chắc chắn cảm xúc của người khác và không lưu nội dung chat mặc định.
 
+## Live Demo
+
+- Frontend: https://love-sense-ai.vercel.app
+- Production backend URL được cấu hình trong Vercel qua `NEXT_PUBLIC_API_URL`.
+
 ## Hiện Có
 
 - Frontend Next.js: `/`, `/analyze`, `/auth`, `/profile`, `/history`, `/privacy`.
-- Backend FastAPI: `/health`, `/api/analyze`, `/api/register`, `/api/token`, `/api/me`, `/api/profile`, `/api/history`, `/api/consent`, `/api/user-data`.
+- Backend FastAPI: `/health`, `/api/health`, `/api/analyze`, `/api/ocr/vision`, `/api/register`, `/api/token`, `/api/me`, `/api/profile`, `/api/history`, `/api/consent`, `/api/user-data`.
 - PostgreSQL/Supabase schema và SQL migrations trong `database/`.
 - SQLAlchemy async models cho user, profile, partner profile, consent và analysis history.
 - Auth đơn giản bằng email/password và Bearer JWT.
 - Tích hợp LLM provider tương thích OpenAI Chat Completions, gồm 9router local qua `LLM_*`.
+- OCR ảnh chat local trên trình duyệt, tùy chọn AI Vision có consent riêng và bước review trước khi phân tích.
+- Output validator và benchmark regression cho chất lượng phân tích cảm xúc.
 - Dữ liệu profile/history/consent luôn được lọc theo `user_id`.
 - Consent rõ ràng: lưu kết quả và lưu nội dung chat là hai lựa chọn riêng.
 - Test frontend cho form `/analyze` và test backend cho auth, analyze, profile, history, consent.

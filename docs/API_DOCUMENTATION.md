@@ -139,6 +139,8 @@ Trích xuất nội dung chữ từ ảnh chụp đoạn chat bằng AI Vision. 
 
 Backend không lưu ảnh, không log ảnh/base64 và không tự động tạo lịch sử phân tích. Sau khi nhận text, frontend vẫn yêu cầu user review/chỉnh sửa trước khi gọi `/api/analyze`.
 
+Model vision được chọn bằng `VISION_OCR_MODEL`; nếu biến này trống, backend dùng `LLM_MODEL`. Không cấu hình `LLM_API_KEY` trong frontend.
+
 Request multipart:
 
 - `image`: file PNG, JPG, JPEG hoặc WEBP, tối đa 5MB.
