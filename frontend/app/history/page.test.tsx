@@ -33,6 +33,7 @@ function jsonResponse(body: unknown, status = 200) {
 describe('HistoryPage', () => {
   beforeEach(() => {
     window.localStorage.setItem('love_emotion_auth_token', 'test-token');
+    vi.stubGlobal('confirm', vi.fn(() => true));
   });
 
   afterEach(() => {

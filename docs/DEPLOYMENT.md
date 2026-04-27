@@ -199,3 +199,10 @@ Kiểm tra staged diff không chứa `.env`, API key, token hoặc secret trư�
 5. Vào `/profile`, lưu hồ sơ và reload để kiểm tra đọc lại.
 6. Vào `/privacy`, thử xóa lịch sử/hồ sơ/toàn bộ dữ liệu với xác nhận.
 7. Kiểm tra backend `/health` và `/api/health`.
+
+## Related Docs
+
+- [Setup Guide](../SETUP.md)
+- [API Documentation](API_DOCUMENTATION.md)
+- [Privacy Design](PRIVACY_DESIGN.md)
+- [Testing Guide](TESTING.md)

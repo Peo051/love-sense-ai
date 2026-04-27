@@ -50,21 +50,41 @@ export default function PrivacyPage() {
   };
 
   const handleDeleteProfile = async () => {
-    await runDestructiveAction(deleteProfile, 'Đã xóa hồ sơ cá nhân hóa.');
+    await runDestructiveAction(
+      deleteProfile,
+      'Đã xóa hồ sơ cá nhân hóa.',
+      'Bạn có chắc muốn xóa hồ sơ cá nhân hóa của tài khoản hiện tại không?'
+    );
   };
 
   const handleClearHistory = async () => {
-    await runDestructiveAction(clearHistory, 'Đã xóa lịch sử phân tích.');
+    await runDestructiveAction(
+      clearHistory,
+      'Đã xóa lịch sử phân tích.',
+      'Bạn có chắc muốn xóa toàn bộ lịch sử phân tích của tài khoản hiện tại không?'
+    );
   };
 
   const handleDeleteAllUserData = async () => {
-    await runDestructiveAction(async () => {
-      await deleteUserData();
-      setSettings(defaultConsent);
-    }, 'Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.');
+    await runDestructiveAction(
+      async () => {
+        await deleteUserData();
+        setSettings(defaultConsent);
+      },
+      'Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.',
+      'Bạn có chắc muốn xóa toàn bộ hồ sơ, lịch sử và cài đặt riêng tư của tài khoản hiện tại không?'
+    );
   };
 
-  const runDestructiveAction = async (action: () => Promise<void>, successMessage: string) => {
+  const runDestructiveAction = async (
+    action: () => Promise<void>,
+    successMessage: string,
+    confirmationMessage: string
+  ) => {
+    if (!window.confirm(confirmationMessage)) {
+      return;
+    }
+
     setStatusMessage('');
     setErrorMessage('');
 
@@ -82,13 +102,21 @@ export default function PrivacyPage() {
         <p className="text-sm font-semibold uppercase text-rose-700">Quyền riêng tư</p>
         <h1 className="text-3xl font-bold text-slate-950">Kiểm soát lưu và xóa dữ liệu</h1>
         <p className="max-w-3xl text-sm leading-6 text-slate-600">
-          Bạn không bị ép đồng ý lưu dữ liệu. Nếu tắt lưu lịch sử hoặc không chọn checkbox ở trang phân
-          tích, nội dung chat sẽ không được ghi vào lịch sử.
+          Bạn không bị ép đồng ý lưu dữ liệu. Nếu tắt lưu lịch sử hoặc không chọn checkbox ở trang phân tích, nội dung
+          chat sẽ không được ghi vào lịch sử.
         </p>
       </div>
 
-      {statusMessage && <p className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">{statusMessage}</p>}
-      {errorMessage && <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
+      {statusMessage && (
+        <p role="status" className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
+          {statusMessage}
+        </p>
+      )}
+      {errorMessage && (
+        <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
+        </p>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card title="Cài đặt lưu dữ liệu">

@@ -79,6 +79,10 @@ export default function ProfilePage() {
   };
 
   const handleDeleteProfile = async () => {
+    if (!window.confirm('Bạn có chắc muốn xóa hồ sơ cá nhân hóa của tài khoản hiện tại không?')) {
+      return;
+    }
+
     setErrorMessage('');
     setStatusMessage('');
 
@@ -104,8 +108,16 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {statusMessage && <p className="rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">{statusMessage}</p>}
-        {errorMessage && <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
+        {statusMessage && (
+          <p role="status" className="rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
+            {statusMessage}
+          </p>
+        )}
+        {errorMessage && (
+          <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+            {errorMessage}
+          </p>
+        )}
 
         <Card title="Hồ sơ người dùng">
           <div className="grid gap-4 sm:grid-cols-2">

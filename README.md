@@ -121,5 +121,6 @@ npm audit
 - [Testing Guide](docs/TESTING.md)
 - [Project Guide](docs/PROJECT_GUIDE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
+- [Privacy Design](docs/PRIVACY_DESIGN.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 - [Roadmap](docs/ROADMAP.md)

@@ -93,6 +93,11 @@ Xem chi tiết: [docs/E2E_ANALYZE_LLM_FLOW.md](docs/E2E_ANALYZE_LLM_FLOW.md)
 
 Xem checklist deploy frontend/backend/database tại [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Khi `APP_ENV=production`, backend yêu cầu `FRONTEND_URL`, `DATABASE_URL` PostgreSQL/Supabase và `SECRET_KEY` thật; SQLite fallback chỉ dành cho development.
 
+Xem thêm:
+- [API Documentation](docs/API_DOCUMENTATION.md)
+- [Privacy Design](docs/PRIVACY_DESIGN.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+
 ## 6. Ghi chú
 
 - MVP không cần chạy `ai-service`.

@@ -17,10 +17,6 @@ const API_BASE_URL =
 const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
 const SAFE_ANALYZE_WARNING = 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.';
 
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  console.log('[API] Base URL:', API_BASE_URL);
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -121,25 +117,13 @@ async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage 
   try {
     const url = `${API_BASE_URL}${path}`;
 
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.log('[API] Request:', init?.method || 'GET', url);
-    }
-
     const response = await fetch(url, {
       ...init,
       headers: buildHeaders(init),
     });
 
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.log('[API] Response:', response.status, response.statusText);
-    }
-
     return parseJsonResponse<T>(response, fallbackMessage);
   } catch (error) {
-    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.error('[API] Error:', error);
-    }
-
     if (error instanceof Error) {
       throw error;
     }
