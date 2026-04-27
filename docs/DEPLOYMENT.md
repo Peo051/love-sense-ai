@@ -2,6 +2,8 @@
 
 Tài liệu này chuẩn bị deploy demo cho Love Sense AI / Love Emotion Web. Không commit `.env`, API key, token hoặc secret vào repository.
 
+Live demo hiện tại: https://love-sense-ai.vercel.app
+
 ## Kiến Trúc Đề Xuất
 
 - Frontend: Vercel, source directory `frontend/`.
@@ -78,6 +80,7 @@ LLM_MOCK_MODE=true
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
 LLM_RETRY_BASE_DELAY_SECONDS=0.25
+VISION_OCR_MODEL=
 ```
 
 LLM thật qua 9Router/OpenAI-compatible provider:
@@ -91,7 +94,10 @@ LLM_MOCK_MODE=false
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
 LLM_RETRY_BASE_DELAY_SECONDS=0.25
+VISION_OCR_MODEL=<optional-vision-model-or-empty>
 ```
+
+`VISION_OCR_MODEL` là tùy chọn. Nếu để trống, backend dùng `LLM_MODEL` cho `/api/ocr/vision`. Không đưa ảnh hoặc base64 vào log; endpoint AI Vision chỉ chạy khi frontend gửi consent riêng của user.
 
 Rate limit cho `POST /api/analyze`:
 
@@ -142,6 +148,7 @@ Backend:
 - `LLM_TIMEOUT_SECONDS`
 - `LLM_MAX_RETRIES`
 - `LLM_RETRY_BASE_DELAY_SECONDS`
+- `VISION_OCR_MODEL` nếu provider dùng model vision riêng
 - `RATE_LIMIT_MAX_REQUESTS`
 - `RATE_LIMIT_WINDOW_SECONDS`
 
@@ -195,10 +202,11 @@ Kiểm tra staged diff không chứa `.env`, API key, token hoặc secret trư�
 1. Mở frontend deploy URL.
 2. Đăng ký/đăng nhập tại `/auth`.
 3. Vào `/analyze`, nhập đoạn chat thủ công và phân tích.
-4. Tick lưu kết quả, không tick lưu nội dung chat, rồi kiểm tra `/history` không có `chat_text`.
-5. Vào `/profile`, lưu hồ sơ và reload để kiểm tra đọc lại.
-6. Vào `/privacy`, thử xóa lịch sử/hồ sơ/toàn bộ dữ liệu với xác nhận.
-7. Kiểm tra backend `/health` và `/api/health`.
+4. Thử upload ảnh chat: OCR local phải tạo bản nháp review; AI Vision chỉ gửi ảnh khi user tick consent riêng.
+5. Tick lưu kết quả, không tick lưu nội dung chat, rồi kiểm tra `/history` không có `chat_text`.
+6. Vào `/profile`, lưu hồ sơ và reload để kiểm tra đọc lại.
+7. Vào `/privacy`, thử xóa lịch sử/hồ sơ/toàn bộ dữ liệu với xác nhận.
+8. Kiểm tra backend `/health` và `/api/health`.
 
 ## Related Docs
 
