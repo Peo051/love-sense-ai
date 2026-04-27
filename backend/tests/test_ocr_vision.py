@@ -2,10 +2,11 @@ import asyncio
 import json
 
 import httpx
+import pytest
 
 from app.core.config import settings
 from app.schemas.ocr_schema import VisionOcrResponse
-from app.services.llm_client import OpenAICompatibleLLMClient
+from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 from app.services.vision_ocr_service import VisionOcrService, VisionOcrServiceError
 
 
@@ -57,6 +58,38 @@ def test_vision_ocr_returns_text_without_persisting_image(client, monkeypatch):
     assert captured == {"image_bytes": b"fake-image", "mime_type": "image/png"}
 
 
+def test_vision_ocr_mock_mode_returns_clear_unavailable_reason(client, monkeypatch):
+    monkeypatch.setattr(settings, "llm_mock_mode", True)
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+
+    response = client.post(
+        "/api/ocr/vision",
+        files={"image": ("chat.png", b"fake-image", "image/png")},
+        data={"is_accepted": "true"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "AI Vision đang tắt trong cấu hình backend."
+
+
+def test_vision_ocr_missing_api_key_returns_clear_configuration_error(client, monkeypatch):
+    monkeypatch.setattr(settings, "llm_mock_mode", False)
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_base_url", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(settings, "llm_api_key", "")
+    monkeypatch.setattr(settings, "llm_model", "openai/gpt-4o-mini")
+    monkeypatch.setattr(settings, "vision_ocr_model", "openai/gpt-4o-mini")
+
+    response = client.post(
+        "/api/ocr/vision",
+        files={"image": ("chat.png", b"fake-image", "image/png")},
+        data={"is_accepted": "true"},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "Missing LLM_API_KEY for AI Vision."
+
+
 def test_vision_ocr_provider_error_is_friendly(client, monkeypatch):
     async def fake_extract(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
         raise VisionOcrServiceError("Vision AI chưa sẵn sàng. Vui lòng dùng OCR local hoặc nhập thủ công.")
@@ -71,6 +104,48 @@ def test_vision_ocr_provider_error_is_friendly(client, monkeypatch):
 
     assert response.status_code == 502
     assert "OCR local" in response.json()["detail"]
+
+
+def test_llm_client_vision_provider_error_is_safe(monkeypatch):
+    monkeypatch.setattr(settings, "llm_mock_mode", False)
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_base_url", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(settings, "llm_api_key", "test-key")
+    monkeypatch.setattr(settings, "llm_model", "openai/gpt-4o-mini")
+    monkeypatch.setattr(settings, "vision_ocr_model", "openai/gpt-4o-mini")
+    monkeypatch.setattr(settings, "llm_max_retries", 0)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(500, json={"error": {"message": "temporary provider outage"}})
+
+    client = OpenAICompatibleLLMClient(transport=httpx.MockTransport(handler))
+
+    with pytest.raises(LLMClientError) as exc_info:
+        asyncio.run(client.extract_chat_text_from_image(b"fake-image", "image/png"))
+
+    assert str(exc_info.value) == "LLM provider trả lỗi HTTP 500."
+    assert exc_info.value.status_code == 502
+
+
+def test_llm_client_vision_unsupported_model_error_is_clear(monkeypatch):
+    monkeypatch.setattr(settings, "llm_mock_mode", False)
+    monkeypatch.setattr(settings, "llm_provider", "openai")
+    monkeypatch.setattr(settings, "llm_base_url", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(settings, "llm_api_key", "test-key")
+    monkeypatch.setattr(settings, "llm_model", "text-only-model")
+    monkeypatch.setattr(settings, "vision_ocr_model", "text-only-model")
+    monkeypatch.setattr(settings, "llm_max_retries", 0)
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(400, json={"error": {"message": "This model does not support image input."}})
+
+    client = OpenAICompatibleLLMClient(transport=httpx.MockTransport(handler))
+
+    with pytest.raises(LLMClientError) as exc_info:
+        asyncio.run(client.extract_chat_text_from_image(b"fake-image", "image/png"))
+
+    assert str(exc_info.value) == "Current model does not support image input."
+    assert exc_info.value.status_code == 502
 
 
 def test_llm_client_parses_vision_response():

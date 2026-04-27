@@ -43,6 +43,11 @@ function getProgressLabel(status: OcrProgress['status']) {
   return labels[status];
 }
 
+function getVisionFallbackPrefix(error: unknown) {
+  const reason = error instanceof Error && error.message.trim() ? error.message.trim() : 'AI Vision chưa sẵn sàng.';
+  return `${reason} Ứng dụng đã chuyển sang OCR local. `;
+}
+
 export default function ImageOcrUploader({ hasChatText = false, onTextExtracted }: ImageOcrUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const activeOcrRunRef = useRef(0);
@@ -182,17 +187,16 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
     setDraftText('');
     setProgress({ status: 'preprocessing', progress: 0 });
 
+    let visionFallbackPrefix = '';
+
     try {
       if (useVisionAi) {
         try {
           await runVisionOcr(selectedFile, runId);
-        } catch {
+        } catch (visionError) {
           if (activeOcrRunRef.current === runId) {
-            await runLocalOcr(
-              selectedFile,
-              runId,
-              'AI Vision chưa sẵn sàng, ứng dụng đã chuyển sang OCR local. '
-            );
+            visionFallbackPrefix = getVisionFallbackPrefix(visionError);
+            await runLocalOcr(selectedFile, runId, visionFallbackPrefix);
           }
         }
       } else {
@@ -200,7 +204,11 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
       }
     } catch {
       if (activeOcrRunRef.current === runId) {
-        setErrorMessage('Không thể nhận diện chữ từ ảnh này. Hãy thử ảnh rõ hơn hoặc nhập thủ công.');
+        setErrorMessage(
+          visionFallbackPrefix
+            ? `${visionFallbackPrefix}OCR local cũng chưa nhận diện được chữ từ ảnh này. Hãy thử ảnh rõ hơn hoặc nhập thủ công.`
+            : 'Không thể nhận diện chữ từ ảnh này. Hãy thử ảnh rõ hơn hoặc nhập thủ công.'
+        );
       }
     } finally {
       if (activeOcrRunRef.current === runId) {

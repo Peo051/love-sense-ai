@@ -230,10 +230,10 @@ describe('ImageOcrUploader', () => {
     );
   });
 
-  it('falls back to local OCR when AI Vision fails, then waits for review apply', async () => {
+  it('shows the AI Vision unavailable reason and falls back to local OCR', async () => {
     const user = userEvent.setup();
     const onTextExtracted = vi.fn();
-    vi.mocked(extractChatTextWithVision).mockRejectedValueOnce(new Error('Vision unavailable'));
+    vi.mocked(extractChatTextWithVision).mockRejectedValueOnce(new Error('AI Vision đang tắt trong cấu hình backend.'));
     vi.mocked(extractTextFromImage).mockResolvedValueOnce(createOcrResult('A: local fallback\nB: vẫn kiểm tra lại'));
     render(<ImageOcrUploader onTextExtracted={onTextExtracted} />);
 
@@ -244,7 +244,8 @@ describe('ImageOcrUploader', () => {
     await user.click(screen.getByLabelText(/tôi đồng ý gửi ảnh này đến ai provider/i));
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
-    expect(await screen.findByText(/đã chuyển sang ocr local/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ai vision đang tắt trong cấu hình backend/i)).toBeInTheDocument();
+    expect(screen.getByText(/đã chuyển sang ocr local/i)).toBeInTheDocument();
     expect(extractTextFromImage).toHaveBeenCalled();
     expect(onTextExtracted).not.toHaveBeenCalled();
 
