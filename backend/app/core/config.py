@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     llm_timeout_seconds: float = 30.0
     llm_max_retries: int = 2
     llm_retry_base_delay_seconds: float = 0.25
+    vision_ocr_model: str = ""
 
     analyze_rate_limit_requests: int = Field(
         default=20,

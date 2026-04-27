@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 from typing import Any
 
@@ -7,6 +8,7 @@ from pydantic import ValidationError
 
 from app.core.config import settings
 from app.schemas.analyze_schema import AnalyzeResponse
+from app.schemas.ocr_schema import VisionOcrResponse
 from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 
 
@@ -42,6 +44,48 @@ class OpenAICompatibleLLMClient:
 
         response_body = await self._post_with_retries(payload)
         return self._parse_response(response_body)
+
+    async def extract_chat_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
+        model_name = settings.vision_ocr_model.strip() or settings.llm_model.strip()
+        self._validate_vision_settings(model_name)
+
+        encoded_image = base64.b64encode(image_bytes).decode("ascii")
+        payload = {
+            "model": model_name,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": (
+                        "Bạn là bộ trích xuất chữ từ ảnh chụp đoạn chat. "
+                        "Chỉ trích xuất nội dung nhìn thấy trong ảnh, không suy đoán cảm xúc, "
+                        "không thêm kết luận và không tạo thông tin không có trong ảnh."
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": (
+                                "Hãy đọc ảnh chụp đoạn hội thoại và trả về JSON hợp lệ theo schema: "
+                                '{"text":"...", "confidence": 0-100, "warnings":["..."]}. '
+                                "Giữ xuống dòng giữa các tin nhắn. Nếu không chắc người gửi, không tự gán tên. "
+                                "Nếu ảnh mờ, chữ nhỏ, emoji hoặc nền làm khó đọc, thêm cảnh báo ngắn trong warnings."
+                            ),
+                        },
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{mime_type};base64,{encoded_image}"},
+                        },
+                    ],
+                },
+            ],
+            "temperature": 0,
+            "max_tokens": 900,
+        }
+
+        response_body = await self._post_with_retries(payload)
+        return self._parse_vision_response(response_body)
 
     async def _post_with_retries(self, payload: dict[str, Any]) -> dict[str, Any]:
         max_retries = max(0, settings.llm_max_retries)
@@ -102,6 +146,19 @@ class OpenAICompatibleLLMClient:
         if missing_fields:
             raise LLMClientError(f"Thiếu cấu hình LLM: {', '.join(missing_fields)}.")
 
+    def _validate_vision_settings(self, model_name: str) -> None:
+        missing_fields = [
+            field
+            for field, value in {
+                "LLM_BASE_URL": settings.llm_base_url,
+                "LLM_API_KEY": settings.llm_api_key,
+                "VISION_OCR_MODEL or LLM_MODEL": model_name,
+            }.items()
+            if not value
+        ]
+        if missing_fields:
+            raise LLMClientError(f"Thiếu cấu hình Vision OCR: {', '.join(missing_fields)}.")
+
     def _is_retryable_status_code(self, status_code: int) -> bool:
         return status_code in {408, 429} or 500 <= status_code <= 599
 
@@ -128,6 +185,33 @@ class OpenAICompatibleLLMClient:
             raise LLMClientError("LLM provider không trả JSON hợp lệ theo schema phân tích.") from exc
 
         return self._normalize_result(result)
+
+    def _parse_vision_response(self, response_body: dict[str, Any]) -> VisionOcrResponse:
+        try:
+            content = response_body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMClientError("Vision provider trả response không đúng định dạng chat completions.") from exc
+
+        if not isinstance(content, str) or not content.strip():
+            raise LLMClientError("Vision provider không trả nội dung OCR.")
+
+        try:
+            raw_result = json.loads(self._extract_json(content))
+            result = VisionOcrResponse.model_validate(raw_result)
+        except (json.JSONDecodeError, ValidationError) as exc:
+            raise LLMClientError("Vision provider không trả JSON hợp lệ theo schema OCR.") from exc
+
+        confidence = min(100.0, max(0.0, float(result.confidence)))
+        warnings = result.warnings
+        if confidence < 60 and not warnings:
+            warnings = ["Vision AI không chắc chắn với ảnh này. Vui lòng kiểm tra lại nội dung trước khi phân tích."]
+
+        return VisionOcrResponse(
+            text=result.text,
+            confidence=confidence,
+            warnings=warnings,
+            provider="vision",
+        )
 
     def _extract_json(self, content: str) -> str:
         cleaned = content.strip()

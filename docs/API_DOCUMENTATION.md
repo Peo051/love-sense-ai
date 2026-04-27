@@ -108,6 +108,33 @@ Lỗi thường gặp:
 
 Rate limit mặc định: 20 request / 60 giây, cấu hình bằng `RATE_LIMIT_MAX_REQUESTS` và `RATE_LIMIT_WINDOW_SECONDS`. Nếu đã đăng nhập thì tính theo `user_id`; nếu chưa đăng nhập thì tính theo IP client.
 
+## POST /api/ocr/vision
+
+Trích xuất nội dung chữ từ ảnh chụp đoạn chat bằng AI Vision. Endpoint này chỉ dùng khi user đã bật tùy chọn AI Vision và đồng ý gửi ảnh đến AI provider.
+
+Backend không lưu ảnh, không log ảnh/base64 và không tự động tạo lịch sử phân tích. Sau khi nhận text, frontend vẫn yêu cầu user review/chỉnh sửa trước khi gọi `/api/analyze`.
+
+Request multipart:
+
+- `image`: file PNG, JPG, JPEG hoặc WEBP, tối đa 5MB.
+- `is_accepted`: `true`.
+
+Response:
+
+```json
+{
+  "text": "A: anh iu ngủ ngon nhó\nB: yeuemm",
+  "confidence": 91,
+  "warnings": [],
+  "provider": "vision"
+}
+```
+
+Lỗi thường gặp:
+
+- `400`: chưa consent, file rỗng, file không phải ảnh hoặc ảnh quá lớn.
+- `502`: Vision provider chưa cấu hình, timeout hoặc lỗi. Frontend nên fallback về OCR local/manual input.
+
 ## Profile
 
 - `GET /api/profile`

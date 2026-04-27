@@ -8,6 +8,7 @@ import type {
   HistoryListResponse,
   ProfilePayload,
   ProfileResponse,
+  VisionOcrResponse,
 } from './types';
 
 const API_BASE_URL =
@@ -48,6 +49,19 @@ function buildHeaders(init?: RequestInit) {
   const token = getStoredToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
+}
+
+function buildAuthHeaders(init?: RequestInit) {
+  const token = getStoredToken();
+  const headers: Record<string, string> = {
     ...(init?.headers as Record<string, string> | undefined),
   };
 
@@ -120,6 +134,23 @@ async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage 
     const response = await fetch(url, {
       ...init,
       headers: buildHeaders(init),
+    });
+
+    return parseJsonResponse<T>(response, fallbackMessage);
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(fallbackMessage);
+  }
+}
+
+async function requestFormData<T>(path: string, formData: FormData, fallbackMessage: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${path}`, {
+      method: 'POST',
+      headers: buildAuthHeaders(),
+      body: formData,
     });
 
     return parseJsonResponse<T>(response, fallbackMessage);
@@ -215,6 +246,18 @@ export async function analyzeEmotion(payload: AnalyzeRequest): Promise<AnalyzeRe
     'Không thể phân tích đoạn chat lúc này.'
   );
   return normalizeAnalyzeResponse(response);
+}
+
+export async function extractChatTextWithVision(file: File, isAccepted: boolean): Promise<VisionOcrResponse> {
+  const formData = new FormData();
+  formData.set('image', file);
+  formData.set('is_accepted', String(isAccepted));
+
+  return requestFormData<VisionOcrResponse>(
+    '/api/ocr/vision',
+    formData,
+    'Không thể dùng AI Vision lúc này. Vui lòng dùng OCR local hoặc nhập thủ công.'
+  );
 }
 
 export async function getProfile(): Promise<ProfileResponse> {
