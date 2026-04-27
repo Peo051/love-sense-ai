@@ -106,7 +106,7 @@ Lỗi thường gặp:
 - `429`: vượt rate limit, response có `Retry-After`.
 - `500`: lỗi ngoài dự kiến. Không trả secret hoặc cấu hình nhạy cảm.
 
-Rate limit mặc định: 20 request / 60 giây. Nếu đã đăng nhập thì tính theo `user_id`; nếu chưa đăng nhập thì tính theo IP client.
+Rate limit mặc định: 20 request / 60 giây, cấu hình bằng `RATE_LIMIT_MAX_REQUESTS` và `RATE_LIMIT_WINDOW_SECONDS`. Nếu đã đăng nhập thì tính theo `user_id`; nếu chưa đăng nhập thì tính theo IP client.
 
 ## Profile
 

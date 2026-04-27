@@ -38,6 +38,8 @@ SECRET_KEY=change-this-for-local-dev
 
 Backend tự chuyển `postgresql://` hoặc `postgres://` thành driver async `postgresql+asyncpg://`.
 
+Khi `APP_ENV=production`, backend không dùng SQLite fallback. Production phải cấu hình `FRONTEND_URL`, `DATABASE_URL` PostgreSQL/Supabase và `SECRET_KEY` thật trong secret store của hosting.
+
 ## Chạy Server
 
 ```powershell
@@ -76,8 +78,8 @@ LLM_MOCK_MODE=false
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
 LLM_RETRY_BASE_DELAY_SECONDS=0.25
-ANALYZE_RATE_LIMIT_REQUESTS=20
-ANALYZE_RATE_LIMIT_WINDOW_SECONDS=60
+RATE_LIMIT_MAX_REQUESTS=20
+RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 Không commit `.env` hoặc API key thật. Khi mock mode tắt, backend gọi provider với timeout, retry có kiểm soát cho lỗi tạm thời, rồi fallback mock response an toàn nếu provider vẫn lỗi. Lỗi cấu hình LLM không được log kèm API key.
@@ -88,7 +90,8 @@ Không commit `.env` hoặc API key thật. Khi mock mode tắt, backend gọi p
 
 - Scope theo `user_id` nếu request có Bearer token hợp lệ.
 - Nếu chưa đăng nhập hoặc token không hợp lệ, scope theo IP client.
-- Mặc định: `ANALYZE_RATE_LIMIT_REQUESTS=20` trong `ANALYZE_RATE_LIMIT_WINDOW_SECONDS=60`.
+- Mặc định: `RATE_LIMIT_MAX_REQUESTS=20` trong `RATE_LIMIT_WINDOW_SECONDS=60`.
+- Backend vẫn đọc alias cũ `ANALYZE_RATE_LIMIT_REQUESTS` và `ANALYZE_RATE_LIMIT_WINDOW_SECONDS` để không phá cấu hình dev cũ.
 - Vượt giới hạn trả `429` và header `Retry-After`.
 
 ## Auth Và Phân Quyền Dữ Liệu
