@@ -5,6 +5,12 @@ export interface AnalyzeRequest {
   save_result: boolean;
 }
 
+export interface EvidenceItem {
+  quote: string;
+  label: string;
+  reason: string;
+}
+
 export interface AnalyzeResponse {
   overall_emotion: string;
   confidence: number;
@@ -14,7 +20,7 @@ export interface AnalyzeResponse {
   suggested_reply: string;
   warning: string;
   tone?: string | null;
-  evidence?: string[];
+  evidence?: EvidenceItem[];
   uncertainty_reasons?: string[];
   input_quality?: 'good' | 'medium' | 'low' | string;
   reply_style?: string | null;

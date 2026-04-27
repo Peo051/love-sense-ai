@@ -29,7 +29,13 @@ const mockAnalyzeResponse = {
   suggested_reply: 'Anh hiểu rồi, em nghỉ một chút nha. Khi nào em muốn nói thì anh vẫn ở đây nghe em.',
   warning: 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.',
   tone: 'mệt mỏi / cần khoảng lặng',
-  evidence: ['B: Em mệt thôi.'],
+  evidence: [
+    {
+      quote: 'B: Em mệt thôi.',
+      label: 'mệt mỏi / né tránh nhẹ',
+      reason: 'Câu cho thấy người nói mệt hoặc muốn lùi lại khỏi cuộc trò chuyện lúc đó.',
+    },
+  ],
   uncertainty_reasons: ['Chỉ dựa trên vài câu chat nên chưa thể kết luận chắc chắn.'],
   input_quality: 'medium',
   reply_style: 'nhẹ nhàng, cho không gian, không hỏi dồn',
@@ -112,7 +118,7 @@ describe('AnalyzePage', () => {
         save_result: false,
       })
     );
-    expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: mockAnalyzeResponse.overall_emotion })).toBeInTheDocument();
   });
 
   it('asks before replacing existing chat text with OCR text', async () => {
@@ -184,7 +190,7 @@ describe('AnalyzePage', () => {
       json: async () => mockAnalyzeResponse,
     } as Response);
 
-    expect(await screen.findByText('mệt mỏi / né tránh nhẹ')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'mệt mỏi / né tránh nhẹ' })).toBeInTheDocument();
     expect(screen.getByText('72%')).toBeInTheDocument();
     expect(screen.getAllByText(/gợi ý phản hồi/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/câu làm căn cứ/i)).toBeInTheDocument();
@@ -209,7 +215,7 @@ describe('AnalyzePage', () => {
         save_input: false,
       })
     );
-    expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: mockAnalyzeResponse.overall_emotion })).toBeInTheDocument();
   });
 
   it('shows a friendly API error and keeps the user input', async () => {

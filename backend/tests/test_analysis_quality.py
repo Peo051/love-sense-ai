@@ -29,6 +29,9 @@ def test_affectionate_teasing_chat_is_not_classified_as_plain_neutral():
     assert "trung lập" not in normalized_emotion
     assert result.confidence >= 0.6
     assert result.evidence
+    assert result.evidence[0].quote
+    assert result.evidence[0].label
+    assert result.evidence[0].reason
     assert result.input_quality in {"medium", "good"}
 
 

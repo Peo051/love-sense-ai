@@ -9,6 +9,7 @@ class PromptBuilder:
             "Phân tích sắc thái hội thoại sau theo hướng thận trọng và an toàn.\n"
             "Không kết luận chắc chắn cảm xúc hoặc ý định của người khác.\n"
             "Nếu có dấu hiệu thân mật, trêu đùa hoặc quan tâm rõ ràng, hãy phản ánh sắc thái đó.\n"
+            "Phân biệt trung lập thật với thiếu dữ liệu.\n"
             "Nếu dữ liệu thiếu hoặc có thể đến từ OCR, giảm confidence và nêu điểm cần thận trọng.\n\n"
             f"Đoạn chat:\n{text}\n\n"
         )
@@ -22,7 +23,7 @@ class PromptBuilder:
 
         prompt += (
             "\nTrả về JSON có overall_emotion, confidence, emotion_distribution, summary, "
-            "context_note, suggested_reply, warning, tone, evidence, uncertainty_reasons, "
-            "input_quality và reply_style."
+            "context_note, suggested_reply, warning, tone, evidence dạng {quote,label,reason}, "
+            "uncertainty_reasons, input_quality và reply_style."
         )
         return prompt

@@ -229,9 +229,13 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         <Card title="Câu làm căn cứ" description="Các câu này chỉ là tín hiệu tham khảo, không phải bằng chứng kết luận cảm xúc thật.">
           <div className="space-y-3">
             {evidenceItems.map((item, index) => (
-              <div key={`${item}-${index}`} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+              <div key={`${item.quote}-${index}`} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
                 <Quote className="mt-1 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
-                <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{item}</p>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">{item.label}</p>
+                  <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-800">{item.quote}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
+                </div>
               </div>
             ))}
           </div>

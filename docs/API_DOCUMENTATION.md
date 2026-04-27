@@ -88,24 +88,35 @@ Response:
   "overall_emotion": "mệt mỏi / né tránh nhẹ",
   "confidence": 0.72,
   "emotion_distribution": {
-    "mệt_mỏi": 0.35,
-    "né_tránh": 0.25,
-    "buồn": 0.2,
-    "trung_lập": 0.2
+    "than_mat": 0.0,
+    "treu_dua": 0.0,
+    "quan_tam": 0.0,
+    "met_moi": 0.35,
+    "ne_tranh": 0.25,
+    "kho_chiu": 0.0,
+    "trung_lap": 0.2,
+    "chua_du_du_lieu": 0.0,
+    "buon": 0.2
   },
   "summary": "Đoạn chat có thể cho thấy người kia đang mệt hoặc chưa muốn trao đổi nhiều. Không đủ dữ liệu để kết luận chắc chắn cảm xúc thật sự.",
   "context_note": "Nếu người này thường im lặng khi mệt, nên phản hồi nhẹ nhàng thay vì hỏi dồn.",
   "suggested_reply": "Anh hiểu rồi, em nghỉ một chút nha. Khi nào em muốn nói thì anh vẫn ở đây nghe em.",
   "warning": "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.",
   "tone": "mệt mỏi / cần khoảng lặng",
-  "evidence": ["Em mệt thôi."],
+  "evidence": [
+    {
+      "quote": "Em mệt thôi.",
+      "label": "mệt mỏi / né tránh nhẹ",
+      "reason": "Câu cho thấy người nói mệt hoặc muốn lùi lại khỏi cuộc trò chuyện lúc đó."
+    }
+  ],
   "uncertainty_reasons": ["Chỉ dựa trên vài câu chat nên chưa thể kết luận chắc chắn."],
   "input_quality": "medium",
   "reply_style": "nhẹ nhàng, cho không gian, không hỏi dồn"
 }
 ```
 
-Các field `tone`, `evidence`, `uncertainty_reasons`, `input_quality`, `reply_style` là phần mở rộng tương thích ngược. Frontend có thể dùng để hiển thị căn cứ phân tích và cảnh báo khi input đến từ OCR hoặc còn thiếu dữ liệu.
+Các field `tone`, `evidence`, `uncertainty_reasons`, `input_quality`, `reply_style` là phần mở rộng tương thích ngược. Frontend có thể dùng để hiển thị căn cứ phân tích và cảnh báo khi input đến từ OCR hoặc còn thiếu dữ liệu. `evidence` dùng object `{quote,label,reason}` để mỗi nhận định quan trọng có câu chat làm căn cứ.
 
 Lỗi thường gặp:
 

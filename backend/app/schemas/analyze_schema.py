@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class AnalyzeRequest(BaseModel):
@@ -23,6 +23,12 @@ class AnalyzeRequest(BaseModel):
     )
 
 
+class EvidenceItem(BaseModel):
+    quote: str
+    label: str
+    reason: str
+
+
 class AnalyzeResponse(BaseModel):
     overall_emotion: str
     confidence: float
@@ -35,9 +41,9 @@ class AnalyzeResponse(BaseModel):
         default=None,
         description="Sắc thái giao tiếp nổi bật, ví dụ thân mật, trêu đùa, mệt mỏi hoặc giận dỗi.",
     )
-    evidence: list[str] = Field(
+    evidence: list[EvidenceItem] = Field(
         default_factory=list,
-        description="Một vài câu trong đoạn chat làm căn cứ cho nhận định. Không dùng để kết luận chắc chắn.",
+        description="Các câu trong đoạn chat làm căn cứ tham khảo cho từng nhận định quan trọng.",
     )
     uncertainty_reasons: list[str] = Field(
         default_factory=list,
@@ -51,3 +57,43 @@ class AnalyzeResponse(BaseModel):
         default=None,
         description="Phong cách phản hồi nên dùng dựa trên sắc thái hội thoại.",
     )
+
+    @field_validator("evidence", mode="before")
+    @classmethod
+    def normalize_evidence(cls, value):
+        if not value:
+            return []
+
+        if not isinstance(value, list):
+            return []
+
+        normalized_items: list[dict[str, str]] = []
+        for item in value:
+            if isinstance(item, EvidenceItem):
+                quote = item.quote.strip()
+                label = item.label.strip() or "tín hiệu hội thoại"
+                reason = item.reason.strip() or "Câu này được dùng làm căn cứ tham khảo cho phân tích."
+                if quote:
+                    normalized_items.append({"quote": quote, "label": label, "reason": reason})
+                continue
+
+            if isinstance(item, str):
+                cleaned_quote = item.strip()
+                if cleaned_quote:
+                    normalized_items.append(
+                        {
+                            "quote": cleaned_quote,
+                            "label": "tín hiệu hội thoại",
+                            "reason": "Câu này được dùng làm căn cứ tham khảo cho phân tích.",
+                        }
+                    )
+                continue
+
+            if isinstance(item, dict):
+                quote = str(item.get("quote", "")).strip()
+                label = str(item.get("label", "")).strip() or "tín hiệu hội thoại"
+                reason = str(item.get("reason", "")).strip() or "Câu này được dùng làm căn cứ tham khảo cho phân tích."
+                if quote:
+                    normalized_items.append({"quote": quote, "label": label, "reason": reason})
+
+        return normalized_items
