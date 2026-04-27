@@ -135,7 +135,7 @@ export default function ProfilePage() {
         <Card title="Hồ sơ người yêu">
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Biệt danh"
+              label="Biệt danh người yêu"
               value={partnerProfile.nickname}
               onChange={(value) => updatePartnerProfile('nickname', value)}
             />
@@ -213,7 +213,7 @@ export default function ProfilePage() {
         </Card>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={handleDeleteProfile}>
+          <Button type="button" variant="secondary" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             Xóa hồ sơ
           </Button>
