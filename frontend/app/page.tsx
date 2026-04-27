@@ -97,8 +97,8 @@ export default function HomePage() {
                 Hiểu sắc thái hội thoại. Phản hồi bình tĩnh hơn.
               </h1>
               <p className="max-w-2xl text-base font-medium leading-8 text-slate-700 sm:text-lg">
-                Nhập đoạn chat thủ công, kiểm tra nội dung trích xuất từ ảnh và nhận gợi ý phản hồi tham khảo — không đọc
-                trộm, không lưu mặc định.
+                Nhập đoạn chat thủ công, kiểm tra nội dung trích xuất từ ảnh và nhận gợi ý phản hồi tham khảo — không tự
+                truy cập tin nhắn, không lưu mặc định.
               </p>
             </div>
 
