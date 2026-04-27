@@ -96,9 +96,16 @@ Response:
   "summary": "Đoạn chat có thể cho thấy người kia đang mệt hoặc chưa muốn trao đổi nhiều. Không đủ dữ liệu để kết luận chắc chắn cảm xúc thật sự.",
   "context_note": "Nếu người này thường im lặng khi mệt, nên phản hồi nhẹ nhàng thay vì hỏi dồn.",
   "suggested_reply": "Anh hiểu rồi, em nghỉ một chút nha. Khi nào em muốn nói thì anh vẫn ở đây nghe em.",
-  "warning": "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp."
+  "warning": "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.",
+  "tone": "mệt mỏi / cần khoảng lặng",
+  "evidence": ["Em mệt thôi."],
+  "uncertainty_reasons": ["Chỉ dựa trên vài câu chat nên chưa thể kết luận chắc chắn."],
+  "input_quality": "medium",
+  "reply_style": "nhẹ nhàng, cho không gian, không hỏi dồn"
 }
 ```
+
+Các field `tone`, `evidence`, `uncertainty_reasons`, `input_quality`, `reply_style` là phần mở rộng tương thích ngược. Frontend có thể dùng để hiển thị căn cứ phân tích và cảnh báo khi input đến từ OCR hoặc còn thiếu dữ liệu.
 
 Lỗi thường gặp:
 

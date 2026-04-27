@@ -31,3 +31,23 @@ class AnalyzeResponse(BaseModel):
     context_note: str
     suggested_reply: str
     warning: str
+    tone: str | None = Field(
+        default=None,
+        description="Sắc thái giao tiếp nổi bật, ví dụ thân mật, trêu đùa, mệt mỏi hoặc giận dỗi.",
+    )
+    evidence: list[str] = Field(
+        default_factory=list,
+        description="Một vài câu trong đoạn chat làm căn cứ cho nhận định. Không dùng để kết luận chắc chắn.",
+    )
+    uncertainty_reasons: list[str] = Field(
+        default_factory=list,
+        description="Các lý do cần thận trọng khi đọc kết quả, nhất là khi input ngắn hoặc đến từ OCR.",
+    )
+    input_quality: str = Field(
+        default="medium",
+        description="Đánh giá chất lượng đầu vào: good, medium hoặc low.",
+    )
+    reply_style: str | None = Field(
+        default=None,
+        description="Phong cách phản hồi nên dùng dựa trên sắc thái hội thoại.",
+    )

@@ -1,6 +1,16 @@
 'use client';
 
-import { AlertTriangle, BarChart3, HeartHandshake, MessageCircle, RotateCcw, ShieldAlert, Sparkles } from 'lucide-react';
+import {
+  AlertTriangle,
+  BarChart3,
+  HeartHandshake,
+  Info,
+  MessageCircle,
+  Quote,
+  RotateCcw,
+  ShieldAlert,
+  Sparkles,
+} from 'lucide-react';
 
 import Card from '@/components/common/Card';
 import type { AnalyzeResponse } from '@/lib/types';
@@ -112,6 +122,10 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
 
   const confidencePercent = clampPercent(result.confidence);
   const distributionEntries = Object.entries(result.emotion_distribution);
+  const evidenceItems = result.evidence ?? [];
+  const uncertaintyItems = result.uncertainty_reasons ?? [];
+  const inputQuality = result.input_quality ?? 'medium';
+  const shouldWarnInputQuality = inputQuality === 'low';
 
   return (
     <div className="space-y-4">
@@ -148,6 +162,36 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         </div>
       </Card>
 
+      {shouldWarnInputQuality ? (
+        <Card title="Chất lượng đầu vào cần kiểm tra" className="border-amber-200 bg-amber-50/80">
+          <div className="flex gap-3 text-amber-950">
+            <Info className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
+            <p className="text-sm leading-6">
+              Đoạn chat có thể quá ngắn hoặc OCR chưa rõ. Hãy kiểm tra lại nội dung trước khi dùng kết quả để phản hồi.
+            </p>
+          </div>
+        </Card>
+      ) : null}
+
+      {result.tone || result.reply_style ? (
+        <Card title="Sắc thái & cách phản hồi">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {result.tone ? (
+              <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Sắc thái</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{result.tone}</p>
+              </div>
+            ) : null}
+            {result.reply_style ? (
+              <div className="rounded-2xl border border-teal-100 bg-teal-50/70 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">Phong cách gợi ý</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{result.reply_style}</p>
+              </div>
+            ) : null}
+          </div>
+        </Card>
+      ) : null}
+
       <Card title="Phân bố cảm xúc" description="Các nhóm cảm xúc có thể cùng xuất hiện trong một đoạn hội thoại.">
         <div className="space-y-4">
           {distributionEntries.map(([emotion, value]) => {
@@ -180,6 +224,32 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
           <p className="text-sm leading-6 text-slate-700">{result.context_note}</p>
         </Card>
       </div>
+
+      {evidenceItems.length > 0 ? (
+        <Card title="Câu làm căn cứ" description="Các câu này chỉ là tín hiệu tham khảo, không phải bằng chứng kết luận cảm xúc thật.">
+          <div className="space-y-3">
+            {evidenceItems.map((item, index) => (
+              <div key={`${item}-${index}`} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
+                <Quote className="mt-1 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
+                <p className="whitespace-pre-line text-sm leading-6 text-slate-700">{item}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {uncertaintyItems.length > 0 ? (
+        <Card title="Điểm cần thận trọng" className="border-amber-200 bg-amber-50/80">
+          <ul className="space-y-2 text-sm leading-6 text-amber-950">
+            {uncertaintyItems.map((item, index) => (
+              <li key={`${item}-${index}`} className="flex gap-2">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      ) : null}
 
       <Card title="Gợi ý phản hồi" className="border-teal-100 bg-teal-50/70">
         <div className="flex gap-3 rounded-2xl bg-white/80 px-4 py-4 text-teal-950 shadow-sm">

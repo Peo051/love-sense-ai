@@ -28,6 +28,11 @@ const mockAnalyzeResponse = {
   context_note: 'Nếu người này thường im lặng khi mệt, nên phản hồi nhẹ nhàng thay vì hỏi dồn.',
   suggested_reply: 'Anh hiểu rồi, em nghỉ một chút nha. Khi nào em muốn nói thì anh vẫn ở đây nghe em.',
   warning: 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.',
+  tone: 'mệt mỏi / cần khoảng lặng',
+  evidence: ['B: Em mệt thôi.'],
+  uncertainty_reasons: ['Chỉ dựa trên vài câu chat nên chưa thể kết luận chắc chắn.'],
+  input_quality: 'medium',
+  reply_style: 'nhẹ nhàng, cho không gian, không hỏi dồn',
 };
 
 function createOcrResult(text: string): OcrExtractionResult {
@@ -182,6 +187,9 @@ describe('AnalyzePage', () => {
     expect(await screen.findByText('mệt mỏi / né tránh nhẹ')).toBeInTheDocument();
     expect(screen.getByText('72%')).toBeInTheDocument();
     expect(screen.getAllByText(/gợi ý phản hồi/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/câu làm căn cứ/i)).toBeInTheDocument();
+    expect(screen.getByText('B: Em mệt thôi.')).toBeInTheDocument();
+    expect(screen.getByText(/điểm cần thận trọng/i)).toBeInTheDocument();
     expect(screen.getByText(mockAnalyzeResponse.suggested_reply)).toBeInTheDocument();
     expect(screen.getByText(/kết quả chỉ mang tính tham khảo/i)).toBeInTheDocument();
   });

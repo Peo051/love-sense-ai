@@ -1,3 +1,5 @@
+import unicodedata
+
 from app.core.config import settings
 from app.schemas.analyze_schema import AnalyzeResponse
 from app.services.analysis_policy import WARNING_MESSAGE
@@ -22,42 +24,93 @@ class AIService:
 
     def _mock_analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
         """Sinh kết quả mock để test ổn định khi chưa bật LLM thật."""
-        text_lower = chat_text.lower()
+        normalized_text = self._normalize_for_matching(chat_text)
         context_lower = profile_context.lower()
+        input_quality = self._estimate_input_quality(chat_text, context_lower)
+        ocr_uncertainty = self._ocr_uncertainty_reasons(context_lower)
 
-        fatigue_keywords = ["mệt", "không sao", "lạ", "im", "nghỉ", "đuối"]
-        sadness_keywords = ["buồn", "tủi", "khóc", "cô đơn", "thất vọng"]
-        conflict_keywords = ["giận", "bực", "khó chịu", "đừng hỏi", "không muốn nói"]
-        affection_keywords = ["yêu", "nhớ", "thương", "vui", "hạnh phúc"]
+        affectionate_keywords = [
+            "iu",
+            "yeu",
+            "yeuemm",
+            "thuong",
+            "nho",
+            "om",
+            "be",
+            "ngu ngon",
+            "hun",
+        ]
+        teasing_keywords = ["nho", "ca dut", "mong du", "duoc hong", "hihi", "haha", "hehe", "troll"]
+        fatigue_keywords = ["met", "khong sao", "hoi la", "im lang", "nghi", "duoi", "mai noi", "noi sau"]
+        sadness_keywords = ["buon", "tui", "khoc", "co don", "that vong"]
+        sulking_keywords = [
+            "gian",
+            "buc",
+            "kho chiu",
+            "dung hoi",
+            "khong muon noi",
+            "sao cung duoc",
+            "muon lam gi thi lam",
+            "thoi khoi",
+            "mac ke",
+        ]
 
-        fatigue_score = self._keyword_score(text_lower, fatigue_keywords)
-        sadness_score = self._keyword_score(text_lower, sadness_keywords)
-        conflict_score = self._keyword_score(text_lower, conflict_keywords)
-        affection_score = self._keyword_score(text_lower, affection_keywords)
+        affection_score = self._keyword_score(normalized_text, affectionate_keywords)
+        teasing_score = self._keyword_score(normalized_text, teasing_keywords)
+        fatigue_score = self._keyword_score(normalized_text, fatigue_keywords)
+        sadness_score = self._keyword_score(normalized_text, sadness_keywords)
+        sulking_score = self._keyword_score(normalized_text, sulking_keywords)
 
-        if fatigue_score or "không sao" in text_lower:
-            return self._fatigue_response(profile_context, context_lower)
+        if self._is_insufficient_input(normalized_text):
+            return self._insufficient_response(profile_context, context_lower, input_quality, ocr_uncertainty)
 
-        if conflict_score:
+        if affection_score >= 2 or (affection_score >= 1 and teasing_score >= 1):
+            return self._affectionate_teasing_response(
+                chat_text,
+                profile_context,
+                context_lower,
+                input_quality,
+                ocr_uncertainty,
+                affectionate_keywords + teasing_keywords,
+            )
+
+        if fatigue_score or "khong sao" in normalized_text:
+            return self._fatigue_response(
+                chat_text,
+                profile_context,
+                context_lower,
+                input_quality,
+                ocr_uncertainty,
+                fatigue_keywords,
+            )
+
+        if sulking_score:
             return AnalyzeResponse(
-                overall_emotion="căng thẳng / cần khoảng lặng",
+                overall_emotion="khó chịu nhẹ / giận dỗi",
                 confidence=0.68,
                 emotion_distribution={
-                    "căng_thẳng": 0.34,
-                    "né_tránh": 0.24,
-                    "buồn": 0.18,
-                    "trung_lập": 0.24,
+                    "khó_chịu_nhẹ": 0.34,
+                    "giận_dỗi": 0.28,
+                    "né_tránh": 0.18,
+                    "trung_lập": 0.20,
                 },
                 summary=(
-                    "Đoạn chat có thể đang có căng thẳng hoặc người kia chưa sẵn sàng trao đổi. "
-                    "Không đủ dữ liệu để kết luận chắc chắn nguyên nhân hay cảm xúc thật sự."
+                    "Một số câu có sắc thái cụt, buông xuôi hoặc phản ứng phòng thủ nhẹ. "
+                    "Điều này có thể liên quan đến khó chịu hoặc giận dỗi, nhưng vẫn cần hỏi lại trực tiếp để tránh suy diễn."
                 ),
                 context_note=self._build_context_note(profile_context, context_lower),
                 suggested_reply=(
-                    "Anh hiểu là lúc này em có thể chưa muốn nói nhiều. "
-                    "Mình nghỉ một chút, khi nào em sẵn sàng thì anh nghe em chia sẻ nhé."
+                    "Anh thấy có thể em đang không thoải mái. Anh không muốn hỏi dồn, khi nào em sẵn sàng thì mình nói chuyện nhẹ nhàng hơn nha."
                 ),
                 warning=WARNING_MESSAGE,
+                tone="khó chịu nhẹ / giận dỗi",
+                evidence=self._extract_evidence(chat_text, sulking_keywords),
+                uncertainty_reasons=[
+                    *ocr_uncertainty,
+                    "Các câu ngắn hoặc buông xuôi có thể bị hiểu nhầm nếu thiếu ngữ cảnh trước đó.",
+                ],
+                input_quality=input_quality,
+                reply_style="bình tĩnh, không tranh cãi, không hỏi dồn",
             )
 
         if sadness_score:
@@ -80,6 +133,14 @@ class AIService:
                     "còn nếu em cần yên tĩnh một chút anh cũng tôn trọng."
                 ),
                 warning=WARNING_MESSAGE,
+                tone="buồn / cần được lắng nghe",
+                evidence=self._extract_evidence(chat_text, sadness_keywords),
+                uncertainty_reasons=[
+                    *ocr_uncertainty,
+                    "Chỉ dựa trên vài câu chữ nên chưa thể biết chắc nguyên nhân cảm xúc.",
+                ],
+                input_quality=input_quality,
+                reply_style="lắng nghe, xác nhận cảm xúc, tránh thúc ép",
             )
 
         if affection_score:
@@ -102,6 +163,14 @@ class AIService:
                     "Mình cứ nói chuyện nhẹ nhàng và thật lòng với nhau nha."
                 ),
                 warning=WARNING_MESSAGE,
+                tone="ấm áp / tích cực",
+                evidence=self._extract_evidence(chat_text, affectionate_keywords),
+                uncertainty_reasons=[
+                    *ocr_uncertainty,
+                    "Một vài từ thân mật có thể mang sắc thái đùa tùy thói quen nhắn tin của hai người.",
+                ],
+                input_quality=input_quality,
+                reply_style="ấm áp, tự nhiên, đáp lại sự quan tâm",
             )
 
         return AnalyzeResponse(
@@ -123,9 +192,63 @@ class AIService:
                 "Nếu em muốn, mình nói chuyện thêm một chút để anh hiểu em hơn nhé."
             ),
             warning=WARNING_MESSAGE,
+            tone="chưa đủ dữ liệu rõ ràng",
+            evidence=self._extract_evidence(chat_text, ["ok", "uh", "ừ", "vang", "ừm"], limit=2),
+            uncertainty_reasons=[
+                *ocr_uncertainty,
+                "Đoạn chat chưa có đủ dấu hiệu rõ để phân loại sắc thái mạnh.",
+            ],
+            input_quality=input_quality,
+            reply_style="hỏi thăm nhẹ, không suy diễn",
         )
 
-    def _fatigue_response(self, profile_context: str, context_lower: str) -> AnalyzeResponse:
+    def _affectionate_teasing_response(
+        self,
+        chat_text: str,
+        profile_context: str,
+        context_lower: str,
+        input_quality: str,
+        uncertainty_reasons: list[str],
+        evidence_keywords: list[str],
+    ) -> AnalyzeResponse:
+        return AnalyzeResponse(
+            overall_emotion="thân mật / trêu đùa / quan tâm",
+            confidence=0.76 if input_quality != "low" else 0.62,
+            emotion_distribution={
+                "thân_mật": 0.34,
+                "trêu_đùa": 0.28,
+                "quan_tâm": 0.24,
+                "trung_lập": 0.14,
+            },
+            summary=(
+                "Đoạn chat có nhiều tín hiệu gần gũi và trêu đùa nhẹ, nhất là các cách gọi thân mật, "
+                "lời chúc ngủ ngon hoặc câu đùa về việc muốn được ôm. Không nên xem đây là kết luận chắc chắn, "
+                "nhưng sắc thái tổng thể không phải trung lập thuần."
+            ),
+            context_note=self._build_context_note(profile_context, context_lower),
+            suggested_reply=(
+                "Nghe đáng yêu quá. Em nghỉ một chút nha, khi nào muốn nói chuyện tiếp thì anh vẫn ở đây nghe em."
+            ),
+            warning=WARNING_MESSAGE,
+            tone="thân mật, trêu đùa nhẹ, có quan tâm",
+            evidence=self._extract_evidence(chat_text, evidence_keywords),
+            uncertainty_reasons=[
+                *uncertainty_reasons,
+                "Teencode, emoji hoặc câu đùa riêng của hai người có thể cần bạn chỉnh lại nếu OCR nhận sai.",
+            ],
+            input_quality=input_quality,
+            reply_style="ấm áp, vui nhẹ, không phân tích quá nặng",
+        )
+
+    def _fatigue_response(
+        self,
+        chat_text: str,
+        profile_context: str,
+        context_lower: str,
+        input_quality: str,
+        uncertainty_reasons: list[str],
+        evidence_keywords: list[str],
+    ) -> AnalyzeResponse:
         return AnalyzeResponse(
             overall_emotion="mệt mỏi / né tránh nhẹ",
             confidence=0.72,
@@ -145,6 +268,46 @@ class AIService:
                 "Khi nào em muốn nói thì anh vẫn ở đây nghe em."
             ),
             warning=WARNING_MESSAGE,
+            tone="mệt mỏi / cần khoảng lặng",
+            evidence=self._extract_evidence(chat_text, evidence_keywords),
+            uncertainty_reasons=[
+                *uncertainty_reasons,
+                "Các câu như 'không sao' hoặc 'mai nói' có thể là mệt thật, cũng có thể là chưa muốn nói lúc đó.",
+            ],
+            input_quality=input_quality,
+            reply_style="nhẹ nhàng, cho không gian, không hỏi dồn",
+        )
+
+    def _insufficient_response(
+        self,
+        profile_context: str,
+        context_lower: str,
+        input_quality: str,
+        uncertainty_reasons: list[str],
+    ) -> AnalyzeResponse:
+        return AnalyzeResponse(
+            overall_emotion="chưa đủ dữ liệu",
+            confidence=0.28,
+            emotion_distribution={
+                "chưa_đủ_dữ_liệu": 0.52,
+                "trung_lập": 0.32,
+                "không_chắc_chắn": 0.16,
+            },
+            summary=(
+                "Đoạn chat quá ngắn nên chưa đủ căn cứ để nhận diện sắc thái cảm xúc rõ ràng. "
+                "Nên bổ sung thêm vài câu trước và sau nếu bạn muốn kết quả có ích hơn."
+            ),
+            context_note=self._build_context_note(profile_context, context_lower),
+            suggested_reply="Mình chưa chắc đã hiểu đúng ý em. Nếu em muốn, mình nói thêm một chút nha.",
+            warning=WARNING_MESSAGE,
+            tone="chưa đủ dữ liệu",
+            evidence=[],
+            uncertainty_reasons=[
+                *uncertainty_reasons,
+                "Input quá ngắn nên confidence được hạ thấp để tránh suy diễn.",
+            ],
+            input_quality="low" if input_quality != "good" else "medium",
+            reply_style="hỏi mở, không kết luận",
         )
 
     def _build_context_note(self, profile_context: str, context_lower: str) -> str:
@@ -164,3 +327,48 @@ class AIService:
 
     def _keyword_score(self, text: str, keywords: list[str]) -> int:
         return sum(1 for keyword in keywords if keyword in text)
+
+    def _normalize_for_matching(self, text: str) -> str:
+        lowered = text.lower().replace("đ", "d")
+        without_accents = "".join(
+            char for char in unicodedata.normalize("NFD", lowered) if unicodedata.category(char) != "Mn"
+        )
+        return " ".join(without_accents.split())
+
+    def _extract_evidence(self, chat_text: str, keywords: list[str], limit: int = 4) -> list[str]:
+        evidence: list[str] = []
+        normalized_keywords = [self._normalize_for_matching(keyword) for keyword in keywords]
+
+        for line in chat_text.splitlines():
+            cleaned_line = line.strip()
+            if not cleaned_line:
+                continue
+
+            normalized_line = self._normalize_for_matching(cleaned_line)
+            if any(keyword and keyword in normalized_line for keyword in normalized_keywords):
+                evidence.append(cleaned_line)
+
+            if len(evidence) >= limit:
+                break
+
+        return evidence
+
+    def _is_insufficient_input(self, normalized_text: str) -> bool:
+        compact = normalized_text.replace(" ", "")
+        short_replies = {"ok", "oke", "uh", "um", "u", "vang", "da", "duoc", "khong"}
+        return compact in short_replies or len(compact) < 5
+
+    def _estimate_input_quality(self, chat_text: str, context_lower: str) -> str:
+        compact_length = len("".join(chat_text.split()))
+        line_count = len([line for line in chat_text.splitlines() if line.strip()])
+
+        if compact_length < 20:
+            return "low"
+        if "ocr" in context_lower:
+            return "medium" if compact_length >= 40 and line_count >= 2 else "low"
+        return "good" if compact_length >= 40 and line_count >= 2 else "medium"
+
+    def _ocr_uncertainty_reasons(self, context_lower: str) -> list[str]:
+        if "ocr" not in context_lower:
+            return []
+        return ["Nội dung có thể chứa lỗi OCR, nên kiểm tra lại câu chữ trước khi đọc kết quả."]

@@ -175,9 +175,22 @@ function normalizeEmotionDistribution(value: unknown): Record<string, number> {
   return Object.keys(distribution).length > 0 ? distribution : { trung_lap: 1 };
 }
 
+function normalizeStringList(value: unknown, limit = 4): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, limit);
+}
+
 function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
   const data = isRecord(value) ? value : {};
   const confidence = typeof data.confidence === 'number' && Number.isFinite(data.confidence) ? data.confidence : 0;
+  const inputQuality = typeof data.input_quality === 'string' && data.input_quality.trim() ? data.input_quality : 'medium';
 
   return {
     overall_emotion:
@@ -202,6 +215,11 @@ function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
       typeof data.warning === 'string' && data.warning.trim()
         ? data.warning
         : SAFE_ANALYZE_WARNING,
+    tone: typeof data.tone === 'string' && data.tone.trim() ? data.tone : null,
+    evidence: normalizeStringList(data.evidence),
+    uncertainty_reasons: normalizeStringList(data.uncertainty_reasons),
+    input_quality: inputQuality,
+    reply_style: typeof data.reply_style === 'string' && data.reply_style.trim() ? data.reply_style : null,
   };
 }
 
