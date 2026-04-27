@@ -29,7 +29,7 @@ Chạy test:
 ```powershell
 cd backend
 venv\Scripts\activate
-python -m pytest tests
+venv\Scripts\python.exe -m pytest tests
 ```
 
 Các nhóm test:
@@ -38,3 +38,7 @@ Các nhóm test:
 - Profile API.
 - Consent API.
 - History API, bao gồm không lưu mặc định, lưu kết quả không kèm chat, lưu chat khi có đồng ý và xóa dữ liệu.
+- Database config, fallback SQLite dev và normalize URL PostgreSQL/Supabase.
+- User data isolation: user A không đọc/sửa/xóa profile, history, consent hoặc user data của user B.
+
+Backend tests dùng SQLite in-memory qua `tests/conftest.py`, nên không phụ thuộc `DATABASE_URL` production.

@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, JSON, String, Text, Uuid
+from sqlalchemy import Boolean, CheckConstraint, Column, DateTime, Float, ForeignKey, JSON, String, Text, Uuid
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -9,6 +9,13 @@ from app.database.connection import Base
 
 class AnalysisSession(Base):
     __tablename__ = "analysis_sessions"
+    __table_args__ = (
+        CheckConstraint("confidence >= 0 AND confidence <= 1", name="ck_analysis_sessions_confidence_range"),
+        CheckConstraint(
+            "chat_text IS NULL OR (save_input IS TRUE AND is_accepted IS TRUE)",
+            name="ck_analysis_sessions_chat_text_requires_consent",
+        ),
+    )
 
     id = Column(Uuid(as_uuid=False), primary_key=True, default=lambda: str(uuid4()), index=True)
     user_id = Column(Uuid(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)

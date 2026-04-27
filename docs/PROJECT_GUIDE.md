@@ -30,15 +30,23 @@ Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn h�
 - `backend/app/services/analysis_policy.py`: cảnh báo an toàn và system prompt dùng chung cho mock/LLM.
 - `backend/app/core/auth.py`: dependency lấy user hiện tại từ Bearer token.
 - `backend/app/core/security.py`: hash password và tạo JWT.
-- `backend/app/database/connection.py`: async engine/session.
+- `backend/app/database/connection.py`: async engine/session, normalize URL PostgreSQL/Supabase và fallback SQLite dev.
+- `database/migrations/`: SQL migrations PostgreSQL/Supabase theo thứ tự.
 
 ## Data Ownership
 
 - `profiles.user_id` là unique.
 - `partner_profiles.user_id` là unique.
 - `consents.user_id + consent_type` là unique.
+- `preferences.user_id` là unique.
 - `analysis_sessions.user_id` được dùng để lọc lịch sử.
 - Mọi endpoint đọc/xóa dữ liệu cá nhân đều dùng `current_user.id`.
+
+## Database
+
+- Dev mặc định có thể dùng `sqlite+aiosqlite:///./love_emotion_dev.db` và tự tạo bảng khi `APP_ENV=development`.
+- PostgreSQL/Supabase dùng `DATABASE_URL` trong `backend/.env` và chạy `database/schema.sql` hoặc các migration theo thứ tự.
+- Backend test dùng SQLite in-memory riêng qua dependency override, không phụ thuộc database production.
 
 ## Quyền Riêng Tư
 
@@ -50,7 +58,7 @@ Love Emotion Web là web app phân tích sắc thái cảm xúc trong đoạn h�
 
 ## Hướng Phát Triển
 
-Ưu tiên tiếp theo là kiểm thử thực tế với PostgreSQL/Supabase local, bổ sung refresh token hoặc session UX tốt hơn, rồi mới tích hợp LLM thật bằng biến môi trường.
+Ưu tiên tiếp theo là bổ sung migration runner tự động như Alembic, refresh token hoặc session UX tốt hơn, rồi mới tích hợp LLM thật bằng biến môi trường.
 
 ## Cấu Hình 9router
 

@@ -136,6 +136,23 @@ def test_each_user_only_sees_own_profile_and_consent(client):
     assert user_b_consent["history_enabled"] is True
 
 
+def test_profile_delete_is_scoped_to_current_user(client):
+    user_a_headers = register_and_login(client)
+    user_b_headers = register_and_login(client)
+
+    client.post("/api/profile", headers=user_a_headers, json=sample_profile_payload("User A"))
+    client.post("/api/profile", headers=user_b_headers, json=sample_profile_payload("User B"))
+
+    delete_response = client.delete("/api/profile", headers=user_a_headers)
+    assert delete_response.status_code == 200
+
+    user_a_profile = client.get("/api/profile", headers=user_a_headers).json()
+    user_b_profile = client.get("/api/profile", headers=user_b_headers).json()
+
+    assert user_a_profile["user_profile"]["nickname"] == ""
+    assert user_b_profile["user_profile"]["nickname"] == "User B"
+
+
 def test_analyze_does_not_save_history_by_default(client, auth_headers):
     response = client.post(
         "/api/analyze",
@@ -253,6 +270,89 @@ def test_each_user_only_sees_own_history(client):
     assert len(user_a_history) == 1
     assert user_a_history[0]["chat_text"] == "User A chat"
     assert user_b_history == []
+
+
+def test_history_detail_delete_and_clear_are_scoped_to_current_user(client):
+    user_a_headers = register_and_login(client)
+    user_b_headers = register_and_login(client)
+
+    client.post(
+        "/api/analyze",
+        headers=user_a_headers,
+        json={
+            "chat_text": "User A private chat",
+            "profile_context": "",
+            "save_input": True,
+            "save_result": True,
+        },
+    )
+    client.post(
+        "/api/analyze",
+        headers=user_b_headers,
+        json={
+            "chat_text": "User B private chat",
+            "profile_context": "",
+            "save_input": True,
+            "save_result": True,
+        },
+    )
+
+    user_a_item = client.get("/api/history", headers=user_a_headers).json()["items"][0]
+    assert client.get(f"/api/history/{user_a_item['id']}", headers=user_b_headers).status_code == 404
+    assert client.delete(f"/api/history/{user_a_item['id']}", headers=user_b_headers).status_code == 404
+    assert client.get(f"/api/history/{user_a_item['id']}", headers=user_a_headers).status_code == 200
+
+    clear_b_response = client.delete("/api/history", headers=user_b_headers)
+    assert clear_b_response.status_code == 200
+    assert client.get("/api/history", headers=user_b_headers).json()["items"] == []
+
+    user_a_history = client.get("/api/history", headers=user_a_headers).json()["items"]
+    assert len(user_a_history) == 1
+    assert user_a_history[0]["chat_text"] == "User A private chat"
+
+
+def test_delete_user_data_is_scoped_to_current_user(client):
+    user_a_headers = register_and_login(client)
+    user_b_headers = register_and_login(client)
+
+    client.post("/api/profile", headers=user_a_headers, json=sample_profile_payload("User A"))
+    client.post("/api/profile", headers=user_b_headers, json=sample_profile_payload("User B"))
+    client.post(
+        "/api/consent",
+        headers=user_b_headers,
+        json={
+            "history_enabled": True,
+            "save_input": False,
+            "save_result": True,
+            "consent_type": "privacy_settings",
+            "is_accepted": True,
+        },
+    )
+
+    for headers, chat_text in [(user_a_headers, "User A chat"), (user_b_headers, "User B chat")]:
+        client.post(
+            "/api/analyze",
+            headers=headers,
+            json={
+                "chat_text": chat_text,
+                "profile_context": "",
+                "save_input": False,
+                "save_result": True,
+            },
+        )
+
+    delete_response = client.delete("/api/user-data", headers=user_a_headers)
+    assert delete_response.status_code == 200
+
+    assert client.get("/api/profile", headers=user_a_headers).json()["user_profile"]["nickname"] == ""
+    assert client.get("/api/history", headers=user_a_headers).json()["items"] == []
+    assert client.get("/api/consent", headers=user_a_headers).json()["is_accepted"] is False
+
+    assert client.get("/api/profile", headers=user_b_headers).json()["user_profile"]["nickname"] == "User B"
+    user_b_history = client.get("/api/history", headers=user_b_headers).json()["items"]
+    assert len(user_b_history) == 1
+    assert user_b_history[0]["chat_text"] is None
+    assert client.get("/api/consent", headers=user_b_headers).json()["is_accepted"] is True
 
 
 def test_delete_history_item_and_all_user_data(client, auth_headers):

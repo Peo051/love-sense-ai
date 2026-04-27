@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     project_name: str = "Love Emotion API"
     allowed_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
 
-    database_url: str = "postgresql://user:password@localhost/loveemotion"
+    database_url: str = "sqlite+aiosqlite:///./love_emotion_dev.db"
+    database_auto_create: bool = True
     ai_service_url: str = "http://localhost:8001"
 
     llm_provider: str = "mock"
