@@ -68,6 +68,8 @@ Trả về user hiện tại theo token.
 
 Phân tích đoạn chat tình cảm. Mặc định backend dùng mock; khi `LLM_MOCK_MODE=false`, backend gọi provider tương thích OpenAI Chat Completions theo cấu hình `LLM_*` như 9router. Endpoint có thể dùng khi chưa đăng nhập, nhưng chỉ lưu lịch sử khi có Bearer token và có consent hợp lệ.
 
+Backend không log API key, token hoặc `chat_text`. Nếu LLM timeout, lỗi tạm thời hoặc trả lỗi provider, backend retry theo cấu hình rồi fallback mock response an toàn cùng schema.
+
 Request:
 
 ```json
@@ -97,6 +99,14 @@ Response:
   "warning": "Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp."
 }
 ```
+
+Lỗi thường gặp:
+
+- `400`: thiếu hoặc rỗng `chat_text`, hoặc nội dung không phù hợp với safety filter.
+- `429`: vượt rate limit, response có `Retry-After`.
+- `500`: lỗi ngoài dự kiến. Không trả secret hoặc cấu hình nhạy cảm.
+
+Rate limit mặc định: 20 request / 60 giây. Nếu đã đăng nhập thì tính theo `user_id`; nếu chưa đăng nhập thì tính theo IP client.
 
 ## Profile
 

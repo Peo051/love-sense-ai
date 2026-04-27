@@ -69,11 +69,18 @@ LLM_BASE_URL=http://localhost:20128/v1
 LLM_API_KEY=
 LLM_MODEL=api_models_all
 LLM_MOCK_MODE=false
+LLM_TIMEOUT_SECONDS=30
+LLM_MAX_RETRIES=2
+LLM_RETRY_BASE_DELAY_SECONDS=0.25
+ANALYZE_RATE_LIMIT_REQUESTS=20
+ANALYZE_RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 2. Chạy 9Router local trên port 20128
 
 3. Restart backend server
+
+`LLM_MAX_RETRIES=2` nghĩa là backend thử lại tối đa 2 lần sau lần gọi đầu tiên cho lỗi tạm thời như timeout, `429`, hoặc `5xx`. Không retry lỗi schema, validation hoặc input. Nếu provider vẫn lỗi, backend fallback mock response an toàn để UI vẫn hiển thị đúng format.
 
 **⚠️ Bảo mật:**
 - Không commit file `.env`

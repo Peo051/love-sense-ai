@@ -24,6 +24,10 @@
   - Security checklist
   - Commit details
 
+- **[PRIVACY_DESIGN.md](PRIVACY_DESIGN.md)** - Thiết kế consent, lưu/xóa dữ liệu và logging an toàn.
+
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Checklist biến môi trường, database, test/build và deploy demo.
+
 ## 🚀 Quick Start
 
 ### Development (Mock Mode)
@@ -43,7 +47,7 @@ npm run dev
 # 1. Configure backend/.env
 LLM_MOCK_MODE=false
 LLM_BASE_URL=http://localhost:20128/v1
-LLM_API_KEY=your-key
+LLM_API_KEY=
 
 # 2. Run 9Router
 9router --port 20128

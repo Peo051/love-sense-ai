@@ -135,10 +135,10 @@ npm run build
 
 1. **Cấu hình backend** (`backend/.env`):
 ```env
-LLM_PROVIDER=openai
+LLM_PROVIDER=9router
 LLM_BASE_URL=http://localhost:20128/v1
-LLM_API_KEY=your-9router-api-key
-LLM_MODEL=gpt-4o-mini
+LLM_API_KEY=
+LLM_MODEL=api_models_all
 LLM_MOCK_MODE=false
 ```
 
