@@ -90,11 +90,11 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
   if (!result) {
     return (
       <Card className="border-dashed bg-rose-50/40">
-        <div className="flex min-h-[34rem] flex-col justify-center px-1 py-6 text-center sm:px-6">
+        <div className="flex min-h-[24rem] flex-col justify-center px-1 py-6 text-center sm:min-h-[34rem] sm:px-6">
           <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-rose-600 shadow-sm">
             <HeartHandshake className="h-7 w-7" aria-hidden="true" />
           </div>
-          <h2 className="text-xl font-bold text-slate-950">Kết quả phân tích sẽ xuất hiện ở đây</h2>
+          <h2 className="text-lg font-bold text-slate-950 sm:text-xl">Kết quả phân tích sẽ xuất hiện ở đây</h2>
           <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
             Nhập đoạn chat ngắn ở cột bên trái để xem sắc thái tổng quan, độ tin cậy, phân bố cảm xúc và gợi ý phản hồi.
           </p>
@@ -119,7 +119,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-rose-600">Cảm xúc tổng quan</p>
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-950">{result.overall_emotion}</h2>
+            <h2 className="mt-2 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              {result.overall_emotion}
+            </h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
               Đây là tín hiệu tham khảo để bạn chọn cách phản hồi bình tĩnh hơn, không phải kết luận chắc chắn.
             </p>
@@ -154,9 +156,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
             return (
               <div key={emotion} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="flex items-center gap-2 font-medium capitalize text-slate-700">
+                  <span className="flex min-w-0 items-center gap-2 font-medium capitalize text-slate-700">
                     <BarChart3 className="h-4 w-4 text-rose-500" aria-hidden="true" />
-                    {formatEmotionName(emotion)}
+                    <span className="break-words">{formatEmotionName(emotion)}</span>
                   </span>
                   <span className="tabular-nums text-slate-500">{percent}%</span>
                 </div>

@@ -177,9 +177,12 @@ export default function PrivacyPage() {
 
           <Card
             title="Xóa dữ liệu"
-            description="Các thao tác này chỉ áp dụng cho dữ liệu của tài khoản đang đăng nhập và luôn cần xác nhận."
+            description="Các thao tác này chỉ áp dụng cho dữ liệu của tài khoản đang đăng nhập. Mỗi thao tác đều mở hộp xác nhận trước khi xóa."
             className="border-red-100"
           >
+            <div className="mb-4 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm leading-6 text-red-800">
+              Đây là vùng thao tác nhạy cảm. Hãy chọn đúng loại dữ liệu cần xóa, sau đó xác nhận trong hộp thoại.
+            </div>
             <div className="grid gap-3">
               <Button type="button" variant="danger" onClick={() => setPendingDelete('history')} aria-label="Xóa lịch sử phân tích">
                 <Trash2 className="h-4 w-4" aria-hidden="true" />

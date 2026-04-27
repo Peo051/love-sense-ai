@@ -21,17 +21,17 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/90 backdrop-blur-xl">
-      <nav aria-label="Điều hướng chính" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <nav aria-label="Điều hướng chính" className="mx-auto max-w-7xl px-3 min-[390px]:px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 rounded-xl text-base font-bold text-slate-950 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+            className="inline-flex min-w-0 items-center gap-2 rounded-xl text-base font-bold text-slate-950 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
             onClick={() => setIsOpen(false)}
           >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200 sm:h-10 sm:w-10">
               <HeartHandshake className="h-5 w-5" aria-hidden="true" />
             </span>
-            <span>
+            <span className="truncate">
               Love Sense <span className="text-rose-600">AI</span>
             </span>
           </Link>
@@ -78,8 +78,10 @@ export default function Navbar() {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'rounded-xl px-3 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
-                    isActive ? 'bg-rose-600 text-white' : 'text-slate-700 hover:bg-rose-50 hover:text-rose-700'
+                    'rounded-xl px-3 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
+                    isActive
+                      ? 'bg-rose-600 text-white shadow-sm shadow-rose-200'
+                      : 'text-slate-700 hover:bg-rose-50 hover:text-rose-700'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >

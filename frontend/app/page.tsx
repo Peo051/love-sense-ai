@@ -83,7 +83,7 @@ export default function HomePage() {
   return (
     <PageShell className="space-y-16 pb-16 pt-6 sm:space-y-20 sm:pt-10">
       <section className="landing-premium-bg relative overflow-hidden rounded-[2rem] border border-rose-100 bg-white shadow-xl shadow-rose-100/70">
-        <div className="relative z-10 grid gap-10 px-6 py-10 sm:px-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-12 lg:py-16">
+        <div className="relative z-10 grid gap-10 px-5 py-9 min-[390px]:px-6 sm:px-10 sm:py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:px-12 lg:py-16">
           <div className="landing-fade-up max-w-3xl space-y-8">
             <Badge tone="rose" className="border-white/70 bg-white/70 text-rose-700 shadow-sm backdrop-blur">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
@@ -101,11 +101,11 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/analyze" className={primaryCtaClass}>
+              <Link href="/analyze" className={`${primaryCtaClass} w-full sm:w-auto`}>
                 Bắt đầu phân tích
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
-              <Link href="/privacy" className={secondaryCtaClass}>
+              <Link href="/privacy" className={`${secondaryCtaClass} w-full sm:w-auto`}>
                 Xem quyền riêng tư
               </Link>
             </div>
@@ -220,7 +220,7 @@ export default function HomePage() {
           </div>
           <Link
             href="/analyze"
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950 sm:w-auto"
           >
             Phân tích ngay
             <ArrowRight className="h-4 w-4" aria-hidden="true" />

@@ -168,18 +168,20 @@ export default function HistoryPage() {
                   onClick={() => setSelectedId(item.id)}
                   aria-pressed={selectedItem?.id === item.id}
                   className={cn(
-                    'w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
+                    'w-full rounded-2xl border px-3 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 min-[390px]:px-4',
                     selectedItem?.id === item.id
                       ? 'border-rose-300 bg-rose-50 shadow-sm shadow-rose-100'
                       : 'border-slate-100 bg-white hover:-translate-y-px hover:border-rose-200 hover:shadow-sm'
                   )}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-950">{item.overall_emotion}</p>
+                  <div className="flex flex-col gap-2 min-[430px]:flex-row min-[430px]:items-start min-[430px]:justify-between">
+                    <div className="min-w-0">
+                      <p className="break-words font-semibold text-slate-950">{item.overall_emotion}</p>
                       <p className="mt-1 text-xs text-slate-500">{formatDate(item.analyzed_at)}</p>
                     </div>
-                    <Badge tone={item.chat_text ? 'teal' : 'slate'}>{item.chat_text ? 'Có chat gốc' : 'Không lưu chat'}</Badge>
+                    <Badge tone={item.chat_text ? 'teal' : 'slate'} className="self-start">
+                      {item.chat_text ? 'Có chat gốc' : 'Không lưu chat'}
+                    </Badge>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-600">{summarize(item.summary)}</p>
                   <p className="mt-2 text-sm font-medium text-rose-700">{Math.round(item.confidence * 100)}% tin cậy</p>
@@ -206,6 +208,7 @@ export default function HistoryPage() {
                 <Button
                   type="button"
                   variant="danger"
+                  className="w-full sm:w-auto"
                   onClick={() => setPendingDelete({ type: 'item', id: selectedItem.id })}
                   aria-label="Xóa lịch sử này"
                 >
