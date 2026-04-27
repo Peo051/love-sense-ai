@@ -223,7 +223,7 @@ describe('AnalyzePage', () => {
     expect(await screen.findByRole('heading', { name: mockAnalyzeResponse.overall_emotion })).toBeInTheDocument();
   });
 
-  it('shows a friendly API error and keeps the user input', async () => {
+  it('shows a friendly backend error and keeps the user input', async () => {
     const user = userEvent.setup();
     mockFetchOnce({ detail: 'Backend đang bận, vui lòng thử lại sau.' }, false);
     render(<AnalyzePage />);
@@ -233,7 +233,21 @@ describe('AnalyzePage', () => {
     await user.type(chatInput, 'Tin nhắn hợp lệ nhưng API lỗi.');
     await user.click(screen.getByRole('button', { name: /phân tích/i }));
 
-    expect(await screen.findByText(/backend đang bận, vui lòng thử lại sau/i)).toBeInTheDocument();
+    expect(await screen.findByText(/backend xử lý thất bại/i)).toBeInTheDocument();
     expect(chatInput).toHaveValue('Tin nhắn hợp lệ nhưng API lỗi.');
+  });
+
+  it('shows a friendly network error and keeps the user input', async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')));
+    render(<AnalyzePage />);
+
+    const chatInput = screen.getByLabelText(/đoạn chat cần phân tích/i);
+    await user.clear(chatInput);
+    await user.type(chatInput, 'Tin nhắn hợp lệ nhưng backend không kết nối.');
+    await user.click(screen.getByRole('button', { name: /phân tích/i }));
+
+    expect(await screen.findByText(/không kết nối được backend/i)).toBeInTheDocument();
+    expect(chatInput).toHaveValue('Tin nhắn hợp lệ nhưng backend không kết nối.');
   });
 });

@@ -12,13 +12,57 @@ import type {
   VisionOcrResponse,
 } from './types';
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  'http://127.0.0.1:8000';
+const DEFAULT_LOCAL_API_BASE_URL = 'http://127.0.0.1:8000';
+const API_REQUEST_TIMEOUT_MS = 60_000;
+const MISSING_API_BASE_URL_MESSAGE = 'Missing NEXT_PUBLIC_API_BASE_URL';
+const NETWORK_ERROR_MESSAGE = 'Không kết nối được backend. Vui lòng kiểm tra cấu hình API hoặc thử lại sau.';
+const TIMEOUT_ERROR_MESSAGE = 'Backend phản hồi quá lâu, vui lòng thử lại.';
+const BACKEND_ERROR_MESSAGE = 'Backend xử lý thất bại. Vui lòng thử lại sau.';
+const UNAUTHORIZED_ERROR_MESSAGE = 'Bạn cần đăng nhập để thực hiện thao tác này.';
+const API_BASE_URL = resolveApiBaseUrl();
 const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
 const SAFE_ANALYZE_WARNING = 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.';
 let authTokenProvider: (() => Promise<string | null>) | null = null;
+
+class ApiRequestError extends Error {
+  status?: number;
+  code?: 'config' | 'network' | 'timeout' | 'http';
+
+  constructor(message: string, options?: { status?: number; code?: ApiRequestError['code'] }) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = options?.status;
+    this.code = options?.code;
+  }
+}
+
+function resolveApiBaseUrl() {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || '';
+  const normalizedBaseUrl = configuredBaseUrl.trim().replace(/\/+$/, '');
+
+  if (normalizedBaseUrl) {
+    return normalizedBaseUrl;
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    return '';
+  }
+
+  return DEFAULT_LOCAL_API_BASE_URL;
+}
+
+if (process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test') {
+  console.info('[API] base URL', API_BASE_URL || MISSING_API_BASE_URL_MESSAGE);
+}
+
+function buildApiUrl(path: string) {
+  if (!API_BASE_URL) {
+    throw new ApiRequestError(MISSING_API_BASE_URL_MESSAGE, { code: 'config' });
+  }
+
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalizedPath}`;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -137,7 +181,10 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   const payload = await readResponsePayload(response);
 
   if (!response.ok) {
-    throw new Error(getErrorMessage(payload, fallbackMessage));
+    throw new ApiRequestError(getHttpErrorMessage(response, payload, fallbackMessage), {
+      status: response.status,
+      code: 'http',
+    });
   }
 
   if (payload === null) {
@@ -147,27 +194,74 @@ async function parseJsonResponse<T>(response: Response, fallbackMessage: string)
   return payload as T;
 }
 
+function getHttpErrorMessage(response: Response, payload: unknown, fallbackMessage: string) {
+  if (response.status === 401) {
+    return UNAUTHORIZED_ERROR_MESSAGE;
+  }
+
+  if (response.status === 408 || response.status === 504) {
+    return TIMEOUT_ERROR_MESSAGE;
+  }
+
+  if (response.status >= 500) {
+    return BACKEND_ERROR_MESSAGE;
+  }
+
+  return getErrorMessage(payload, fallbackMessage);
+}
+
+async function fetchWithTimeout(url: string, init?: RequestInit) {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), API_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: init?.signal ?? controller.signal,
+    });
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
+function toApiError(error: unknown, fallbackMessage: string) {
+  if (error instanceof ApiRequestError) {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    if (error.name === 'AbortError') {
+      return new ApiRequestError(TIMEOUT_ERROR_MESSAGE, { code: 'timeout' });
+    }
+
+    if (error instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(error.message)) {
+      return new ApiRequestError(NETWORK_ERROR_MESSAGE, { code: 'network' });
+    }
+
+    return error;
+  }
+
+  return new Error(fallbackMessage);
+}
+
 async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage = 'Không thể xử lý yêu cầu.') {
   try {
-    const url = `${API_BASE_URL}${path}`;
+    const url = buildApiUrl(path);
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
       ...init,
       headers: await buildHeaders(init),
     });
 
     return parseJsonResponse<T>(response, fallbackMessage);
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(fallbackMessage);
+    throw toApiError(error, fallbackMessage);
   }
 }
 
 async function requestFormData<T>(path: string, formData: FormData, fallbackMessage: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}${path}`, {
+    const response = await fetchWithTimeout(buildApiUrl(path), {
       method: 'POST',
       headers: await buildAuthHeaders(),
       body: formData,
@@ -175,10 +269,7 @@ async function requestFormData<T>(path: string, formData: FormData, fallbackMess
 
     return parseJsonResponse<T>(response, fallbackMessage);
   } catch (error) {
-    if (error instanceof Error) {
-      throw error;
-    }
-    throw new Error(fallbackMessage);
+    throw toApiError(error, fallbackMessage);
   }
 }
 
@@ -296,15 +387,19 @@ export async function loginUser(email: string, password: string): Promise<AuthTo
   formData.set('username', email);
   formData.set('password', password);
 
-  const response = await fetch(`${API_BASE_URL}/api/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: formData,
-  });
+  try {
+    const response = await fetchWithTimeout(buildApiUrl('/api/token'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData,
+    });
 
-  const token = await parseJsonResponse<AuthToken>(response, 'Không thể đăng nhập.');
-  saveAuthToken(token.access_token);
-  return token;
+    const token = await parseJsonResponse<AuthToken>(response, 'Không thể đăng nhập.');
+    saveAuthToken(token.access_token);
+    return token;
+  } catch (error) {
+    throw toApiError(error, 'Không thể đăng nhập.');
+  }
 }
 
 export async function getCurrentUser(): Promise<AuthUser> {

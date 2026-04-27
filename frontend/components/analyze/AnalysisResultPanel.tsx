@@ -88,7 +88,7 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>Kiểm tra backend đang chạy và có thể nhận request.</li>
                 <li>Giữ nguyên nội dung đã nhập, chờ vài giây rồi bấm phân tích lại.</li>
-                <li>Nếu dùng local, kiểm tra biến `NEXT_PUBLIC_API_URL` của frontend.</li>
+                <li>Nếu dùng local hoặc Vercel, kiểm tra biến `NEXT_PUBLIC_API_BASE_URL` của frontend.</li>
               </ul>
             </div>
           </div>
