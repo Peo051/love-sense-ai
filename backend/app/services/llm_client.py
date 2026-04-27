@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from app.core.config import settings
 from app.schemas.analyze_schema import AnalyzeResponse, EvidenceItem
 from app.schemas.ocr_schema import VisionOcrResponse
+from app.services.analysis_output_validator import validate_analysis_output
 from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 
 
@@ -43,7 +44,8 @@ class OpenAICompatibleLLMClient:
         }
 
         response_body = await self._post_with_retries(payload)
-        return self._parse_response(response_body)
+        parsed_result = self._parse_response(response_body)
+        return validate_analysis_output(parsed_result, chat_text, profile_context)
 
     async def extract_chat_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
         model_name = settings.vision_ocr_model.strip() or settings.llm_model.strip()

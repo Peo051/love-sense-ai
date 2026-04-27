@@ -70,6 +70,13 @@ Phân tích đoạn chat tình cảm. Mặc định backend dùng mock; khi `LLM
 
 Backend không log API key, token hoặc `chat_text`. Nếu LLM timeout, lỗi tạm thời hoặc trả lỗi provider, backend retry theo cấu hình rồi fallback mock response an toàn cùng schema.
 
+Sau khi LLM trả kết quả, backend chạy output validator trước khi trả response:
+
+- Chuẩn hóa `evidence` về object `{quote,label,reason}` và bỏ evidence không khớp gần với `chat_text`.
+- Giới hạn `confidence` khi đoạn chat quá ngắn, OCR có cảnh báo chất lượng thấp hoặc không có evidence rõ.
+- Chuẩn hóa `emotion_distribution` về key không dấu và tổng gần `1.0`.
+- Rewrite output nếu provider trả các kết luận không an toàn như “hết yêu”, “phản bội”, “lừa dối” hoặc “chắc chắn”.
+
 Request:
 
 ```json
