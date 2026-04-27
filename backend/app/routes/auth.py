@@ -4,12 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.auth import get_current_user
 from app.core.config import settings
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.database.connection import get_db
-from app.models.user import User
-from app.schemas.auth_schema import Token, UserCreate, UserResponse
+from app.deps.auth import CurrentUser, get_current_user
+from app.schemas.auth_schema import AuthMeResponse, Token, UserCreate, UserResponse
 from app.services.db_store import UserRepository
 
 router = APIRouter()
@@ -46,6 +45,13 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSessi
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_me(current_user: User = Depends(get_current_user)):
-    return UserResponse(id=current_user.id, email=current_user.email, is_active=current_user.is_active)
+@router.get("/me", response_model=AuthMeResponse)
+async def get_me(current_user: CurrentUser = Depends(get_current_user)):
+    return AuthMeResponse(
+        id=current_user.id,
+        uid=current_user.uid,
+        email=current_user.email,
+        name=current_user.name,
+        picture=current_user.picture,
+        is_active=current_user.is_active,
+    )

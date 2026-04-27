@@ -5,13 +5,16 @@ import { LockKeyhole, MessageSquareText, ShieldCheck, Sparkles } from 'lucide-re
 
 import AnalysisForm from '@/components/analyze/AnalysisForm';
 import AnalysisResultPanel from '@/components/analyze/AnalysisResultPanel';
+import { InfoAlert, SuccessAlert } from '@/components/common/Alerts';
 import Badge from '@/components/common/Badge';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
+import { useAuth } from '@/contexts/AuthContext';
 import { analyzeEmotion } from '@/lib/api';
 import type { AnalyzeRequest, AnalyzeResponse } from '@/lib/types';
 
 export default function AnalyzePage() {
+  const { isAuthenticated } = useAuth();
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -56,6 +59,14 @@ export default function AnalyzePage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.96fr)_minmax(420px,1.04fr)] lg:items-start">
         <div className="space-y-4 lg:sticky lg:top-24">
+          {!isAuthenticated ? (
+            <InfoAlert>
+              Đăng nhập để lưu lịch sử và hồ sơ cá nhân hóa. Bạn vẫn có thể phân tích thử mà không cần tài khoản.
+            </InfoAlert>
+          ) : result?.saved_to_history ? (
+            <SuccessAlert>Kết quả đã được lưu vào lịch sử theo consent của bạn.</SuccessAlert>
+          ) : null}
+
           <div className="hidden rounded-2xl border border-slate-200 bg-white/95 p-4 shadow-sm lg:block">
             <div className="flex items-start gap-3">
               <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-rose-100 text-rose-700">

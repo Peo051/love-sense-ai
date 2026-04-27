@@ -27,13 +27,14 @@ psql -U postgres -d loveemotion -f migrations/005_create_analysis_sessions.sql
 psql -U postgres -d loveemotion -f migrations/006_add_consent_and_privacy_controls.sql
 psql -U postgres -d loveemotion -f migrations/007_add_auth_scoped_models.sql
 psql -U postgres -d loveemotion -f migrations/008_harden_user_scoped_persistence.sql
+psql -U postgres -d loveemotion -f migrations/009_add_firebase_uid_to_users.sql
 ```
 
-`007_add_auth_scoped_models.sql` đồng bộ schema với SQLAlchemy models hiện tại và thêm các field cần cho auth/user-scoped data. `008_harden_user_scoped_persistence.sql` đồng bộ preference constraints và thêm check constraint để `chat_text` chỉ tồn tại khi đã có consent lưu nội dung chat.
+`007_add_auth_scoped_models.sql` đồng bộ schema với SQLAlchemy models hiện tại và thêm các field cần cho auth/user-scoped data. `008_harden_user_scoped_persistence.sql` đồng bộ preference constraints và thêm check constraint để `chat_text` chỉ tồn tại khi đã có consent lưu nội dung chat. `009_add_firebase_uid_to_users.sql` thêm mapping Firebase uid sang user id nội bộ.
 
 ## Bảng Chính
 
-- `users`: tài khoản auth đơn giản.
+- `users`: tài khoản auth đơn giản và mapping Firebase Google Login qua `firebase_uid`.
 - `profiles`: hồ sơ người dùng, một bản ghi cho mỗi user.
 - `partner_profiles`: hồ sơ người yêu, một bản ghi cho mỗi user.
 - `preferences`: cài đặt giao diện/ngôn ngữ theo user.

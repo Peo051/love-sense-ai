@@ -21,6 +21,7 @@ $$ language 'plpgsql';
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
+    firebase_uid VARCHAR(128) UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -28,6 +29,7 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_firebase_uid ON users(firebase_uid);
 
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
@@ -145,7 +147,8 @@ CREATE INDEX idx_analysis_sessions_analyzed_at ON analysis_sessions(analyzed_at 
 CREATE INDEX idx_analysis_sessions_overall_emotion ON analysis_sessions(overall_emotion);
 CREATE INDEX idx_analysis_sessions_emotion_distribution ON analysis_sessions USING GIN (emotion_distribution);
 
-COMMENT ON TABLE users IS 'User accounts for simple bearer-token auth.';
+COMMENT ON TABLE users IS 'User accounts for simple bearer-token auth and Firebase Google Login mapping.';
+COMMENT ON COLUMN users.firebase_uid IS 'Firebase Authentication uid mapped to the internal user id.';
 COMMENT ON TABLE profiles IS 'Per-user profile information.';
 COMMENT ON TABLE partner_profiles IS 'Per-user partner profile information. Height, weight, and appearance are optional and must not be used to infer emotion.';
 COMMENT ON TABLE preferences IS 'Per-user preference settings.';

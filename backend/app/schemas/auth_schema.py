@@ -20,3 +20,9 @@ class UserResponse(BaseModel):
     id: str
     email: EmailStr
     is_active: bool
+
+
+class AuthMeResponse(UserResponse):
+    uid: str
+    name: str | None = None
+    picture: str | None = None

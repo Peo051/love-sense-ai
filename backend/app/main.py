@@ -4,12 +4,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.firebase import initialize_firebase_admin
 from app.database.connection import init_database_for_development
 from app.routes import analyze, auth, consent, health, history, ocr, profile, user_data
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    initialize_firebase_admin()
     await init_database_for_development()
     yield
 

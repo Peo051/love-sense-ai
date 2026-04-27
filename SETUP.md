@@ -36,6 +36,32 @@ npm run dev
 
 Mở `http://localhost:3000/analyze`.
 
+### Firebase Google Login
+
+Để dùng Google Login local:
+
+1. Tạo Firebase project.
+2. Bật Authentication -> Google provider.
+3. Thêm `localhost` vào Authorized domains.
+4. Điền Firebase Web SDK config vào `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+5. Điền Firebase Admin credential JSON vào `backend/.env`:
+
+```env
+FIREBASE_SERVICE_ACCOUNT_JSON=
+```
+
+Không commit hai file env này. Nếu chưa cấu hình Firebase, `/api/analyze` vẫn dùng được ở chế độ demo không đăng nhập, nhưng `/profile`, `/history`, `/privacy` sẽ yêu cầu đăng nhập.
+
 ## 3. Test
 
 Backend:
@@ -95,6 +121,7 @@ Xem checklist deploy frontend/backend/database tại [docs/DEPLOYMENT.md](docs/D
 
 Xem thêm:
 - [API Documentation](docs/API_DOCUMENTATION.md)
+- [Firebase Auth Guide](docs/AUTH_FIREBASE.md)
 - [Privacy Design](docs/PRIVACY_DESIGN.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)
 

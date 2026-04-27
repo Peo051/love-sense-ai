@@ -67,8 +67,8 @@ export default function AuthPage() {
                 Đăng nhập để quản lý dữ liệu của riêng bạn
               </h1>
               <p className="text-sm leading-6 text-slate-600">
-                Tài khoản giúp Love Sense AI tách hồ sơ, lịch sử và consent theo từng người dùng. Ứng dụng không tự đọc
-                tin nhắn và không lưu chat nếu bạn chưa bật consent.
+                Tài khoản giúp Love Sense AI tách hồ sơ, lịch sử và consent theo từng người dùng. Ứng dụng không tự
+                truy cập tin nhắn và không lưu chat nếu bạn chưa bật consent.
               </p>
             </div>
           </div>

@@ -24,6 +24,8 @@ export interface AnalyzeResponse {
   uncertainty_reasons?: string[];
   input_quality?: 'good' | 'medium' | 'low' | string;
   reply_style?: string | null;
+  authenticated?: boolean;
+  saved_to_history?: boolean;
 }
 
 export interface VisionOcrResponse {
@@ -93,6 +95,9 @@ export interface AuthToken {
 
 export interface AuthUser {
   id: string;
+  uid?: string;
   email: string;
+  name?: string | null;
+  picture?: string | null;
   is_active: boolean;
 }

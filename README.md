@@ -79,6 +79,68 @@ Các endpoint chính:
 
 Chi tiết request/response nằm trong [API Documentation](docs/API_DOCUMENTATION.md).
 
+## Firebase Login
+
+Love Sense AI hỗ trợ Google Login bằng Firebase Authentication:
+
+1. Frontend gọi Firebase Web SDK để đăng nhập Google.
+2. Firebase trả ID Token cho user đang đăng nhập.
+3. Frontend gửi token đến backend qua:
+
+```http
+Authorization: Bearer <firebase_id_token>
+```
+
+4. Backend FastAPI dùng Firebase Admin SDK để verify token.
+5. Backend map `firebase_uid` sang `users.id` nội bộ để profile, history và consent vẫn được scope theo user.
+
+User chưa đăng nhập vẫn dùng được `/api/analyze` để demo, nhưng không được lưu profile/history. Các route profile, history, consent và delete-data yêu cầu đăng nhập.
+
+### Cấu Hình Firebase Console
+
+1. Tạo Firebase project cho Love Sense AI.
+2. Vào Authentication -> Sign-in method.
+3. Bật Google provider.
+4. Vào Authentication -> Settings -> Authorized domains.
+5. Thêm:
+   - `localhost`
+   - `love-sense-ai.vercel.app`
+6. Vào Project settings -> General -> Web apps để lấy Firebase Web SDK config.
+7. Vào Project settings -> Service accounts để tạo service account JSON cho backend. Không commit JSON này.
+
+### Vercel Env
+
+Đặt trong project frontend trên Vercel:
+
+```text
+NEXT_PUBLIC_API_URL=https://love-sense-ai.onrender.com
+NEXT_PUBLIC_API_BASE_URL=https://love-sense-ai.onrender.com
+NEXT_PUBLIC_FIREBASE_API_KEY=<Firebase web client value>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<project>.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<project-id>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<project>.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<sender-id>
+NEXT_PUBLIC_FIREBASE_APP_ID=<app-id>
+```
+
+Các biến `NEXT_PUBLIC_FIREBASE_*` là client config public của Firebase Web SDK, không phải backend secret.
+
+### Render Env
+
+Đặt trong backend service trên Render:
+
+```text
+APP_ENV=production
+FRONTEND_URL=https://love-sense-ai.vercel.app
+ALLOWED_ORIGINS=https://love-sense-ai.vercel.app
+DATABASE_URL=<Supabase PostgreSQL connection string>
+SECRET_KEY=<strong random value>
+FIREBASE_SERVICE_ACCOUNT_JSON=<service account JSON string>
+LLM_MOCK_MODE=false
+```
+
+Không đưa `FIREBASE_SERVICE_ACCOUNT_JSON` vào frontend, GitHub, README hoặc log.
+
 ## Privacy Note
 
 Love Sense AI được thiết kế để giảm rủi ro xử lý dữ liệu nhạy cảm:
@@ -187,6 +249,7 @@ Luồng demo khuyến nghị:
 - [Testing Guide](docs/TESTING.md)
 - [Project Guide](docs/PROJECT_GUIDE.md)
 - [API Documentation](docs/API_DOCUMENTATION.md)
+- [Firebase Auth Guide](docs/AUTH_FIREBASE.md)
 - [Privacy Design](docs/PRIVACY_DESIGN.md)
 - [OCR and Vision Plan](docs/OCR_AND_VISION_PLAN.md)
 - [Deployment Guide](docs/DEPLOYMENT.md)

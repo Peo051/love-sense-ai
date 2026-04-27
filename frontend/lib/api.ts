@@ -18,6 +18,7 @@ const API_BASE_URL =
   'http://127.0.0.1:8000';
 const AUTH_TOKEN_KEY = 'love_emotion_auth_token';
 const SAFE_ANALYZE_WARNING = 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.';
+let authTokenProvider: (() => Promise<string | null>) | null = null;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -28,6 +29,10 @@ function getStoredToken() {
     return null;
   }
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setAuthTokenProvider(provider: (() => Promise<string | null>) | null) {
+  authTokenProvider = provider;
 }
 
 export function saveAuthToken(token: string) {
@@ -46,8 +51,22 @@ export function hasAuthToken() {
   return Boolean(getStoredToken());
 }
 
-function buildHeaders(init?: RequestInit) {
-  const token = getStoredToken();
+async function getRequestToken() {
+  if (authTokenProvider) {
+    try {
+      const token = await authTokenProvider();
+      if (token) {
+        return token;
+      }
+    } catch {
+      return getStoredToken();
+    }
+  }
+  return getStoredToken();
+}
+
+async function buildHeaders(init?: RequestInit) {
+  const token = await getRequestToken();
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(init?.headers as Record<string, string> | undefined),
@@ -60,8 +79,8 @@ function buildHeaders(init?: RequestInit) {
   return headers;
 }
 
-function buildAuthHeaders(init?: RequestInit) {
-  const token = getStoredToken();
+async function buildAuthHeaders(init?: RequestInit) {
+  const token = await getRequestToken();
   const headers: Record<string, string> = {
     ...(init?.headers as Record<string, string> | undefined),
   };
@@ -134,7 +153,7 @@ async function requestJson<T>(path: string, init?: RequestInit, fallbackMessage 
 
     const response = await fetch(url, {
       ...init,
-      headers: buildHeaders(init),
+      headers: await buildHeaders(init),
     });
 
     return parseJsonResponse<T>(response, fallbackMessage);
@@ -150,7 +169,7 @@ async function requestFormData<T>(path: string, formData: FormData, fallbackMess
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       method: 'POST',
-      headers: buildAuthHeaders(),
+      headers: await buildAuthHeaders(),
       body: formData,
     });
 
@@ -256,6 +275,8 @@ function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
     uncertainty_reasons: normalizeStringList(data.uncertainty_reasons),
     input_quality: inputQuality,
     reply_style: typeof data.reply_style === 'string' && data.reply_style.trim() ? data.reply_style : null,
+    authenticated: typeof data.authenticated === 'boolean' ? data.authenticated : false,
+    saved_to_history: typeof data.saved_to_history === 'boolean' ? data.saved_to_history : false,
   };
 }
 

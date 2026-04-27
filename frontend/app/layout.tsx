@@ -4,6 +4,7 @@ import { Be_Vietnam_Pro, JetBrains_Mono } from 'next/font/google';
 import Footer from '@/components/common/Footer';
 import Navbar from '@/components/common/Navbar';
 import { cn } from '@/lib/utils';
+import Providers from './providers';
 import '../styles/globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -39,9 +40,11 @@ export default function RootLayout({
   return (
     <html lang="vi" className={cn(beVietnamPro.variable, beVietnamDisplay.variable, jetBrainsMono.variable)}>
       <body>
-        <Navbar />
-        <main className="min-h-screen">{children}</main>
-        <Footer />
+        <Providers>
+          <Navbar />
+          <main className="min-h-screen">{children}</main>
+          <Footer />
+        </Providers>
       </body>
     </html>
   );
