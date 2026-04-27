@@ -1,10 +1,15 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Save, Trash2 } from 'lucide-react';
+import { Save, Trash2, UserRound, UsersRound } from 'lucide-react';
 
+import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
+import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import FieldLabel from '@/components/common/FieldLabel';
+import PageShell from '@/components/common/PageShell';
+import SectionHeader from '@/components/common/SectionHeader';
 import { deleteProfile, getProfile, saveProfile } from '@/lib/api';
 import type { PartnerProfile, ProfilePayload, UserProfile } from '@/lib/types';
 
@@ -97,35 +102,28 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+    <PageShell size="normal" className="space-y-8">
+      <SectionHeader
+        eyebrow="Hồ sơ cá nhân hóa"
+        title="Thêm bối cảnh để gợi ý phản hồi phù hợp hơn"
+        description="Các trường đều là tùy chọn. Dữ liệu nhạy cảm không bắt buộc và không được dùng để suy luận cảm xúc."
+        action={<Badge tone="amber">Không dùng chiều cao/cân nặng để suy luận</Badge>}
+      />
+
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-3">
-          <p className="text-sm font-semibold uppercase text-rose-700">Hồ sơ cá nhân hóa</p>
-          <h1 className="text-3xl font-bold text-slate-950">Thông tin dùng để cá nhân hóa gợi ý phản hồi</h1>
-          <p className="max-w-3xl text-sm leading-6 text-slate-600">
-            Các trường nhạy cảm là tùy chọn. Chiều cao, cân nặng và ngoại hình không được dùng để suy luận
-            cảm xúc; chỉ nên dùng làm ghi chú nếu bạn thật sự cần.
-          </p>
-        </div>
+        {statusMessage && <SuccessAlert>{statusMessage}</SuccessAlert>}
+        {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
-        {statusMessage && (
-          <p role="status" className="rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
-            {statusMessage}
-          </p>
-        )}
-        {errorMessage && (
-          <p role="alert" className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-            {errorMessage}
-          </p>
-        )}
-
-        <Card title="Hồ sơ người dùng">
+        <Card
+          title="Hồ sơ của bạn"
+          description="Thông tin này giúp hệ thống điều chỉnh cách diễn đạt gợi ý cho phù hợp với bạn."
+        >
+          <div className="mb-5 flex items-center gap-3 text-sm font-semibold text-rose-700">
+            <UserRound className="h-4 w-4" aria-hidden="true" />
+            Người dùng hiện tại
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <TextField
-              label="Biệt danh"
-              value={userProfile.nickname}
-              onChange={(value) => updateUserProfile('nickname', value)}
-            />
+            <TextField label="Biệt danh" value={userProfile.nickname} onChange={(value) => updateUserProfile('nickname', value)} />
             <TextField
               label="Ngôn ngữ chính"
               value={userProfile.primary_language}
@@ -144,10 +142,17 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        <Card title="Hồ sơ người yêu">
+        <Card
+          title="Hồ sơ người ấy"
+          description="Chỉ nhập những gì bạn thấy cần thiết để cá nhân hóa gợi ý phản hồi. Không cần nhập dữ liệu nhạy cảm."
+        >
+          <div className="mb-5 flex items-center gap-3 text-sm font-semibold text-rose-700">
+            <UsersRound className="h-4 w-4" aria-hidden="true" />
+            Bối cảnh giao tiếp
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Biệt danh người yêu"
+              label="Biệt danh người ấy"
               value={partnerProfile.nickname}
               onChange={(value) => updatePartnerProfile('nickname', value)}
             />
@@ -156,16 +161,15 @@ export default function ProfilePage() {
               value={partnerProfile.texting_style}
               onChange={(value) => updatePartnerProfile('texting_style', value)}
             />
-            <TextArea
-              label="Sở thích"
-              value={partnerProfile.likes}
-              onChange={(value) => updatePartnerProfile('likes', value)}
-            />
+            <TextArea label="Sở thích" value={partnerProfile.likes} onChange={(value) => updatePartnerProfile('likes', value)} />
             <TextArea
               label="Điều không thích"
               value={partnerProfile.dislikes}
               onChange={(value) => updatePartnerProfile('dislikes', value)}
             />
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <TextArea
               label="Khi vui thường biểu hiện thế nào"
               value={partnerProfile.when_happy}
@@ -181,14 +185,9 @@ export default function ProfilePage() {
               value={partnerProfile.when_angry}
               onChange={(value) => updatePartnerProfile('when_angry', value)}
             />
-            <TextArea
-              label="Ghi chú riêng"
-              value={partnerProfile.private_notes}
-              onChange={(value) => updatePartnerProfile('private_notes', value)}
-            />
           </div>
 
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <CheckboxField
               label="Có thích được hỏi thăm không"
               checked={partnerProfile.likes_checkins}
@@ -202,7 +201,10 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        <Card title="Dữ liệu tùy chọn" description="Không bắt buộc nhập. Các trường này không được dùng để suy luận cảm xúc.">
+        <Card
+          title="Ghi chú riêng và dữ liệu tùy chọn"
+          description="Chiều cao, cân nặng và ngoại hình chỉ là context phụ nếu bạn muốn ghi lại; không dùng để kết luận cảm xúc."
+        >
           <div className="grid gap-4 sm:grid-cols-3">
             <NumberField
               label="Chiều cao"
@@ -222,10 +224,17 @@ export default function ProfilePage() {
               onChange={(value) => updatePartnerProfile('appearance', value)}
             />
           </div>
+          <div className="mt-4">
+            <TextArea
+              label="Ghi chú riêng"
+              value={partnerProfile.private_notes}
+              onChange={(value) => updatePartnerProfile('private_notes', value)}
+            />
+          </div>
         </Card>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button type="button" variant="secondary" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
+          <Button type="button" variant="danger" onClick={handleDeleteProfile} aria-label="Xóa hồ sơ cá nhân hóa">
             <Trash2 className="h-4 w-4" aria-hidden="true" />
             Xóa hồ sơ
           </Button>
@@ -235,7 +244,7 @@ export default function ProfilePage() {
           </Button>
         </div>
       </form>
-    </div>
+    </PageShell>
   );
 }
 
@@ -247,28 +256,26 @@ interface TextFieldProps {
 
 function TextField({ label, value, onChange }: TextFieldProps) {
   return (
-    <label className="space-y-2 text-sm font-medium text-slate-800">
-      <span>{label}</span>
+    <FieldLabel label={label}>
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-md border border-rose-100 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+        className="w-full rounded-2xl border border-rose-100 px-4 py-3 text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
       />
-    </label>
+    </FieldLabel>
   );
 }
 
 function TextArea({ label, value, onChange }: TextFieldProps) {
   return (
-    <label className="space-y-2 text-sm font-medium text-slate-800">
-      <span>{label}</span>
+    <FieldLabel label={label}>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={3}
-        className="w-full rounded-md border border-rose-100 px-3 py-2 text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+        className="w-full rounded-2xl border border-rose-100 px-4 py-3 text-sm outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
       />
-    </label>
+    </FieldLabel>
   );
 }
 
@@ -281,19 +288,18 @@ interface NumberFieldProps {
 
 function NumberField({ label, value, suffix, onChange }: NumberFieldProps) {
   return (
-    <label className="space-y-2 text-sm font-medium text-slate-800">
-      <span>{label}</span>
-      <div className="flex rounded-md border border-rose-100 bg-white focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-100">
+    <FieldLabel label={label}>
+      <div className="flex rounded-2xl border border-rose-100 bg-white focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-100">
         <input
           type="number"
           min="0"
           value={value ?? ''}
           onChange={(event) => onChange(event.target.value ? Number(event.target.value) : null)}
-          className="w-full rounded-l-md px-3 py-2 text-sm outline-none"
+          className="w-full rounded-l-2xl px-4 py-3 text-sm outline-none"
         />
-        <span className="border-l border-rose-100 px-3 py-2 text-sm text-slate-500">{suffix}</span>
+        <span className="border-l border-rose-100 px-3 py-3 text-sm text-slate-500">{suffix}</span>
       </div>
-    </label>
+    </FieldLabel>
   );
 }
 
@@ -305,7 +311,7 @@ interface CheckboxFieldProps {
 
 function CheckboxField({ label, checked, onChange }: CheckboxFieldProps) {
   return (
-    <label className="flex items-center gap-3 rounded-lg border border-rose-100 bg-rose-50/60 px-4 py-3 text-sm text-slate-800">
+    <label className="flex items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-sm text-slate-800">
       <input
         type="checkbox"
         checked={checked}

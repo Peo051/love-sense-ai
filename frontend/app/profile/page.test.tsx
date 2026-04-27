@@ -66,7 +66,7 @@ describe('ProfilePage', () => {
 
     const nicknameInput = await screen.findByLabelText(/^Biệt danh$/i);
     expect(nicknameInput).toHaveValue('An');
-    expect(screen.getByLabelText(/biệt danh người yêu/i)).toHaveValue('Bình');
+    expect(screen.getByLabelText(/biệt danh người ấy/i)).toHaveValue('Bình');
 
     await user.clear(nicknameInput);
     await user.type(nicknameInput, 'An mới');

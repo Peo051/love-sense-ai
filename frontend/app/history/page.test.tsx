@@ -50,7 +50,7 @@ describe('HistoryPage', () => {
 
     expect(await screen.findAllByText('mệt mỏi / né tránh nhẹ')).toHaveLength(2);
     expect(screen.getByText('72% tin cậy')).toBeInTheDocument();
-    expect(screen.getByText('Đoạn chat có thể cho thấy người kia đang mệt.')).toBeInTheDocument();
+    expect(screen.getAllByText('Đoạn chat có thể cho thấy người kia đang mệt.').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Không lưu vì bạn chưa đồng ý lưu nội dung chat.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       'http://127.0.0.1:8000/api/history',

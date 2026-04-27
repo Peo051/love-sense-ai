@@ -1,10 +1,15 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Search, Trash2 } from 'lucide-react';
 
+import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
+import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import { EmptyState, LoadingState } from '@/components/common/StateBlocks';
+import PageShell from '@/components/common/PageShell';
+import SectionHeader from '@/components/common/SectionHeader';
 import { clearHistory, deleteHistoryItem, getHistory } from '@/lib/api';
 import type { HistoryItem } from '@/lib/types';
 
@@ -15,16 +20,34 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function summarize(text: string, length = 130) {
+  return text.length > length ? `${text.slice(0, length)}...` : text;
+}
+
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [query, setQuery] = useState('');
+
+  const filteredItems = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return items;
+    }
+
+    return items.filter((item) =>
+      [item.overall_emotion, item.summary, item.suggested_reply].some((value) =>
+        value.toLowerCase().includes(normalizedQuery)
+      )
+    );
+  }, [items, query]);
 
   const selectedItem = useMemo(
-    () => items.find((item) => item.id === selectedId) ?? items[0] ?? null,
-    [items, selectedId]
+    () => filteredItems.find((item) => item.id === selectedId) ?? filteredItems[0] ?? null,
+    [filteredItems, selectedId]
   );
 
   useEffect(() => {
@@ -75,75 +98,77 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase text-rose-700">Lịch sử phân tích</p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-950">Các lần phân tích đã được bạn đồng ý lưu</h1>
-        </div>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={items.length === 0}
-          onClick={handleClearHistory}
-          aria-label="Xóa toàn bộ lịch sử phân tích"
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-          Xóa toàn bộ lịch sử
-        </Button>
-      </div>
+    <PageShell className="space-y-8">
+      <SectionHeader
+        eyebrow="Lịch sử phân tích"
+        title="Những kết quả bạn đã đồng ý lưu"
+        description="Danh sách này chỉ chứa dữ liệu của tài khoản hiện tại. Chat gốc chỉ xuất hiện khi bạn đã bật lưu nội dung chat."
+        action={
+          <Button
+            type="button"
+            variant="danger"
+            disabled={items.length === 0}
+            onClick={handleClearHistory}
+            aria-label="Xóa toàn bộ lịch sử phân tích"
+          >
+            <Trash2 className="h-4 w-4" aria-hidden="true" />
+            Xóa toàn bộ
+          </Button>
+        }
+      />
 
-      {statusMessage && (
-        <p role="status" className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
-          {statusMessage}
-        </p>
-      )}
-      {errorMessage && (
-        <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
-          {errorMessage}
-        </p>
-      )}
+      {statusMessage && <SuccessAlert>{statusMessage}</SuccessAlert>}
+      {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
       {isLoading ? (
-        <Card title="Đang tải lịch sử">
-          <div className="min-h-48 rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 py-12 text-center text-sm text-slate-600">
-            Đang tải các lần phân tích đã được lưu cho tài khoản hiện tại.
-          </div>
-        </Card>
+        <LoadingState title="Đang tải lịch sử" description="Đang tải các lần phân tích đã được lưu cho tài khoản hiện tại." />
       ) : items.length === 0 ? (
-        <Card
+        <EmptyState
           title="Chưa có lịch sử"
-          description="Ứng dụng không lưu mặc định. Lịch sử chỉ xuất hiện khi bạn bật tùy chọn lưu kết quả tại trang phân tích."
-        >
-          <p className="text-sm leading-6 text-slate-600">
-            Nếu bạn chỉ muốn xem kết quả một lần, hãy tiếp tục không chọn các checkbox lưu dữ liệu.
-          </p>
-        </Card>
+          description="Ứng dụng không lưu mặc định. Lịch sử chỉ xuất hiện khi bạn bật tùy chọn lưu kết quả ở trang phân tích."
+        />
       ) : (
-        <div className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-          <Card title="Danh sách">
+        <div className="grid gap-6 lg:grid-cols-[390px_minmax(0,1fr)]">
+          <Card title="Danh sách" description="Tìm theo sắc thái, tóm tắt hoặc gợi ý phản hồi.">
+            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-rose-100 bg-white px-3 py-2 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-100">
+              <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="Tìm trong lịch sử..."
+                aria-label="Tìm trong lịch sử phân tích"
+                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+              />
+            </div>
+
             <div className="space-y-3">
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedId(item.id)}
                   aria-pressed={selectedItem?.id === item.id}
-                  className={`w-full rounded-lg border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 ${
                     selectedItem?.id === item.id
                       ? 'border-rose-300 bg-rose-50'
                       : 'border-slate-100 bg-white hover:border-rose-200'
                   }`}
                 >
-                  <p className="font-semibold text-slate-950">{item.overall_emotion}</p>
-                  <p className="mt-1 text-sm text-slate-500">{formatDate(item.analyzed_at)}</p>
-                  <p className="mt-2 text-sm text-slate-600">{Math.round(item.confidence * 100)}% tin cậy</p>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-950">{item.overall_emotion}</p>
+                      <p className="mt-1 text-xs text-slate-500">{formatDate(item.analyzed_at)}</p>
+                    </div>
+                    <Badge tone={item.chat_text ? 'teal' : 'slate'}>{item.chat_text ? 'Có chat gốc' : 'Không lưu chat'}</Badge>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{summarize(item.summary)}</p>
+                  <p className="mt-2 text-sm font-medium text-rose-700">{Math.round(item.confidence * 100)}% tin cậy</p>
                 </button>
               ))}
             </div>
           </Card>
 
-          {selectedItem && (
+          {selectedItem ? (
             <Card title="Chi tiết lịch sử">
               <div className="space-y-5 text-sm leading-6 text-slate-700">
                 <DetailRow label="Thời gian" value={formatDate(selectedItem.analyzed_at)} />
@@ -154,13 +179,13 @@ export default function HistoryPage() {
                 <DetailRow label="Cảnh báo an toàn" value={selectedItem.warning} />
                 <div>
                   <p className="font-semibold text-slate-950">Nội dung chat gốc</p>
-                  <p className="mt-2 rounded-lg bg-slate-50 px-4 py-3">
+                  <p className="mt-2 rounded-2xl bg-slate-50 px-4 py-3">
                     {selectedItem.chat_text ?? 'Không lưu vì bạn chưa đồng ý lưu nội dung chat.'}
                   </p>
                 </div>
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="danger"
                   onClick={() => handleDeleteItem(selectedItem.id)}
                   aria-label="Xóa lịch sử này"
                 >
@@ -169,10 +194,12 @@ export default function HistoryPage() {
                 </Button>
               </div>
             </Card>
+          ) : (
+            <EmptyState title="Không tìm thấy kết quả" description="Thử xóa từ khóa tìm kiếm hoặc phân tích thêm một đoạn hội thoại mới." />
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

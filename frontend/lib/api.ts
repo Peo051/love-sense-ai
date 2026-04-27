@@ -166,7 +166,7 @@ function normalizeAnalyzeResponse(value: unknown): AnalyzeResponse {
     suggested_reply:
       typeof data.suggested_reply === 'string' && data.suggested_reply.trim()
         ? data.suggested_reply
-        : 'Mình có thể nói chuyện thêm khi em sẵn sàng nhé.',
+        : 'Mình có thể nói chuyện thêm khi bạn sẵn sàng.',
     warning:
       typeof data.warning === 'string' && data.warning.trim()
         ? data.warning
