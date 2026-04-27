@@ -28,7 +28,7 @@ export default function AnalyzePage() {
       setResult(analysis);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Không thể phân tích đoạn chat lúc này.';
-      setErrorMessage(`${message} Vui lòng kiểm tra kết nối backend hoặc thử lại sau ít phút.`);
+      setErrorMessage(message);
     } finally {
       setIsLoading(false);
     }

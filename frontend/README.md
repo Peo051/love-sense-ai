@@ -1,6 +1,6 @@
 # Love Sense AI Frontend
 
-Frontend Next.js cho Love Sense AI. Ứng dụng dùng Firebase Google Login, gọi backend FastAPI qua `NEXT_PUBLIC_API_URL` và giữ nguyên demo mode cho `/analyze` khi user chưa đăng nhập.
+Frontend Next.js cho Love Sense AI. Ứng dụng dùng Firebase Google Login, gọi backend FastAPI qua `NEXT_PUBLIC_API_BASE_URL`/`NEXT_PUBLIC_API_URL` và giữ nguyên demo mode cho `/analyze` khi user chưa đăng nhập.
 
 ## Công Nghệ
 
@@ -39,6 +39,13 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
 NEXT_PUBLIC_FIREBASE_APP_ID=
+```
+
+Trên Vercel production, đặt cả hai biến về backend Render:
+
+```text
+NEXT_PUBLIC_API_BASE_URL=https://love-sense-ai.onrender.com
+NEXT_PUBLIC_API_URL=https://love-sense-ai.onrender.com
 ```
 
 Không đưa backend secret, database URL hoặc Firebase service account vào frontend.
