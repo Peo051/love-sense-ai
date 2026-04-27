@@ -2,7 +2,17 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { extractTextFromImage } from '@/lib/ocr';
 import AnalyzePage from './page';
+
+vi.mock('@/lib/ocr', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ocr')>();
+
+  return {
+    ...actual,
+    extractTextFromImage: vi.fn(),
+  };
+});
 
 const mockAnalyzeResponse = {
   overall_emotion: 'mệt mỏi / né tránh nhẹ',
@@ -35,6 +45,7 @@ function mockFetchOnce(response: unknown, ok = true) {
 describe('AnalyzePage', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+    vi.mocked(extractTextFromImage).mockReset();
     window.localStorage.clear();
   });
 
@@ -49,7 +60,39 @@ describe('AnalyzePage', () => {
 
     expect(screen.getByLabelText(/đoạn chat cần phân tích/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/bối cảnh cá nhân hóa/i)).toBeInTheDocument();
+    expect(screen.getByText(/nhập từ ảnh chụp đoạn chat/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /phân tích/i })).toBeInTheDocument();
+  });
+
+  it('fills chat text from OCR without auto submit and then submits the extracted text', async () => {
+    const user = userEvent.setup();
+    const fetchMock = mockFetchOnce(mockAnalyzeResponse);
+    const ocrText = 'A: Em sao vậy?\nB: Em mệt thôi.';
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(ocrText);
+    render(<AnalyzePage />);
+
+    const chatInput = screen.getByLabelText(/đoạn chat cần phân tích/i);
+    await user.clear(chatInput);
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), new File(['fake image'], 'chat.png', {
+      type: 'image/png',
+    }));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(await screen.findByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
+    expect(chatInput).toHaveValue(ocrText);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /phân tích sắc thái/i }));
+
+    const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(requestBody).toEqual(
+      expect.objectContaining({
+        chat_text: ocrText,
+        save_input: false,
+        save_result: false,
+      })
+    );
+    expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
   });
 
   it('does not submit and shows validation when chat text is empty', async () => {
