@@ -45,23 +45,17 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
     }
   };
 
-  const handleOcrTextExtracted = (text: string, result: OcrExtractionResult) => {
+  const handleOcrTextExtracted = (text: string, result: OcrExtractionResult, mode: 'replace' | 'append') => {
     const nextText = text.trim();
     if (!nextText) {
       return;
     }
 
-    if (chatText.trim() && chatText.trim() !== nextText) {
-      const shouldReplace = window.confirm(
-        'Bạn muốn thay thế nội dung hiện tại bằng văn bản OCR không? Chọn Hủy để thêm vào cuối nội dung hiện có.'
-      );
-
-      if (!shouldReplace) {
-        setChatText((currentText) => `${currentText.trimEnd()}\n\n${nextText}`.trim());
-        setLastOcrResult(result);
-        setIsChatFromOcr(true);
-        return;
-      }
+    if (mode === 'append' && chatText.trim()) {
+      setChatText((currentText) => `${currentText.trimEnd()}\n\n${nextText}`.trim());
+      setLastOcrResult(result);
+      setIsChatFromOcr(true);
+      return;
     }
 
     setChatText(nextText);
@@ -96,7 +90,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <ImageOcrUploader onTextExtracted={handleOcrTextExtracted} />
+      <ImageOcrUploader hasChatText={Boolean(chatText.trim())} onTextExtracted={handleOcrTextExtracted} />
 
       <Card
         title="Đoạn chat"

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -47,12 +47,14 @@ describe('ImageOcrUploader', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the image upload section', () => {
+  it('renders the image upload section and OCR capture guidance', () => {
     render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
 
     expect(screen.getByText(/nhập từ ảnh chụp đoạn chat/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/tải ảnh chụp đoạn chat/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i })).toBeDisabled();
+    expect(screen.getByText(/cắt sát vùng hội thoại/i)).toBeInTheDocument();
+    expect(screen.getByText(/che thông tin nhạy cảm/i)).toBeInTheDocument();
   });
 
   it('rejects files that are not images', async () => {
@@ -67,7 +69,7 @@ describe('ImageOcrUploader', () => {
     expect(extractTextFromImage).not.toHaveBeenCalled();
   });
 
-  it('shows a preview when a valid image is selected', async () => {
+  it('shows a larger preview when a valid image is selected', async () => {
     const user = userEvent.setup();
     render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
 
@@ -96,7 +98,7 @@ describe('ImageOcrUploader', () => {
     expect(extractTextFromImage).not.toHaveBeenCalled();
   });
 
-  it('extracts text and notifies the parent component', async () => {
+  it('extracts text into a review draft before notifying the parent component', async () => {
     const user = userEvent.setup();
     const onTextExtracted = vi.fn();
     let resolveOcr: (value: OcrExtractionResult) => void = () => undefined;
@@ -114,12 +116,41 @@ describe('ImageOcrUploader', () => {
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
     expect(screen.getByText(/đang nhận diện chữ/i)).toBeInTheDocument();
-    const result = createOcrResult('A: Em sao vậy?\nB: Em mệt thôi.');
-    resolveOcr(result);
-    await waitFor(() => {
-      expect(onTextExtracted).toHaveBeenCalledWith('A: Em sao vậy?\nB: Em mệt thôi.', result);
-    });
-    expect(screen.getByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
+    resolveOcr(createOcrResult('A: Em sao vậy?\nB: Em mệt thôi.'));
+
+    const draft = await screen.findByLabelText(/bản nháp nội dung trích xuất/i);
+    expect(draft).toHaveValue('A: Em sao vậy?\nB: Em mệt thôi.');
+    expect(onTextExtracted).not.toHaveBeenCalled();
+    expect(screen.getAllByText(/đã trích xuất nội dung/i).length).toBeGreaterThanOrEqual(1);
+
+    await user.clear(draft);
+    await user.type(draft, 'A: Em sao vậy?\nB: Em mệt thôi.');
+    await user.click(screen.getByRole('button', { name: /^dùng nội dung này$/i }));
+
+    expect(onTextExtracted).toHaveBeenCalledWith(
+      'A: Em sao vậy?\nB: Em mệt thôi.',
+      expect.objectContaining({ text: 'A: Em sao vậy?\nB: Em mệt thôi.' }),
+      'replace'
+    );
+  });
+
+  it('can append reviewed OCR draft when current chat already has content', async () => {
+    const user = userEvent.setup();
+    const onTextExtracted = vi.fn();
+    const result = createOcrResult('A: thêm nội dung OCR');
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(result);
+
+    render(<ImageOcrUploader hasChatText onTextExtracted={onTextExtracted} />);
+
+    await user.upload(
+      screen.getByLabelText(/tải ảnh chụp đoạn chat/i),
+      new File(['fake image'], 'chat.png', { type: 'image/png' })
+    );
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+    await screen.findByLabelText(/bản nháp nội dung trích xuất/i);
+    await user.click(screen.getByRole('button', { name: /nối vào cuối đoạn chat hiện tại/i }));
+
+    expect(onTextExtracted).toHaveBeenCalledWith('A: thêm nội dung OCR', result, 'append');
   });
 
   it('shows a warning when OCR quality is low or text is too short', async () => {
@@ -138,6 +169,7 @@ describe('ImageOcrUploader', () => {
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
     expect(await screen.findByText(/ocr có thể chưa chính xác/i)).toBeInTheDocument();
+    expect(screen.getByText(/độ tin cậy ocr thấp/i)).toBeInTheDocument();
     expect(screen.getByText(/ocr nhận diện quá ít nội dung/i)).toBeInTheDocument();
   });
 
@@ -168,7 +200,7 @@ describe('ImageOcrUploader', () => {
     expect(extractTextFromImage).not.toHaveBeenCalled();
   });
 
-  it('uses AI Vision when enabled and consented', async () => {
+  it('uses AI Vision when enabled and consented, then waits for review apply', async () => {
     const user = userEvent.setup();
     const onTextExtracted = vi.fn();
     vi.mocked(extractChatTextWithVision).mockResolvedValueOnce({
@@ -188,13 +220,17 @@ describe('ImageOcrUploader', () => {
     expect(await screen.findByText(/ai vision đã trích xuất nội dung/i)).toBeInTheDocument();
     expect(extractChatTextWithVision).toHaveBeenCalledWith(file, true);
     expect(extractTextFromImage).not.toHaveBeenCalled();
+    expect(onTextExtracted).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /^dùng nội dung này$/i }));
     expect(onTextExtracted).toHaveBeenCalledWith(
       'A: anh iu ngủ ngon nhó\nB: yeuemm 🥺',
-      expect.objectContaining({ language: 'vision', confidence: 91 })
+      expect.objectContaining({ language: 'vision', confidence: 91 }),
+      'replace'
     );
   });
 
-  it('falls back to local OCR when AI Vision fails', async () => {
+  it('falls back to local OCR when AI Vision fails, then waits for review apply', async () => {
     const user = userEvent.setup();
     const onTextExtracted = vi.fn();
     vi.mocked(extractChatTextWithVision).mockRejectedValueOnce(new Error('Vision unavailable'));
@@ -210,9 +246,13 @@ describe('ImageOcrUploader', () => {
 
     expect(await screen.findByText(/đã chuyển sang ocr local/i)).toBeInTheDocument();
     expect(extractTextFromImage).toHaveBeenCalled();
+    expect(onTextExtracted).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole('button', { name: /^dùng nội dung này$/i }));
     expect(onTextExtracted).toHaveBeenCalledWith(
       'A: local fallback\nB: vẫn kiểm tra lại',
-      expect.objectContaining({ language: 'vie+eng' })
+      expect.objectContaining({ language: 'vie+eng' }),
+      'replace'
     );
   });
 });
