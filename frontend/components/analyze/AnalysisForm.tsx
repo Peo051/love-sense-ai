@@ -1,10 +1,11 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
-import { Loader2, Send, ShieldCheck } from 'lucide-react';
+import { History, Loader2, LockKeyhole, Save, Send, ShieldCheck } from 'lucide-react';
 
 import { ErrorAlert, InfoAlert } from '@/components/common/Alerts';
 import Button from '@/components/common/Button';
+import Card from '@/components/common/Card';
 import FieldLabel from '@/components/common/FieldLabel';
 import type { AnalyzeRequest } from '@/lib/types';
 
@@ -45,86 +46,119 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <FieldLabel
-        htmlFor="chat_text"
-        label="Đoạn chat cần phân tích"
-        hint="Chỉ nhập nội dung bạn có quyền sử dụng. Ứng dụng không tự đọc tin nhắn từ nền tảng khác."
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Card
+        title="Đoạn chat"
+        description="Dán một đoạn hội thoại ngắn để hệ thống phân tích sắc thái. Không cần nhập thông tin cá nhân."
       >
-        <textarea
-          id="chat_text"
-          value={chatText}
-          onChange={(event) => setChatText(event.target.value)}
-          className="min-h-72 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
-          placeholder="Dán hoặc nhập đoạn chat thủ công tại đây..."
-        />
-      </FieldLabel>
+        <FieldLabel
+          htmlFor="chat_text"
+          label="Đoạn chat cần phân tích"
+          hint="Ứng dụng chỉ xử lý nội dung bạn nhập thủ công, không tự đọc tin nhắn từ nền tảng khác."
+        >
+          <textarea
+            id="chat_text"
+            value={chatText}
+            onChange={(event) => setChatText(event.target.value)}
+            className="min-h-72 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+            placeholder="Dán đoạn hội thoại ngắn tại đây. Không cần thông tin cá nhân."
+          />
+        </FieldLabel>
+      </Card>
 
-      <FieldLabel
-        htmlFor="profile_context"
-        label="Bối cảnh cá nhân hóa"
-        hint="Không bắt buộc. Nên mô tả phong cách giao tiếp, thói quen phản hồi hoặc điều nên tránh."
+      <Card
+        title="Bối cảnh cá nhân hóa"
+        description="Phần này giúp gợi ý phản hồi bớt máy móc. Có thể bỏ trống nếu bạn chưa muốn thêm bối cảnh."
       >
-        <textarea
-          id="profile_context"
-          value={profileContext}
-          onChange={(event) => setProfileContext(event.target.value)}
-          className="min-h-36 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
-          placeholder="Ví dụ: người ấy thường im lặng khi mệt, thích được lắng nghe trước khi nhận lời khuyên..."
-        />
-      </FieldLabel>
-
-      <div className="grid gap-3">
-        <label className="flex items-start gap-3 rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm leading-6 text-teal-950">
-          <input
-            type="checkbox"
-            checked={saveResult}
-            onChange={(event) => {
-              const checked = event.target.checked;
-              setSaveResult(checked);
-              if (!checked) {
-                setSaveInput(false);
-              }
-            }}
-            className="mt-1 h-4 w-4 rounded border-teal-300 text-rose-600 focus:ring-rose-500"
+        <FieldLabel
+          htmlFor="profile_context"
+          label="Bối cảnh cá nhân hóa"
+          hint="Mô tả phong cách giao tiếp, thói quen phản hồi hoặc điều nên tránh."
+        >
+          <textarea
+            id="profile_context"
+            value={profileContext}
+            onChange={(event) => setProfileContext(event.target.value)}
+            className="min-h-36 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+            placeholder="Ví dụ: Người ấy thường im lặng khi mệt, không thích bị hỏi dồn..."
           />
-          <span>
-            Tôi muốn lưu kết quả phân tích vào lịch sử. Nếu không chọn, kết quả chỉ hiển thị trong phiên hiện tại.
-          </span>
-        </label>
+        </FieldLabel>
+      </Card>
 
-        <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-950">
-          <input
-            type="checkbox"
-            checked={saveInput}
-            onChange={(event) => {
-              const checked = event.target.checked;
-              setSaveInput(checked);
-              if (checked) {
-                setSaveResult(true);
-              }
-            }}
-            className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
-          />
-          <span>
-            Tôi đồng ý lưu nội dung đoạn chat này để xem lại trong lịch sử. Nếu không chọn, hệ thống không lưu chat gốc.
-          </span>
-        </label>
-      </div>
+      <Card title="Tùy chọn lưu dữ liệu" description="Bạn có thể phân tích mà không lưu gì. Các tùy chọn này mặc định tắt.">
+        <div className="grid gap-3">
+          <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-slate-700 transition hover:border-rose-200 hover:bg-rose-50/50">
+            <input
+              type="checkbox"
+              checked={saveResult}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setSaveResult(checked);
+                if (!checked) {
+                  setSaveInput(false);
+                }
+              }}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span>
+              <span className="flex items-center gap-2 font-semibold text-slate-950">
+                <History className="h-4 w-4 text-rose-600" aria-hidden="true" />
+                Lưu kết quả phân tích vào lịch sử
+              </span>
+              <span className="mt-1 block">Chỉ lưu phần kết quả tổng hợp để bạn xem lại sau.</span>
+            </span>
+          </label>
+
+          <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm leading-6 text-amber-950 transition hover:border-amber-300 hover:bg-amber-50">
+            <input
+              type="checkbox"
+              checked={saveInput}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setSaveInput(checked);
+                if (checked) {
+                  setSaveResult(true);
+                }
+              }}
+              className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span>
+              <span className="flex items-center gap-2 font-semibold text-amber-950">
+                <Save className="h-4 w-4 text-amber-700" aria-hidden="true" />
+                Lưu nội dung chat gốc
+              </span>
+              <span className="mt-1 block">
+                Chỉ bật khi bạn thật sự muốn xem lại nội dung chat trong lịch sử. Nếu không chọn, hệ thống không lưu chat
+                gốc.
+              </span>
+            </span>
+          </label>
+        </div>
+      </Card>
 
       {validationError && <ErrorAlert>{validationError}</ErrorAlert>}
 
       <InfoAlert>
-        <span className="inline-flex items-center gap-2">
-          <ShieldCheck className="h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
-          Không đọc trộm, không kết luận chắc chắn, không lưu chat nếu bạn chưa đồng ý.
+        <span className="inline-flex items-start gap-2">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+          <span>Ứng dụng không lưu nội dung chat nếu bạn chưa đồng ý.</span>
         </span>
       </InfoAlert>
 
-      <Button type="submit" isLoading={isLoading} className="w-full">
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Send className="h-4 w-4" aria-hidden="true" />}
-        {isLoading ? 'Đang phân tích' : 'Phân tích'}
-      </Button>
+      <div className="rounded-2xl border border-rose-100 bg-white/90 p-3 shadow-sm">
+        <Button type="submit" isLoading={isLoading} className="min-h-12 w-full text-base">
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Send className="h-4 w-4" aria-hidden="true" />
+          )}
+          {isLoading ? 'Đang phân tích sắc thái' : 'Phân tích sắc thái'}
+        </Button>
+        <p className="mt-3 flex items-start gap-2 px-1 text-xs leading-5 text-slate-500">
+          <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          Không lưu chat mặc định. Bạn có thể bỏ qua toàn bộ tùy chọn lưu dữ liệu.
+        </p>
+      </div>
     </form>
   );
 }
