@@ -37,6 +37,6 @@ async def extract_chat_text_with_vision(
         return await VisionOcrService().extract_chat_text_from_image(image_bytes, image.content_type)
     except VisionOcrServiceError as exc:
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
+            status_code=exc.status_code,
             detail=str(exc) or "Vision AI chưa sẵn sàng. Vui lòng dùng OCR local hoặc nhập thủ công.",
         ) from exc

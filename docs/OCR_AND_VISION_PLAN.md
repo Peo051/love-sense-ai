@@ -29,8 +29,26 @@ AI Vision yêu cầu consent riêng vì ảnh sẽ được gửi đến backend
 - Không lưu ảnh mặc định.
 - Không log ảnh, URL ảnh, base64 hoặc OCR text nhạy cảm.
 - Nếu Vision API lỗi, frontend fallback về OCR local hoặc người dùng nhập thủ công.
+- Nếu `LLM_MOCK_MODE=true`, backend trả rõ: "AI Vision đang tắt trong cấu hình backend." và frontend hiển thị lý do này trước khi fallback OCR local.
+- Nếu thiếu `LLM_API_KEY`, backend trả rõ: "Missing LLM_API_KEY for AI Vision."
+- Nếu provider báo model không hỗ trợ ảnh, backend trả rõ: "Current model does not support image input."
 - Sau khi Vision AI trả text, người dùng vẫn phải review/chỉnh sửa trước khi phân tích.
 - Tách riêng thiết lập retention cho ảnh, OCR text và kết quả phân tích.
+
+## Cấu hình môi trường
+
+AI Vision dùng cùng cấu hình OpenAI-compatible với luồng phân tích:
+
+```text
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=
+LLM_MODEL=openai/gpt-4o-mini
+VISION_MODEL=openai/gpt-4o-mini
+LLM_MOCK_MODE=true
+```
+
+`VISION_MODEL` là tùy chọn. Nếu không đặt, backend dùng `LLM_MODEL`. Backend vẫn đọc alias cũ `VISION_OCR_MODEL` để không phá môi trường đã cấu hình trước đó.
 
 ## API hiện tại
 

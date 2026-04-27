@@ -72,15 +72,15 @@ Nếu không set `ALLOWED_ORIGINS`, backend production sẽ chỉ dùng `FRONTEN
 LLM mock mode an toàn:
 
 ```text
-LLM_PROVIDER=mock
-LLM_BASE_URL=http://localhost:20128/v1
+LLM_PROVIDER=openai
+LLM_BASE_URL=https://openrouter.ai/api/v1
 LLM_API_KEY=
-LLM_MODEL=api_models_all
+LLM_MODEL=openai/gpt-4o-mini
 LLM_MOCK_MODE=true
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
 LLM_RETRY_BASE_DELAY_SECONDS=0.25
-VISION_OCR_MODEL=
+VISION_MODEL=openai/gpt-4o-mini
 ```
 
 LLM thật qua 9Router/OpenAI-compatible provider:
@@ -94,10 +94,10 @@ LLM_MOCK_MODE=false
 LLM_TIMEOUT_SECONDS=30
 LLM_MAX_RETRIES=2
 LLM_RETRY_BASE_DELAY_SECONDS=0.25
-VISION_OCR_MODEL=<optional-vision-model-or-empty>
+VISION_MODEL=<optional-vision-model-or-empty>
 ```
 
-`VISION_OCR_MODEL` là tùy chọn. Nếu để trống, backend dùng `LLM_MODEL` cho `/api/ocr/vision`. Không đưa ảnh hoặc base64 vào log; endpoint AI Vision chỉ chạy khi frontend gửi consent riêng của user.
+`VISION_MODEL` là tùy chọn. Nếu để trống, backend dùng `LLM_MODEL` cho `/api/ocr/vision`. Backend vẫn đọc alias cũ `VISION_OCR_MODEL` để tương thích môi trường cũ. Không đưa ảnh hoặc base64 vào log; endpoint AI Vision chỉ chạy khi frontend gửi consent riêng của user.
 
 Rate limit cho `POST /api/analyze`:
 
@@ -148,7 +148,7 @@ Backend:
 - `LLM_TIMEOUT_SECONDS`
 - `LLM_MAX_RETRIES`
 - `LLM_RETRY_BASE_DELAY_SECONDS`
-- `VISION_OCR_MODEL` nếu provider dùng model vision riêng
+- `VISION_MODEL` nếu provider dùng model vision riêng
 - `RATE_LIMIT_MAX_REQUESTS`
 - `RATE_LIMIT_WINDOW_SECONDS`
 

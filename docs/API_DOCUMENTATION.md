@@ -139,7 +139,7 @@ Trích xuất nội dung chữ từ ảnh chụp đoạn chat bằng AI Vision. 
 
 Backend không lưu ảnh, không log ảnh/base64 và không tự động tạo lịch sử phân tích. Sau khi nhận text, frontend vẫn yêu cầu user review/chỉnh sửa trước khi gọi `/api/analyze`.
 
-Model vision được chọn bằng `VISION_OCR_MODEL`; nếu biến này trống, backend dùng `LLM_MODEL`. Không cấu hình `LLM_API_KEY` trong frontend.
+Model vision được chọn bằng `VISION_MODEL`; nếu biến này trống, backend dùng `LLM_MODEL`. Backend vẫn đọc alias cũ `VISION_OCR_MODEL` để tương thích môi trường cũ. Không cấu hình `LLM_API_KEY` trong frontend.
 
 Request multipart:
 
@@ -160,7 +160,8 @@ Response:
 Lỗi thường gặp:
 
 - `400`: chưa consent, file rỗng, file không phải ảnh hoặc ảnh quá lớn.
-- `502`: Vision provider chưa cấu hình, timeout hoặc lỗi. Frontend nên fallback về OCR local/manual input.
+- `503`: `LLM_MOCK_MODE=true` hoặc thiếu cấu hình như `LLM_API_KEY`. Ví dụ: `AI Vision đang tắt trong cấu hình backend.` hoặc `Missing LLM_API_KEY for AI Vision.`
+- `502`: Vision provider timeout/lỗi hoặc model không hỗ trợ ảnh. Ví dụ: `Current model does not support image input.` Frontend nên fallback về OCR local/manual input.
 
 ## Profile
 

@@ -16,9 +16,10 @@ from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 class LLMClientError(Exception):
     """Raised when the configured LLM provider cannot return a valid analysis."""
 
-    def __init__(self, message: str, *, retryable: bool = False):
+    def __init__(self, message: str, *, retryable: bool = False, status_code: int | None = None):
         super().__init__(message)
         self.retryable = retryable
+        self.status_code = status_code
 
 
 class OpenAICompatibleLLMClient:
@@ -121,9 +122,11 @@ class OpenAICompatibleLLMClient:
                 response.raise_for_status()
         except httpx.HTTPStatusError as exc:
             status_code = exc.response.status_code
+            message = self._provider_error_message(exc.response, payload)
             raise LLMClientError(
-                f"LLM provider trả lỗi HTTP {status_code}.",
+                message or f"LLM provider trả lỗi HTTP {status_code}.",
                 retryable=self._is_retryable_status_code(status_code),
+                status_code=502,
             ) from exc
         except httpx.TimeoutException as exc:
             raise LLMClientError("LLM provider phản hồi quá thời gian chờ.", retryable=True) from exc
@@ -149,20 +152,39 @@ class OpenAICompatibleLLMClient:
             raise LLMClientError(f"Thiếu cấu hình LLM: {', '.join(missing_fields)}.")
 
     def _validate_vision_settings(self, model_name: str) -> None:
-        missing_fields = [
-            field
-            for field, value in {
-                "LLM_BASE_URL": settings.llm_base_url,
-                "LLM_API_KEY": settings.llm_api_key,
-                "VISION_OCR_MODEL or LLM_MODEL": model_name,
-            }.items()
-            if not value
-        ]
-        if missing_fields:
-            raise LLMClientError(f"Thiếu cấu hình Vision OCR: {', '.join(missing_fields)}.")
+        if not settings.llm_base_url:
+            raise LLMClientError("Missing LLM_BASE_URL for AI Vision.", status_code=503)
+        if not settings.llm_api_key:
+            raise LLMClientError("Missing LLM_API_KEY for AI Vision.", status_code=503)
+        if not model_name:
+            raise LLMClientError("Missing VISION_MODEL or LLM_MODEL for AI Vision.", status_code=503)
 
     def _is_retryable_status_code(self, status_code: int) -> bool:
         return status_code in {408, 429} or 500 <= status_code <= 599
+
+    def _provider_error_message(self, response: httpx.Response, payload: dict[str, Any]) -> str | None:
+        if self._is_vision_payload(payload) and self._response_mentions_unsupported_image(response):
+            return "Current model does not support image input."
+        return None
+
+    def _is_vision_payload(self, payload: dict[str, Any]) -> bool:
+        for message in payload.get("messages", []):
+            content = message.get("content") if isinstance(message, dict) else None
+            if isinstance(content, list):
+                for part in content:
+                    if isinstance(part, dict) and part.get("type") == "image_url":
+                        return True
+        return False
+
+    def _response_mentions_unsupported_image(self, response: httpx.Response) -> bool:
+        try:
+            response_text = response.text.lower()
+        except Exception:
+            return False
+
+        unsupported_terms = ("not support image", "does not support image", "image input", "unsupported image")
+        model_terms = ("model", "modality", "vision", "input")
+        return any(term in response_text for term in unsupported_terms) and any(term in response_text for term in model_terms)
 
     def _build_user_prompt(self, chat_text: str, profile_context: str) -> str:
         return (
