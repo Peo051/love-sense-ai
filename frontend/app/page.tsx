@@ -14,6 +14,7 @@ import Link from 'next/link';
 
 import Badge from '@/components/common/Badge';
 import Card from '@/components/common/Card';
+import HeroVisual from '@/components/home/HeroVisual';
 import PageShell from '@/components/common/PageShell';
 
 const trustItems = [
@@ -119,72 +120,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="landing-fade-up landing-fade-delay-1">
-            <div className="landing-preview-float relative mx-auto max-w-xl rounded-[2rem] border border-white/80 bg-white/90 p-4 shadow-2xl shadow-rose-200/70 backdrop-blur">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-slate-950">Bản xem trước phân tích</p>
-                  <p className="text-xs text-slate-500">Không lưu chat nếu chưa có consent</p>
-                </div>
-                <Badge tone="teal" className="shrink-0">
-                  <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-                  Privacy lock
-                </Badge>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-                  <div className="mb-3 flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Input sample</p>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-500 shadow-sm">
-                      Manual
-                    </span>
-                  </div>
-                  <p className="whitespace-pre-line text-sm leading-6 text-slate-700">
-                    A: Em sao vậy?{'\n'}B: Không sao.{'\n'}A: Anh thấy em hơi lạ.{'\n'}B: Em mệt thôi.
-                  </p>
-                </div>
-
-                <div className="rounded-2xl border border-rose-100 bg-white p-4 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-600">Result sample</p>
-                      <p className="mt-1 text-lg font-bold text-slate-950">mệt mỏi / né tránh nhẹ</p>
-                    </div>
-                    <div className="rounded-2xl bg-teal-50 px-3 py-2 text-right">
-                      <p className="text-xs font-semibold text-teal-700">Độ tin cậy</p>
-                      <p className="text-lg font-bold text-teal-800">72%</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    {[
-                      ['mệt mỏi', '35%', 'w-[35%]'],
-                      ['né tránh', '25%', 'w-[25%]'],
-                      ['buồn', '20%', 'w-[20%]'],
-                    ].map(([label, value, width]) => (
-                      <div key={label}>
-                        <div className="mb-1 flex justify-between text-xs font-medium text-slate-600">
-                          <span>{label}</span>
-                          <span>{value}</span>
-                        </div>
-                        <div className="h-2 overflow-hidden rounded-full bg-rose-50">
-                          <div className={`h-full rounded-full bg-rose-500 ${width}`} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-amber-100 bg-amber-50/80 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">Gợi ý phản hồi</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">
-                    Anh hiểu rồi, em nghỉ một chút nha. Khi nào em muốn nói thì anh vẫn ở đây nghe em.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          <HeroVisual />
         </div>
       </section>
 
@@ -282,7 +218,10 @@ export default function HomePage() {
               Nhập vài dòng hội thoại, thêm bối cảnh cần thiết và xem gợi ý phản hồi tham khảo trong vài giây.
             </p>
           </div>
-          <Link href="/analyze" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950">
+          <Link
+            href="/analyze"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-slate-950"
+          >
             Phân tích ngay
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
