@@ -20,23 +20,23 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/90 shadow-sm shadow-rose-100/40 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b-2 border-slate-950 bg-white/92 shadow-[0_6px_0_rgba(17,24,39,0.08)] backdrop-blur-xl">
       <nav aria-label="Điều hướng chính" className="mx-auto max-w-7xl px-3 min-[390px]:px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex min-w-0 items-center gap-2 rounded-xl text-base font-bold text-slate-950 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
+            className="inline-flex min-w-0 items-center gap-2 rounded-xl text-base font-black text-slate-950 focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2"
             onClick={() => setIsOpen(false)}
           >
-            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200 sm:h-10 sm:w-10">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-gradient-to-br from-blue-500 to-violet-600 text-white shadow-[4px_4px_0_rgba(17,24,39,0.2)] sm:h-10 sm:w-10">
               <HeartHandshake className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="truncate">
-              Love Sense <span className="text-rose-600">AI</span>
+              Love Sense <span className="text-blue-600">AI</span>
             </span>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-2xl border border-rose-100 bg-white/85 p-1 text-sm font-medium text-slate-700 shadow-sm shadow-rose-100/50 ring-1 ring-white/70 md:flex">
+          <div className="hidden items-center gap-1 rounded-2xl border-2 border-slate-950 bg-white p-1 font-mono text-xs font-bold uppercase tracking-[0.08em] text-slate-700 shadow-[4px_4px_0_rgba(17,24,39,0.12)] md:flex">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -44,10 +44,10 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'rounded-xl px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
+                    'rounded-xl px-3 py-2 transition focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2',
                     isActive
-                      ? 'bg-rose-600 text-white shadow-sm shadow-rose-200/70'
-                      : 'hover:bg-rose-50 hover:text-rose-700'
+                      ? 'bg-blue-600 text-white shadow-[3px_3px_0_rgba(17,24,39,0.22)]'
+                      : 'hover:bg-blue-50 hover:text-blue-700'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >
@@ -59,7 +59,7 @@ export default function Navbar() {
 
           <button
             type="button"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-rose-100 bg-white text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 md:hidden"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border-2 border-slate-950 bg-white text-slate-700 shadow-[4px_4px_0_rgba(17,24,39,0.16)] focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2 md:hidden"
             aria-label={isOpen ? 'Đóng menu' : 'Mở menu'}
             aria-expanded={isOpen}
             onClick={() => setIsOpen((current) => !current)}
@@ -69,7 +69,7 @@ export default function Navbar() {
         </div>
 
         {isOpen && (
-          <div className="grid gap-1 border-t border-rose-100 py-3 md:hidden">
+          <div className="grid gap-2 border-t-2 border-slate-950 py-3 md:hidden">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -78,10 +78,10 @@ export default function Navbar() {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={cn(
-                    'rounded-xl px-3 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
+                    'rounded-xl border-2 px-3 py-3 text-sm font-bold transition focus:outline-none focus:ring-4 focus:ring-blue-200 focus:ring-offset-2',
                     isActive
-                      ? 'bg-rose-600 text-white shadow-sm shadow-rose-200'
-                      : 'text-slate-700 hover:bg-rose-50 hover:text-rose-700'
+                      ? 'border-slate-950 bg-blue-600 text-white shadow-[4px_4px_0_rgba(17,24,39,0.16)]'
+                      : 'border-transparent text-slate-700 hover:border-slate-950 hover:bg-blue-50 hover:text-blue-700'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >

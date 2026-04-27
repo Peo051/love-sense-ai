@@ -37,9 +37,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
   if (loading) {
     return (
       <div role="status" aria-live="polite" className="space-y-4">
-        <Card className="border-rose-100 bg-white">
+        <Card className="bg-white">
           <div className="flex items-start gap-3">
-            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-blue-100 text-blue-600">
               <Sparkles className="h-5 w-5 animate-pulse" aria-hidden="true" />
             </span>
             <div>
@@ -83,7 +83,7 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
           <div>
             <h2 className="text-lg font-semibold">Chưa thể tạo kết quả</h2>
             <p className="mt-2 text-sm leading-6">{error}</p>
-            <div className="mt-4 rounded-2xl border border-red-100 bg-white/70 p-4 text-sm leading-6 text-red-800">
+            <div className="mt-4 rounded-2xl border-2 border-red-900 bg-white/70 p-4 text-sm leading-6 text-red-800 shadow-[4px_4px_0_rgba(127,29,29,0.12)]">
               <p className="font-semibold">Bạn có thể thử:</p>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>Kiểm tra backend đang chạy và có thể nhận request.</li>
@@ -99,9 +99,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
 
   if (!result) {
     return (
-      <Card className="border-dashed bg-rose-50/40">
+      <Card className="border-dashed bg-blue-50/70">
         <div className="flex min-h-[24rem] flex-col justify-center px-1 py-6 text-center sm:min-h-[34rem] sm:px-6">
-          <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-rose-600 shadow-sm">
+          <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border-2 border-slate-950 bg-white text-blue-600 shadow-[5px_5px_0_rgba(17,24,39,0.14)]">
             <HeartHandshake className="h-7 w-7" aria-hidden="true" />
           </div>
           <h2 className="text-lg font-bold text-slate-950 sm:text-xl">Kết quả phân tích sẽ xuất hiện ở đây</h2>
@@ -109,8 +109,8 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
             Nhập đoạn chat ngắn ở cột bên trái để xem sắc thái tổng quan, độ tin cậy, phân bố cảm xúc và gợi ý phản hồi.
           </p>
 
-          <div className="mx-auto mt-6 max-w-md rounded-2xl border border-white bg-white/80 p-4 text-left shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-600">Gợi ý mẫu</p>
+          <div className="mx-auto mt-6 max-w-md rounded-2xl border-2 border-slate-950 bg-white/80 p-4 text-left shadow-[4px_4px_0_rgba(17,24,39,0.12)]">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-blue-600">Gợi ý mẫu</p>
             <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
               A: Em sao vậy?{'\n'}B: Không sao.{'\n'}A: Anh thấy em hơi lạ.{'\n'}B: Em mệt thôi.
             </p>
@@ -129,11 +129,11 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
 
   return (
     <div className="space-y-4">
-      <Card className="overflow-hidden border-rose-100 bg-[linear-gradient(135deg,#fff1f2_0%,#ffffff_58%,#f0fdfa_100%)]">
+      <Card className="overflow-hidden bg-[linear-gradient(135deg,#dbeafe_0%,#ffffff_52%,#ede9fe_100%)]" variant="artistic">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-rose-600">Cảm xúc tổng quan</p>
-            <h2 className="mt-2 break-words text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+            <p className="font-mono text-sm font-bold uppercase tracking-[0.16em] text-blue-700">Analysis board</p>
+            <h2 className="mt-2 break-words font-display text-3xl font-normal leading-tight text-slate-950 sm:text-4xl">
               {result.overall_emotion}
             </h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600">
@@ -141,9 +141,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white bg-white/80 p-4 shadow-sm sm:min-w-40">
-            <p className="text-sm font-semibold text-slate-600">Độ tin cậy</p>
-            <p className="mt-1 text-3xl font-bold text-teal-700">{confidencePercent}%</p>
+          <div className="rounded-2xl border-2 border-slate-950 bg-white/90 p-4 shadow-[5px_5px_0_rgba(17,24,39,0.16)] sm:min-w-40">
+            <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-slate-600">Độ tin cậy</p>
+            <p className="mt-1 text-3xl font-black text-emerald-700">{confidencePercent}%</p>
           </div>
         </div>
       </Card>
@@ -151,7 +151,7 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
       <Card title="Confidence meter" description="Mức này thể hiện độ chắc tương đối của phân tích, không phải sự thật tuyệt đối.">
         <div className="h-3 overflow-hidden rounded-full bg-slate-100">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-rose-500 to-teal-500 transition-all duration-300"
+            className="h-full rounded-full bg-gradient-to-r from-blue-600 to-violet-600 transition-all duration-300"
             style={{ width: `${confidencePercent}%` }}
           />
         </div>
@@ -177,14 +177,14 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         <Card title="Sắc thái & cách phản hồi">
           <div className="grid gap-4 sm:grid-cols-2">
             {result.tone ? (
-              <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">Sắc thái</p>
+              <div className="rounded-2xl border-2 border-slate-950 bg-blue-50/80 p-4">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-blue-700">Sắc thái</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">{result.tone}</p>
               </div>
             ) : null}
             {result.reply_style ? (
-              <div className="rounded-2xl border border-teal-100 bg-teal-50/70 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-teal-700">Phong cách gợi ý</p>
+              <div className="rounded-2xl border-2 border-slate-950 bg-emerald-50/80 p-4">
+                <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-emerald-700">Phong cách gợi ý</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">{result.reply_style}</p>
               </div>
             ) : null}
@@ -201,13 +201,13 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
               <div key={emotion} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-3 text-sm">
                   <span className="flex min-w-0 items-center gap-2 font-medium capitalize text-slate-700">
-                    <BarChart3 className="h-4 w-4 text-rose-500" aria-hidden="true" />
+                    <BarChart3 className="h-4 w-4 text-blue-600" aria-hidden="true" />
                     <span className="break-words">{formatEmotionName(emotion)}</span>
                   </span>
                   <span className="tabular-nums text-slate-500">{percent}%</span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-rose-500" style={{ width: `${percent}%` }} />
+                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
                 </div>
               </div>
             );
@@ -229,10 +229,10 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         <Card title="Câu làm căn cứ" description="Các câu này chỉ là tín hiệu tham khảo, không phải bằng chứng kết luận cảm xúc thật.">
           <div className="space-y-3">
             {evidenceItems.map((item, index) => (
-              <div key={`${item.quote}-${index}`} className="flex gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
-                <Quote className="mt-1 h-4 w-4 shrink-0 text-rose-500" aria-hidden="true" />
+              <div key={`${item.quote}-${index}`} className="flex gap-3 rounded-2xl border-2 border-slate-950 bg-slate-50/80 p-4 shadow-[4px_4px_0_rgba(17,24,39,0.1)]">
+                <Quote className="mt-1 h-4 w-4 shrink-0 text-blue-600" aria-hidden="true" />
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-rose-600">{item.label}</p>
+                  <p className="font-mono text-xs font-bold uppercase tracking-[0.14em] text-blue-600">{item.label}</p>
                   <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-800">{item.quote}</p>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
                 </div>
@@ -255,9 +255,9 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
         </Card>
       ) : null}
 
-      <Card title="Gợi ý phản hồi" className="border-teal-100 bg-teal-50/70">
-        <div className="flex gap-3 rounded-2xl bg-white/80 px-4 py-4 text-teal-950 shadow-sm">
-          <MessageCircle className="mt-1 h-5 w-5 shrink-0 text-teal-700" aria-hidden="true" />
+      <Card title="Gợi ý phản hồi" className="bg-emerald-50/80">
+        <div className="flex gap-3 rounded-2xl border-2 border-slate-950 bg-white/90 px-4 py-4 text-emerald-950 shadow-[4px_4px_0_rgba(17,24,39,0.12)]">
+          <MessageCircle className="mt-1 h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
           <p className="text-sm leading-6">{result.suggested_reply}</p>
         </div>
       </Card>

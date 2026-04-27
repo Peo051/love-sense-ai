@@ -33,8 +33,8 @@ export default function AnalyzePage() {
 
   return (
     <PageShell className="space-y-8 pb-12">
-      <section className="relative overflow-hidden rounded-[2rem] border border-rose-100 bg-white p-6 shadow-sm shadow-rose-100/70 sm:p-8">
-        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_left,rgba(251,113,133,0.16),transparent_28rem),radial-gradient(circle_at_top_right,rgba(20,184,166,0.1),transparent_24rem)]" />
+      <section className="artistic-panel-bg relative overflow-hidden rounded-[2rem] border-2 border-slate-950 bg-white p-6 shadow-[8px_8px_0_rgba(17,24,39,0.16)] sm:p-8">
+        <div className="absolute inset-0 -z-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_28rem),radial-gradient(circle_at_top_right,rgba(139,92,246,0.14),transparent_24rem)]" />
         <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <SectionHeader
             eyebrow="AI dashboard"
@@ -56,9 +56,9 @@ export default function AnalyzePage() {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,0.96fr)_minmax(420px,1.04fr)] lg:items-start">
         <div className="space-y-4 lg:sticky lg:top-24">
-          <div className="hidden rounded-2xl border border-rose-100 bg-white/90 p-4 shadow-sm shadow-rose-100/50 lg:block">
+          <div className="hidden rounded-2xl border-2 border-slate-950 bg-white/95 p-4 shadow-[5px_5px_0_rgba(17,24,39,0.14)] lg:block">
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-slate-950 bg-blue-100 text-blue-700">
                 <Sparkles className="h-5 w-5" aria-hidden="true" />
               </span>
               <div>
@@ -78,9 +78,9 @@ export default function AnalyzePage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-teal-100 bg-teal-50/70 p-4 text-sm leading-6 text-teal-950">
+      <div className="rounded-2xl border-2 border-slate-950 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950 shadow-[5px_5px_0_rgba(17,24,39,0.1)]">
         <div className="flex gap-3">
-          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-teal-700" aria-hidden="true" />
+          <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" aria-hidden="true" />
           <p>
             Phần phân tích chỉ là điểm bắt đầu để bạn giao tiếp bình tĩnh hơn, không thay thế trao đổi trực tiếp.
           </p>

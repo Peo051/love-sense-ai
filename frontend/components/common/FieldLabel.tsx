@@ -14,7 +14,7 @@ export default function FieldLabel({
   if (!htmlFor) {
     return (
       <label className="block space-y-2">
-        <span className="block text-sm font-semibold text-slate-800">{label}</span>
+        <span className="block text-sm font-black text-slate-950">{label}</span>
         {children}
         {hint && <span className="block text-xs leading-5 text-slate-500">{hint}</span>}
       </label>
@@ -23,7 +23,7 @@ export default function FieldLabel({
 
   return (
     <div className="space-y-2">
-      <label htmlFor={htmlFor} className="block text-sm font-semibold text-slate-800">
+      <label htmlFor={htmlFor} className="block text-sm font-black text-slate-950">
         {label}
       </label>
       {children}

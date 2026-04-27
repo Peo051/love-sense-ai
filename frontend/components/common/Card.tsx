@@ -9,6 +9,7 @@ interface CardProps {
   className?: string;
   headerClassName?: string;
   bodyClassName?: string;
+  variant?: 'default' | 'flat' | 'artistic' | 'dark';
 }
 
 export default function Card({
@@ -18,18 +19,37 @@ export default function Card({
   className = '',
   headerClassName = '',
   bodyClassName = '',
+  variant = 'default',
 }: CardProps) {
+  const variantClassName = {
+    default:
+      'border-2 border-slate-900 bg-white shadow-[6px_6px_0_rgba(17,24,39,0.14)] hover:shadow-[8px_8px_0_rgba(17,24,39,0.18)]',
+    flat: 'border-2 border-slate-900/70 bg-white shadow-none',
+    artistic:
+      'border-2 border-slate-900 bg-[linear-gradient(135deg,#ffffff_0%,#eff6ff_58%,#ede9fe_100%)] shadow-[8px_8px_0_rgba(17,24,39,0.18)]',
+    dark: 'border-2 border-slate-950 bg-slate-950 text-white shadow-[8px_8px_0_rgba(59,130,246,0.34)]',
+  }[variant];
+
   return (
     <section
       className={cn(
-        'rounded-2xl border border-rose-100/80 bg-white/95 p-5 shadow-[0_14px_45px_rgba(244,63,94,0.06)] ring-1 ring-white/70 backdrop-blur transition-shadow duration-200 hover:shadow-[0_18px_55px_rgba(244,63,94,0.08)]',
+        'rounded-[24px] p-5 backdrop-blur transition duration-200',
+        variantClassName,
         className
       )}
     >
       {(title || description) && (
         <div className={cn('mb-5 space-y-1.5', headerClassName)}>
-          {title && <h2 className="text-lg font-semibold text-slate-950">{title}</h2>}
-          {description && <p className="text-sm leading-6 text-slate-600">{description}</p>}
+          {title && (
+            <h2 className={cn('text-lg font-black tracking-tight', variant === 'dark' ? 'text-white' : 'text-slate-950')}>
+              {title}
+            </h2>
+          )}
+          {description && (
+            <p className={cn('text-sm leading-6', variant === 'dark' ? 'text-slate-300' : 'text-slate-600')}>
+              {description}
+            </p>
+          )}
         </div>
       )}
       <div className={bodyClassName}>{children}</div>

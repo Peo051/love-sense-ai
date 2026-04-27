@@ -132,7 +132,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
 
       <Card title="Tùy chọn lưu dữ liệu" description="Bạn có thể phân tích mà không lưu gì. Các tùy chọn này mặc định tắt.">
         <div className="grid gap-3">
-          <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm leading-6 text-slate-700 transition hover:border-rose-200 hover:bg-rose-50/50">
+          <label className="flex items-start gap-3 rounded-2xl border-2 border-slate-950 bg-blue-50/80 px-4 py-3 text-sm leading-6 text-slate-700 transition hover:-translate-y-0.5 hover:bg-blue-100/70">
             <input
               type="checkbox"
               checked={saveResult}
@@ -143,18 +143,18 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
                   setSaveInput(false);
                 }
               }}
-              className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+              className="mt-1 h-4 w-4 rounded border-slate-900 text-blue-600 focus:ring-blue-500"
             />
             <span>
               <span className="flex items-start gap-2 font-semibold text-slate-950 sm:items-center">
-                <History className="h-4 w-4 text-rose-600" aria-hidden="true" />
+                <History className="h-4 w-4 text-blue-600" aria-hidden="true" />
                 Lưu kết quả phân tích vào lịch sử
               </span>
               <span className="mt-1 block">Chỉ lưu phần kết quả tổng hợp để bạn xem lại sau.</span>
             </span>
           </label>
 
-          <label className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm leading-6 text-amber-950 transition hover:border-amber-300 hover:bg-amber-50">
+          <label className="flex items-start gap-3 rounded-2xl border-2 border-slate-950 bg-amber-50/80 px-4 py-3 text-sm leading-6 text-amber-950 transition hover:-translate-y-0.5 hover:bg-amber-100/70">
             <input
               type="checkbox"
               checked={saveInput}
@@ -165,7 +165,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
                   setSaveResult(true);
                 }
               }}
-              className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
+              className="mt-1 h-4 w-4 rounded border-amber-900 text-blue-600 focus:ring-blue-500"
             />
             <span>
               <span className="flex items-start gap-2 font-semibold text-amber-950 sm:items-center">
@@ -185,12 +185,12 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
 
       <InfoAlert>
         <span className="inline-flex items-start gap-2">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-teal-600" aria-hidden="true" />
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
           <span>Ứng dụng không lưu nội dung chat nếu bạn chưa đồng ý.</span>
         </span>
       </InfoAlert>
 
-      <div className="rounded-2xl border border-rose-100 bg-white/90 p-3 shadow-sm">
+      <div className="rounded-2xl border-2 border-slate-950 bg-white/90 p-3 shadow-[5px_5px_0_rgba(17,24,39,0.12)]">
         <Button type="submit" isLoading={isLoading} size="lg" className="w-full">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
