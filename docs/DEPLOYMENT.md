@@ -31,8 +31,18 @@ database/migrations/008_harden_user_scoped_persistence.sql
 database/migrations/009_add_firebase_uid_to_users.sql
 ```
 
-4. Lấy connection string PostgreSQL từ Supabase và đặt vào `DATABASE_URL` trên backend hosting.
-5. Không bật SQLite fallback ở production. Khi `APP_ENV=production`, backend sẽ báo lỗi cấu hình rõ ràng nếu `DATABASE_URL` không phải PostgreSQL/Supabase.
+4. Sau khi merge Firebase Auth, bắt buộc chạy migration `009_add_firebase_uid_to_users.sql` trên production database. Nếu bỏ qua bước này, request có Firebase token có thể lỗi `column users.firebase_uid does not exist`.
+5. Có thể kiểm tra nhanh cột đã tồn tại bằng SQL:
+
+```sql
+SELECT column_name
+FROM information_schema.columns
+WHERE table_name = 'users'
+  AND column_name = 'firebase_uid';
+```
+
+6. Lấy connection string PostgreSQL từ Supabase và đặt vào `DATABASE_URL` trên backend hosting.
+7. Không bật SQLite fallback ở production. Khi `APP_ENV=production`, backend sẽ báo lỗi cấu hình rõ ràng nếu `DATABASE_URL` không phải PostgreSQL/Supabase.
 
 ## Backend: Render Hoặc Railway
 

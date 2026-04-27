@@ -1,3 +1,4 @@
+import logging
 from dataclasses import dataclass
 
 from fastapi import Depends, HTTPException, status
@@ -5,6 +6,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from firebase_admin import auth as firebase_auth
 from jose import JWTError, jwt
 from sqlalchemy import select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -16,6 +18,12 @@ from app.services.db_store import UserRepository
 
 bearer_scheme = HTTPBearer(auto_error=False)
 optional_bearer_scheme = HTTPBearer(auto_error=False)
+logger = logging.getLogger(__name__)
+
+MISSING_FIREBASE_UID_SCHEMA_DETAIL = (
+    "Database schema is missing users.firebase_uid. "
+    "Run migration database/migrations/009_add_firebase_uid_to_users.sql."
+)
 
 
 @dataclass(frozen=True)
@@ -34,6 +42,50 @@ def _credentials_exception(detail: str = "Invalid or expired authentication toke
         detail=detail,
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+
+def _schema_exception() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=MISSING_FIREBASE_UID_SCHEMA_DETAIL,
+    )
+
+
+def _is_missing_firebase_uid_schema_error(exc: BaseException) -> bool:
+    pending: list[BaseException] = [exc]
+    seen: set[int] = set()
+
+    while pending:
+        current = pending.pop(0)
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
+
+        message = str(current).lower()
+        if "firebase_uid" in message and (
+            "undefinedcolumn" in message
+            or "undefined column" in message
+            or "no such column" in message
+            or "does not exist" in message
+        ):
+            return True
+
+        for nested in (
+            getattr(current, "orig", None),
+            getattr(current, "__cause__", None),
+            getattr(current, "__context__", None),
+        ):
+            if isinstance(nested, BaseException):
+                pending.append(nested)
+
+    return False
+
+
+async def _rollback_safely(db: AsyncSession) -> None:
+    try:
+        await db.rollback()
+    except Exception:
+        logger.warning("Failed to rollback auth database session after auth lookup error.")
 
 
 def _to_current_user(user: User, *, uid: str | None = None, name: str | None = None, picture: str | None = None) -> CurrentUser:
@@ -111,7 +163,18 @@ async def get_current_user(
         raise _credentials_exception("Authentication token is required.")
     if credentials.scheme.lower() != "bearer":
         raise _credentials_exception()
-    return await _resolve_current_user(credentials.credentials, db)
+    try:
+        return await _resolve_current_user(credentials.credentials, db)
+    except SQLAlchemyError as exc:
+        await _rollback_safely(db)
+        if _is_missing_firebase_uid_schema_error(exc):
+            logger.error("Database schema is missing users.firebase_uid. Run migration 009 before authenticated routes.")
+            raise _schema_exception() from exc
+        logger.error("Database error while resolving authenticated user: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication storage is temporarily unavailable.",
+        ) from exc
 
 
 async def get_optional_user(
@@ -125,4 +188,13 @@ async def get_optional_user(
     try:
         return await _resolve_current_user(credentials.credentials, db)
     except HTTPException:
+        return None
+    except SQLAlchemyError as exc:
+        await _rollback_safely(db)
+        if _is_missing_firebase_uid_schema_error(exc):
+            logger.error(
+                "Database schema is missing users.firebase_uid. Continuing optional auth request as guest; history will not be saved."
+            )
+            return None
+        logger.warning("Optional auth lookup skipped after database error: %s", type(exc).__name__)
         return None
