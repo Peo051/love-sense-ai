@@ -5,22 +5,36 @@ import { AlertTriangle, HeartHandshake, MessageCircle, ShieldAlert } from 'lucid
 import Card from '@/components/common/Card';
 import type { AnalyzeResponse } from '@/lib/types';
 
-interface AnalysisResultPanelProps {
-  result: AnalyzeResponse | null;
-  errorMessage: string;
-}
+type Props = {
+  result?: AnalyzeResponse | null;
+  error?: string | null;
+  loading?: boolean;
+};
 
 function formatEmotionName(name: string) {
   return name.replaceAll('_', ' ');
 }
 
-export default function AnalysisResultPanel({ result, errorMessage }: AnalysisResultPanelProps) {
-  if (errorMessage) {
+export default function AnalysisResultPanel({ result = null, error = null, loading = false }: Props) {
+  if (loading) {
+    return (
+      <Card title="Đang phân tích">
+        <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center">
+          <HeartHandshake className="mb-4 h-10 w-10 animate-pulse text-rose-500" aria-hidden="true" />
+          <p className="max-w-md text-sm leading-6 text-slate-600">
+            Đang gửi đoạn chat đến backend và tạo kết quả phân tích.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (error) {
     return (
       <Card title="Không thể phân tích" className="border-red-100 bg-red-50">
         <div className="flex gap-3 text-red-800">
           <AlertTriangle className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
-          <p className="text-sm leading-6">{errorMessage}</p>
+          <p className="text-sm leading-6">{error}</p>
         </div>
       </Card>
     );
@@ -28,12 +42,12 @@ export default function AnalysisResultPanel({ result, errorMessage }: AnalysisRe
 
   if (!result) {
     return (
-      <Card title="Kết quả phân tích" description="Kết quả mock sẽ xuất hiện ở đây sau khi gửi đoạn chat.">
+      <Card title="Kết quả phân tích" description="Kết quả sẽ xuất hiện ở đây sau khi gửi đoạn chat.">
         <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center">
           <HeartHandshake className="mb-4 h-10 w-10 text-rose-500" aria-hidden="true" />
           <p className="max-w-md text-sm leading-6 text-slate-600">
-            Nhập đoạn chat và bối cảnh cá nhân hóa để nhận phân tích cảm xúc, gợi ý phản hồi nhẹ nhàng và
-            cảnh báo an toàn.
+            Nhập đoạn chat và bối cảnh cá nhân hóa để nhận phân tích cảm xúc, gợi ý phản hồi nhẹ nhàng và cảnh báo an
+            toàn.
           </p>
         </div>
       </Card>

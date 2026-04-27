@@ -102,14 +102,12 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
           className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
         />
         <span>
-          Tôi đồng ý lưu nội dung đoạn chat này để xem lại trong lịch sử. Nếu không chọn, ứng dụng chỉ lưu
-          kết quả tổng hợp khi bạn đã bật lưu kết quả.
+          Tôi đồng ý lưu nội dung đoạn chat này để xem lại trong lịch sử. Nếu không chọn, ứng dụng chỉ lưu kết quả tổng
+          hợp khi bạn đã bật lưu kết quả.
         </span>
       </label>
 
-      {validationError && (
-        <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{validationError}</p>
-      )}
+      {validationError && <p className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{validationError}</p>}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex items-center gap-2 text-sm text-slate-600">

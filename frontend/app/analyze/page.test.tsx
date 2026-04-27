@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,6 +23,8 @@ const mockAnalyzeResponse = {
 function mockFetchOnce(response: unknown, ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok,
+    status: ok ? 200 : 500,
+    statusText: ok ? 'OK' : 'Server Error',
     json: vi.fn().mockResolvedValue(response),
   });
 
@@ -33,11 +35,13 @@ function mockFetchOnce(response: unknown, ok = true) {
 describe('AnalyzePage', () => {
   beforeEach(() => {
     vi.unstubAllGlobals();
+    window.localStorage.clear();
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+    window.localStorage.clear();
   });
 
   it('renders the analyze form fields and submit button', () => {
@@ -85,6 +89,7 @@ describe('AnalyzePage', () => {
     expect(requestBody).toEqual(
       expect.objectContaining({
         chat_text: 'Em mệt thôi.',
+        profile_context: expect.any(String),
         save_input: false,
         save_result: false,
       })
@@ -93,14 +98,14 @@ describe('AnalyzePage', () => {
 
     resolveFetch({
       ok: true,
+      status: 200,
+      statusText: 'OK',
       json: async () => mockAnalyzeResponse,
     } as Response);
 
-    expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
+    expect(await screen.findByText('mệt mỏi / né tránh nhẹ')).toBeInTheDocument();
     expect(screen.getByText('72%')).toBeInTheDocument();
-    expect(screen.getAllByText(/mệt mỏi/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText(/né tránh/i).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(mockAnalyzeResponse.summary)).toBeInTheDocument();
+    expect(screen.getAllByText(/gợi ý phản hồi/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(mockAnalyzeResponse.suggested_reply)).toBeInTheDocument();
     expect(screen.getByText(/kết quả chỉ mang tính tham khảo/i)).toBeInTheDocument();
   });

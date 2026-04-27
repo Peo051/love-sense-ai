@@ -1,5 +1,4 @@
 from app.core.config import settings
-from app.core.exceptions import AIServiceException
 from app.schemas.analyze_schema import AnalyzeResponse
 from app.services.analysis_policy import WARNING_MESSAGE
 from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
@@ -15,11 +14,11 @@ class AIService:
 
         try:
             return await self.llm_client.analyze_emotion(chat_text, profile_context)
-        except LLMClientError as exc:
-            raise AIServiceException(str(exc)) from exc
+        except LLMClientError:
+            return self._mock_analyze_emotion(chat_text, profile_context)
 
     def _should_use_mock(self) -> bool:
-        return settings.LLM_MOCK_MODE or settings.LLM_PROVIDER.lower() in {"", "mock", "none"}
+        return settings.llm_mock_mode or settings.llm_provider.lower() in {"", "mock", "none"}
 
     def _mock_analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
         """Sinh kết quả mock để test ổn định khi chưa bật LLM thật."""

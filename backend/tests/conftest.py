@@ -32,8 +32,8 @@ async def reset_database():
 
 @pytest.fixture(autouse=True)
 def test_runtime_settings(monkeypatch):
-    monkeypatch.setattr(settings, "LLM_MOCK_MODE", True)
-    monkeypatch.setattr(settings, "LLM_PROVIDER", "mock")
+    monkeypatch.setattr(settings, "llm_mock_mode", True)
+    monkeypatch.setattr(settings, "llm_provider", "mock")
 
 
 @pytest.fixture(autouse=True)
