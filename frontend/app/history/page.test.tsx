@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -33,7 +33,6 @@ function jsonResponse(body: unknown, status = 200) {
 describe('HistoryPage', () => {
   beforeEach(() => {
     window.localStorage.setItem('love_emotion_auth_token', 'test-token');
-    vi.stubGlobal('confirm', vi.fn(() => true));
   });
 
   afterEach(() => {
@@ -60,7 +59,7 @@ describe('HistoryPage', () => {
     );
   });
 
-  it('clears all history from the page and calls the backend delete endpoint', async () => {
+  it('clears all history from the page and calls the backend delete endpoint after confirmation', async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
@@ -77,6 +76,9 @@ describe('HistoryPage', () => {
 
     expect(await screen.findAllByText('mệt mỏi / né tránh nhẹ')).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: /xóa toàn bộ lịch sử phân tích/i }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: /xóa toàn bộ lịch sử/i });
+    await user.click(within(dialog).getByRole('button', { name: /xóa toàn bộ lịch sử/i }));
 
     await waitFor(() => expect(screen.getByText('Đã xóa toàn bộ lịch sử phân tích.')).toBeInTheDocument());
     expect(screen.getByText('Chưa có lịch sử')).toBeInTheDocument();

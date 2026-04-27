@@ -20,7 +20,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-rose-100/80 bg-white/90 backdrop-blur-xl">
       <nav aria-label="Điều hướng chính" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex min-h-16 items-center justify-between gap-4">
           <Link
@@ -28,7 +28,7 @@ export default function Navbar() {
             className="inline-flex items-center gap-2 rounded-xl text-base font-bold text-slate-950 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2"
             onClick={() => setIsOpen(false)}
           >
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-rose-600 text-white shadow-sm shadow-rose-200">
+            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-sm shadow-rose-200">
               <HeartHandshake className="h-5 w-5" aria-hidden="true" />
             </span>
             <span>
@@ -36,7 +36,7 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="hidden items-center gap-1 rounded-2xl border border-rose-100 bg-white/80 p-1 text-sm font-medium text-slate-700 shadow-sm md:flex">
+          <div className="hidden items-center gap-1 rounded-2xl border border-rose-100 bg-white/85 p-1 text-sm font-medium text-slate-700 shadow-sm shadow-rose-100/50 md:flex">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -45,7 +45,9 @@ export default function Navbar() {
                   href={item.href}
                   className={cn(
                     'rounded-xl px-3 py-2 transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
-                    isActive ? 'bg-rose-600 text-white shadow-sm' : 'hover:bg-rose-50 hover:text-rose-700'
+                    isActive
+                      ? 'bg-rose-600 text-white shadow-sm shadow-rose-200/70'
+                      : 'hover:bg-rose-50 hover:text-rose-700'
                   )}
                   aria-current={isActive ? 'page' : undefined}
                 >

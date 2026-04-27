@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -23,7 +23,6 @@ function jsonResponse(body: unknown, status = 200) {
 describe('PrivacyPage', () => {
   beforeEach(() => {
     window.localStorage.setItem('love_emotion_auth_token', 'test-token');
-    vi.stubGlobal('confirm', vi.fn(() => true));
   });
 
   afterEach(() => {
@@ -32,7 +31,7 @@ describe('PrivacyPage', () => {
     window.localStorage.clear();
   });
 
-  it('calls the correct delete endpoints for history, profile, and all user data', async () => {
+  it('calls the correct delete endpoints for history, profile, and all user data after confirmation', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -54,12 +53,18 @@ describe('PrivacyPage', () => {
     expect(await screen.findByText('Cài đặt lưu dữ liệu')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /xóa lịch sử phân tích/i }));
+    let dialog = await screen.findByRole('alertdialog', { name: /xóa lịch sử phân tích/i });
+    await user.click(within(dialog).getByRole('button', { name: /xóa lịch sử phân tích/i }));
     await waitFor(() => expect(screen.getByText('Đã xóa lịch sử phân tích.')).toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: /xóa hồ sơ cá nhân hóa/i }));
+    dialog = await screen.findByRole('alertdialog', { name: /xóa hồ sơ cá nhân hóa/i });
+    await user.click(within(dialog).getByRole('button', { name: /xóa hồ sơ cá nhân hóa/i }));
     await waitFor(() => expect(screen.getByText('Đã xóa hồ sơ cá nhân hóa.')).toBeInTheDocument());
 
     await user.click(screen.getByRole('button', { name: /xóa toàn bộ dữ liệu cá nhân/i }));
+    dialog = await screen.findByRole('alertdialog', { name: /xóa toàn bộ dữ liệu cá nhân/i });
+    await user.click(within(dialog).getByRole('button', { name: /xóa toàn bộ dữ liệu cá nhân/i }));
     await waitFor(() =>
       expect(screen.getByText('Đã xóa toàn bộ dữ liệu cá nhân của tài khoản hiện tại.')).toBeInTheDocument()
     );

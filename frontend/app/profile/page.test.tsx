@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -39,7 +39,6 @@ function jsonResponse(body: unknown, status = 200) {
 describe('ProfilePage', () => {
   beforeEach(() => {
     window.localStorage.setItem('love_emotion_auth_token', 'test-token');
-    vi.stubGlobal('confirm', vi.fn(() => true));
   });
 
   afterEach(() => {
@@ -86,7 +85,7 @@ describe('ProfilePage', () => {
     );
   });
 
-  it('deletes the profile and resets the visible form', async () => {
+  it('deletes the profile after confirmation and resets the visible form', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -103,6 +102,9 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByLabelText(/^Biệt danh$/i)).toHaveValue('An');
     await user.click(screen.getByRole('button', { name: /xóa hồ sơ cá nhân hóa/i }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: /xóa hồ sơ cá nhân hóa/i });
+    await user.click(within(dialog).getByRole('button', { name: /xóa hồ sơ cá nhân hóa/i }));
 
     await waitFor(() => expect(screen.getByText('Đã xóa hồ sơ cá nhân hóa.')).toBeInTheDocument());
     expect(screen.getByLabelText(/^Biệt danh$/i)).toHaveValue('');

@@ -8,6 +8,7 @@ import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import FieldLabel from '@/components/common/FieldLabel';
 import type { AnalyzeRequest } from '@/lib/types';
+import { textareaClassName } from '@/lib/ui';
 
 interface AnalysisFormProps {
   isLoading: boolean;
@@ -60,7 +61,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
             id="chat_text"
             value={chatText}
             onChange={(event) => setChatText(event.target.value)}
-            className="min-h-72 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+            className={`${textareaClassName} min-h-72`}
             placeholder="Dán đoạn hội thoại ngắn tại đây. Không cần thông tin cá nhân."
           />
         </FieldLabel>
@@ -79,7 +80,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
             id="profile_context"
             value={profileContext}
             onChange={(event) => setProfileContext(event.target.value)}
-            className="min-h-36 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-rose-400 focus:ring-4 focus:ring-rose-100"
+            className={`${textareaClassName} min-h-36`}
             placeholder="Ví dụ: Người ấy thường im lặng khi mệt, không thích bị hỏi dồn..."
           />
         </FieldLabel>
@@ -146,7 +147,7 @@ export default function AnalysisForm({ isLoading, onAnalyze }: AnalysisFormProps
       </InfoAlert>
 
       <div className="rounded-2xl border border-rose-100 bg-white/90 p-3 shadow-sm">
-        <Button type="submit" isLoading={isLoading} className="min-h-12 w-full text-base">
+        <Button type="submit" isLoading={isLoading} size="lg" className="w-full">
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (

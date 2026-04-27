@@ -2,16 +2,22 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Search, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Badge from '@/components/common/Badge';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import ConfirmDialog from '@/components/common/ConfirmDialog';
 import { EmptyState, LoadingState } from '@/components/common/StateBlocks';
 import PageShell from '@/components/common/PageShell';
 import SectionHeader from '@/components/common/SectionHeader';
 import { clearHistory, deleteHistoryItem, getHistory } from '@/lib/api';
 import type { HistoryItem } from '@/lib/types';
+import { inputClassName } from '@/lib/ui';
+import { cn } from '@/lib/utils';
+
+type PendingDelete = { type: 'all' } | { type: 'item'; id: string } | null;
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('vi-VN', {
@@ -30,6 +36,8 @@ export default function HistoryPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
   const [query, setQuery] = useState('');
 
   const filteredItems = useMemo(() => {
@@ -60,45 +68,45 @@ export default function HistoryPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleDeleteItem = async (id: string) => {
-    if (!window.confirm('Bạn có chắc muốn xóa lịch sử phân tích này không?')) {
+  const confirmDelete = async () => {
+    if (!pendingDelete) {
       return;
     }
 
+    setIsDeleting(true);
     setErrorMessage('');
     setStatusMessage('');
 
     try {
-      await deleteHistoryItem(id);
-      const remainingItems = items.filter((item) => item.id !== id);
-      setItems(remainingItems);
-      setSelectedId(remainingItems[0]?.id ?? null);
-      setStatusMessage('Đã xóa lịch sử phân tích.');
+      if (pendingDelete.type === 'all') {
+        await clearHistory();
+        setItems([]);
+        setSelectedId(null);
+        setStatusMessage('Đã xóa toàn bộ lịch sử phân tích.');
+      } else {
+        await deleteHistoryItem(pendingDelete.id);
+        const remainingItems = items.filter((item) => item.id !== pendingDelete.id);
+        setItems(remainingItems);
+        setSelectedId(remainingItems[0]?.id ?? null);
+        setStatusMessage('Đã xóa lịch sử phân tích.');
+      }
+      setPendingDelete(null);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Không thể xóa lịch sử.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleClearHistory = async () => {
-    if (!window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử phân tích không?')) {
-      return;
-    }
-
-    setErrorMessage('');
-    setStatusMessage('');
-
-    try {
-      await clearHistory();
-      setItems([]);
-      setSelectedId(null);
-      setStatusMessage('Đã xóa toàn bộ lịch sử phân tích.');
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Không thể xóa toàn bộ lịch sử.');
-    }
-  };
+  const pendingDeleteTitle =
+    pendingDelete?.type === 'all' ? 'Xóa toàn bộ lịch sử?' : 'Xóa lịch sử phân tích này?';
+  const pendingDeleteDescription =
+    pendingDelete?.type === 'all'
+      ? 'Thao tác này xóa mọi kết quả phân tích đã lưu của tài khoản hiện tại. Nội dung đã xóa không thể khôi phục.'
+      : 'Thao tác này chỉ xóa mục lịch sử đang chọn của tài khoản hiện tại.';
 
   return (
-    <PageShell className="space-y-8">
+    <PageShell className="space-y-8 pb-12">
       <SectionHeader
         eyebrow="Lịch sử phân tích"
         title="Những kết quả bạn đã đồng ý lưu"
@@ -108,7 +116,7 @@ export default function HistoryPage() {
             type="button"
             variant="danger"
             disabled={items.length === 0}
-            onClick={handleClearHistory}
+            onClick={() => setPendingDelete({ type: 'all' })}
             aria-label="Xóa toàn bộ lịch sử phân tích"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -121,23 +129,34 @@ export default function HistoryPage() {
       {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
       {isLoading ? (
-        <LoadingState title="Đang tải lịch sử" description="Đang tải các lần phân tích đã được lưu cho tài khoản hiện tại." />
+        <LoadingState
+          title="Đang tải lịch sử"
+          description="Đang tải các lần phân tích đã được lưu cho tài khoản hiện tại."
+        />
       ) : items.length === 0 ? (
         <EmptyState
           title="Chưa có lịch sử"
           description="Ứng dụng không lưu mặc định. Lịch sử chỉ xuất hiện khi bạn bật tùy chọn lưu kết quả ở trang phân tích."
+          action={
+            <Link
+              href="/analyze"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200/80 transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2"
+            >
+              Phân tích đoạn chat mới
+            </Link>
+          }
         />
       ) : (
         <div className="grid gap-6 lg:grid-cols-[390px_minmax(0,1fr)]">
           <Card title="Danh sách" description="Tìm theo sắc thái, tóm tắt hoặc gợi ý phản hồi.">
-            <div className="mb-4 flex items-center gap-2 rounded-2xl border border-rose-100 bg-white px-3 py-2 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-100">
-              <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
+            <div className="relative mb-4">
+              <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Tìm trong lịch sử..."
                 aria-label="Tìm trong lịch sử phân tích"
-                className="w-full bg-transparent text-sm outline-none placeholder:text-slate-400"
+                className={cn(inputClassName, 'pl-10')}
               />
             </div>
 
@@ -148,11 +167,12 @@ export default function HistoryPage() {
                   type="button"
                   onClick={() => setSelectedId(item.id)}
                   aria-pressed={selectedItem?.id === item.id}
-                  className={`w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 ${
+                  className={cn(
+                    'w-full rounded-2xl border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2',
                     selectedItem?.id === item.id
-                      ? 'border-rose-300 bg-rose-50'
-                      : 'border-slate-100 bg-white hover:border-rose-200'
-                  }`}
+                      ? 'border-rose-300 bg-rose-50 shadow-sm shadow-rose-100'
+                      : 'border-slate-100 bg-white hover:-translate-y-px hover:border-rose-200 hover:shadow-sm'
+                  )}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -169,7 +189,7 @@ export default function HistoryPage() {
           </Card>
 
           {selectedItem ? (
-            <Card title="Chi tiết lịch sử">
+            <Card title="Chi tiết lịch sử" className="lg:sticky lg:top-24">
               <div className="space-y-5 text-sm leading-6 text-slate-700">
                 <DetailRow label="Thời gian" value={formatDate(selectedItem.analyzed_at)} />
                 <DetailRow label="Cảm xúc tổng quan" value={selectedItem.overall_emotion} />
@@ -186,7 +206,7 @@ export default function HistoryPage() {
                 <Button
                   type="button"
                   variant="danger"
-                  onClick={() => handleDeleteItem(selectedItem.id)}
+                  onClick={() => setPendingDelete({ type: 'item', id: selectedItem.id })}
                   aria-label="Xóa lịch sử này"
                 >
                   <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -195,10 +215,28 @@ export default function HistoryPage() {
               </div>
             </Card>
           ) : (
-            <EmptyState title="Không tìm thấy kết quả" description="Thử xóa từ khóa tìm kiếm hoặc phân tích thêm một đoạn hội thoại mới." />
+            <EmptyState
+              title="Không tìm thấy kết quả"
+              description="Thử xóa từ khóa tìm kiếm hoặc phân tích thêm một đoạn hội thoại mới."
+              action={
+                <Button type="button" variant="secondary" onClick={() => setQuery('')}>
+                  Xóa tìm kiếm
+                </Button>
+              }
+            />
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title={pendingDeleteTitle}
+        description={pendingDeleteDescription}
+        confirmLabel={pendingDelete?.type === 'all' ? 'Xóa toàn bộ lịch sử' : 'Xóa lịch sử phân tích'}
+        isBusy={isDeleting}
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={confirmDelete}
+      />
     </PageShell>
   );
 }
