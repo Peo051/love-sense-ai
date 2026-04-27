@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import ImageOcrUploader from '@/components/analyze/ImageOcrUploader';
-import { extractTextFromImage } from '@/lib/ocr';
+import { extractTextFromImage, type OcrExtractionResult } from '@/lib/ocr';
 
 vi.mock('@/lib/ocr', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/ocr')>();
@@ -13,6 +13,24 @@ vi.mock('@/lib/ocr', async (importOriginal) => {
     extractTextFromImage: vi.fn(),
   };
 });
+
+function createOcrResult(
+  text: string,
+  options: { warnings?: string[]; confidence?: number; score?: number } = {}
+): OcrExtractionResult {
+  const warnings = options.warnings ?? [];
+
+  return {
+    text,
+    rawText: text,
+    confidence: options.confidence ?? 86,
+    language: 'vie+eng',
+    quality: {
+      score: options.score ?? (warnings.length ? 0.35 : 0.92),
+      warnings,
+    },
+  };
+}
 
 describe('ImageOcrUploader', () => {
   afterEach(() => {
@@ -39,6 +57,20 @@ describe('ImageOcrUploader', () => {
     expect(extractTextFromImage).not.toHaveBeenCalled();
   });
 
+  it('shows a preview when a valid image is selected', async () => {
+    const user = userEvent.setup();
+    render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
+
+    await user.upload(
+      screen.getByLabelText(/tải ảnh chụp đoạn chat/i),
+      new File(['fake image'], 'chat-preview.webp', { type: 'image/webp' })
+    );
+
+    expect(screen.getByText('chat-preview.webp')).toBeInTheDocument();
+    expect(screen.getByAltText(/ảnh chụp đoạn chat đã chọn/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i })).toBeEnabled();
+  });
+
   it('rejects images larger than 5MB', async () => {
     const user = userEvent.setup();
     render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
@@ -57,10 +89,10 @@ describe('ImageOcrUploader', () => {
   it('extracts text and notifies the parent component', async () => {
     const user = userEvent.setup();
     const onTextExtracted = vi.fn();
-    let resolveOcr: (value: string) => void = () => undefined;
+    let resolveOcr: (value: OcrExtractionResult) => void = () => undefined;
     vi.mocked(extractTextFromImage).mockImplementationOnce((_file, onProgress) => {
-      onProgress?.({ status: 'recognizing text', progress: 0.65 });
-      return new Promise<string>((resolve) => {
+      onProgress?.({ status: 'recognizing', progress: 0.65 });
+      return new Promise<OcrExtractionResult>((resolve) => {
         resolveOcr = resolve;
       });
     });
@@ -72,11 +104,31 @@ describe('ImageOcrUploader', () => {
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
     expect(screen.getByText(/đang nhận diện chữ/i)).toBeInTheDocument();
-    resolveOcr('A: Em sao vậy?\nB: Em mệt thôi.');
+    const result = createOcrResult('A: Em sao vậy?\nB: Em mệt thôi.');
+    resolveOcr(result);
     await waitFor(() => {
-      expect(onTextExtracted).toHaveBeenCalledWith('A: Em sao vậy?\nB: Em mệt thôi.');
+      expect(onTextExtracted).toHaveBeenCalledWith('A: Em sao vậy?\nB: Em mệt thôi.', result);
     });
     expect(screen.getByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
+  });
+
+  it('shows a warning when OCR quality is low or text is too short', async () => {
+    const user = userEvent.setup();
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(
+      createOcrResult('ok', {
+        confidence: 42,
+        warnings: ['OCR nhận diện quá ít nội dung, vui lòng thử ảnh rõ hơn hoặc nhập thủ công.'],
+      })
+    );
+    render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
+
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), new File(['fake image'], 'chat.png', {
+      type: 'image/png',
+    }));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(await screen.findByText(/ocr có thể chưa chính xác/i)).toBeInTheDocument();
+    expect(screen.getByText(/ocr nhận diện quá ít nội dung/i)).toBeInTheDocument();
   });
 
   it('shows a friendly error when OCR fails', async () => {

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { extractTextFromImage } from '@/lib/ocr';
+import { extractTextFromImage, type OcrExtractionResult } from '@/lib/ocr';
 import AnalyzePage from './page';
 
 vi.mock('@/lib/ocr', async (importOriginal) => {
@@ -30,6 +30,19 @@ const mockAnalyzeResponse = {
   warning: 'Kết quả chỉ mang tính tham khảo, không thể thay thế giao tiếp trực tiếp.',
 };
 
+function createOcrResult(text: string): OcrExtractionResult {
+  return {
+    text,
+    rawText: text,
+    confidence: 88,
+    language: 'vie+eng',
+    quality: {
+      score: 0.92,
+      warnings: [],
+    },
+  };
+}
+
 function mockFetchOnce(response: unknown, ok = true) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok,
@@ -52,6 +65,7 @@ describe('AnalyzePage', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     window.localStorage.clear();
   });
 
@@ -68,7 +82,7 @@ describe('AnalyzePage', () => {
     const user = userEvent.setup();
     const fetchMock = mockFetchOnce(mockAnalyzeResponse);
     const ocrText = 'A: Em sao vậy?\nB: Em mệt thôi.';
-    vi.mocked(extractTextFromImage).mockResolvedValueOnce(ocrText);
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(createOcrResult(ocrText));
     render(<AnalyzePage />);
 
     const chatInput = screen.getByLabelText(/đoạn chat cần phân tích/i);
@@ -88,11 +102,30 @@ describe('AnalyzePage', () => {
     expect(requestBody).toEqual(
       expect.objectContaining({
         chat_text: ocrText,
+        profile_context: expect.stringContaining('trích xuất từ ảnh OCR'),
         save_input: false,
         save_result: false,
       })
     );
     expect(await screen.findByText(mockAnalyzeResponse.overall_emotion)).toBeInTheDocument();
+  });
+
+  it('asks before replacing existing chat text with OCR text', async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const ocrText = 'A: anh iu ngủ ngon nhó\nB: yeuemm';
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(createOcrResult(ocrText));
+    render(<AnalyzePage />);
+
+    const chatInput = screen.getByLabelText(/đoạn chat cần phân tích/i);
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), new File(['fake image'], 'chat.png', {
+      type: 'image/png',
+    }));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(await screen.findByText(/đã trích xuất nội dung/i)).toBeInTheDocument();
+    expect(confirmSpy).toHaveBeenCalledWith(expect.stringContaining('thay thế nội dung hiện tại'));
+    expect(chatInput).toHaveValue(ocrText);
   });
 
   it('does not submit and shows validation when chat text is empty', async () => {
