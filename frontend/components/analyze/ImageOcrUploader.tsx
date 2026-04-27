@@ -6,7 +6,9 @@ import { AlertTriangle, FileImage, Loader2, ShieldCheck, Trash2, WandSparkles } 
 import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
+import { extractChatTextWithVision } from '@/lib/api';
 import { extractTextFromImage, validateImageFile, type OcrExtractionResult, type OcrProgress } from '@/lib/ocr';
+import { estimateOcrQuality } from '@/lib/ocrPostprocess';
 
 type ImageOcrUploaderProps = {
   onTextExtracted: (text: string, result: OcrExtractionResult) => void;
@@ -38,6 +40,8 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
   const [progress, setProgress] = useState<OcrProgress>({ status: 'preprocessing', progress: 0 });
   const [ocrResult, setOcrResult] = useState<OcrExtractionResult | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [useVisionAi, setUseVisionAi] = useState(false);
+  const [visionConsent, setVisionConsent] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -81,6 +85,7 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setOcrResult(null);
     setProgress({ status: 'preprocessing', progress: 0 });
     setIsExtracting(false);
+    setVisionConsent(false);
     setSuccessMessage('');
     setErrorMessage('');
 
@@ -89,9 +94,68 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     }
   };
 
+  const createVisionExtractionResult = (text: string, confidence: number, warnings: string[]): OcrExtractionResult => {
+    const localQuality = estimateOcrQuality(text, confidence);
+
+    return {
+      text,
+      rawText: text,
+      confidence,
+      language: 'vision',
+      quality: {
+        score: warnings.length ? Math.min(localQuality.score, 0.72) : localQuality.score,
+        warnings: [...new Set([...warnings, ...localQuality.warnings])],
+      },
+    };
+  };
+
+  const applyExtractionResult = (extraction: OcrExtractionResult, message: string) => {
+    setOcrResult(extraction);
+    onTextExtracted(extraction.text, extraction);
+    setSuccessMessage(message);
+  };
+
+  const runLocalOcr = async (file: File, runId: number, successPrefix = '') => {
+    const extraction = await extractTextFromImage(file, (nextProgress) => {
+      if (activeOcrRunRef.current === runId) {
+        setProgress(nextProgress);
+      }
+    });
+
+    if (activeOcrRunRef.current !== runId) {
+      return;
+    }
+
+    applyExtractionResult(
+      extraction,
+      `${successPrefix}Đã trích xuất nội dung. Vui lòng kiểm tra và chỉnh sửa lại nếu OCR nhận diện sai.`
+    );
+  };
+
+  const runVisionOcr = async (file: File, runId: number) => {
+    setProgress({ status: 'recognizing', progress: 0.35 });
+    const response = await extractChatTextWithVision(file, true);
+
+    if (activeOcrRunRef.current !== runId) {
+      return;
+    }
+
+    setProgress({ status: 'postprocessing', progress: 0.94 });
+    const extraction = createVisionExtractionResult(response.text, response.confidence, response.warnings ?? []);
+    applyExtractionResult(
+      extraction,
+      'AI Vision đã trích xuất nội dung. Vui lòng kiểm tra và chỉnh sửa lại trước khi phân tích.'
+    );
+  };
+
   const handleExtractText = async () => {
     if (!selectedFile) {
       setErrorMessage('Vui lòng chọn ảnh chụp đoạn chat trước khi trích xuất chữ.');
+      return;
+    }
+
+    if (useVisionAi && !visionConsent) {
+      setErrorMessage('Bạn cần đồng ý gửi ảnh này đến AI provider trước khi dùng AI Vision.');
       return;
     }
 
@@ -104,19 +168,21 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
     setProgress({ status: 'preprocessing', progress: 0 });
 
     try {
-      const extraction = await extractTextFromImage(selectedFile, (nextProgress) => {
-        if (activeOcrRunRef.current === runId) {
-          setProgress(nextProgress);
+      if (useVisionAi) {
+        try {
+          await runVisionOcr(selectedFile, runId);
+        } catch {
+          if (activeOcrRunRef.current === runId) {
+            await runLocalOcr(
+              selectedFile,
+              runId,
+              'AI Vision chưa sẵn sàng, ứng dụng đã chuyển sang OCR local. '
+            );
+          }
         }
-      });
-
-      if (activeOcrRunRef.current !== runId) {
-        return;
+      } else {
+        await runLocalOcr(selectedFile, runId);
       }
-
-      setOcrResult(extraction);
-      onTextExtracted(extraction.text, extraction);
-      setSuccessMessage('Đã trích xuất nội dung. Vui lòng kiểm tra và chỉnh sửa lại nếu OCR nhận diện sai.');
     } catch {
       if (activeOcrRunRef.current === runId) {
         setErrorMessage('Không thể nhận diện chữ từ ảnh này. Hãy thử ảnh rõ hơn hoặc nhập thủ công.');
@@ -207,6 +273,42 @@ export default function ImageOcrUploader({ onTextExtracted }: ImageOcrUploaderPr
 
         {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
         {successMessage && <SuccessAlert>{successMessage}</SuccessAlert>}
+
+        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-700">
+          <label className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={useVisionAi}
+              onChange={(event) => {
+                const checked = event.target.checked;
+                setUseVisionAi(checked);
+                if (!checked) {
+                  setVisionConsent(false);
+                }
+              }}
+              className="mt-1 h-4 w-4 rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+            />
+            <span>
+              <span className="block font-semibold text-slate-950">Dùng AI Vision để trích xuất chính xác hơn</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500">
+                Mặc định ứng dụng dùng OCR local trên trình duyệt. AI Vision có thể đọc layout bong bóng chat tốt hơn nhưng cần gửi ảnh đến provider.
+              </span>
+            </span>
+          </label>
+
+          {useVisionAi && (
+            <label className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2 text-amber-950">
+              <input
+                type="checkbox"
+                checked={visionConsent}
+                onChange={(event) => setVisionConsent(event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-amber-300 text-rose-600 focus:ring-rose-500"
+              />
+              <span>Tôi đồng ý gửi ảnh này đến AI provider để trích xuất nội dung.</span>
+            </label>
+          )}
+        </div>
+
         {hasQualityWarnings && (
           <div role="alert" className="rounded-2xl border border-amber-200 bg-amber-50/85 px-4 py-3 text-sm leading-6 text-amber-950">
             <div className="flex gap-2">

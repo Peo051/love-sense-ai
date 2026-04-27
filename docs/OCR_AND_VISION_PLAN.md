@@ -18,28 +18,29 @@ Love Sense AI xử lý ảnh chụp đoạn chat bằng OCR chạy trên trình 
 - Không log ảnh, base64 ảnh, nội dung chat hoặc dữ liệu nhạy cảm.
 - Người dùng nên che hoặc xóa thông tin nhạy cảm trước khi gửi phân tích.
 
-## Vision AI sau MVP
+## Chế độ AI Vision nâng cao
 
-Vision AI có thể chính xác hơn OCR truyền thống vì mô hình hiểu layout bong bóng chat, emoji và thứ tự hội thoại tốt hơn. Tuy nhiên hướng này yêu cầu gửi ảnh lên backend hoặc provider AI, nên chỉ nên triển khai khi có cơ chế consent rõ ràng.
+Mặc định Love Sense AI vẫn dùng OCR local trên trình duyệt. Người dùng có thể bật tùy chọn "Dùng AI Vision để trích xuất chính xác hơn" khi ảnh có chữ nhỏ, nền nhiều họa tiết, emoji hoặc bong bóng chat khó đọc.
 
-Nếu thêm Vision AI sau này, cần:
+AI Vision yêu cầu consent riêng vì ảnh sẽ được gửi đến backend và AI provider:
 
-- Consent riêng trước khi gửi ảnh ra backend/provider.
-- Giải thích rõ ảnh được xử lý ở đâu.
+- Checkbox bắt buộc: "Tôi đồng ý gửi ảnh này đến AI provider để trích xuất nội dung."
+- Backend chỉ đọc ảnh trong bộ nhớ cho request hiện tại.
 - Không lưu ảnh mặc định.
-- Xóa ảnh ngay sau xử lý nếu không có consent lưu riêng.
 - Không log ảnh, URL ảnh, base64 hoặc OCR text nhạy cảm.
-- Giữ fallback nhập thủ công nếu người dùng không đồng ý gửi ảnh.
+- Nếu Vision API lỗi, frontend fallback về OCR local hoặc người dùng nhập thủ công.
+- Sau khi Vision AI trả text, người dùng vẫn phải review/chỉnh sửa trước khi phân tích.
 - Tách riêng thiết lập retention cho ảnh, OCR text và kết quả phân tích.
 
-## API đề xuất sau MVP
+## API hiện tại
 
-Không cần thay đổi `/api/analyze` cho MVP OCR local. Nếu thêm Vision AI, nên tạo endpoint riêng, ví dụ:
+Không thay đổi `/api/analyze`. Vision AI dùng endpoint riêng:
 
 - `POST /api/ocr/vision`
-- Request yêu cầu consent rõ ràng.
-- Response chỉ trả text đã trích xuất và cảnh báo chất lượng.
+- Request multipart gồm `image` và `is_accepted=true`.
+- Response chỉ trả text đã trích xuất, độ tin cậy và cảnh báo chất lượng.
 - Không tự động tạo lịch sử phân tích.
+- Không lưu ảnh.
 
 Luồng phân tích vẫn nên giữ:
 

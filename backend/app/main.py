@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.connection import init_database_for_development
-from app.routes import analyze, auth, consent, health, history, profile, user_data
+from app.routes import analyze, auth, consent, health, history, ocr, profile, user_data
 
 
 @asynccontextmanager
@@ -31,6 +31,7 @@ app.add_middleware(
 
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(analyze.router, prefix="/api", tags=["analyze"])
+app.include_router(ocr.router, prefix="/api", tags=["ocr"])
 app.include_router(profile.router, prefix="/api", tags=["profile"])
 app.include_router(history.router, prefix="/api", tags=["history"])
 app.include_router(consent.router, prefix="/api", tags=["consent"])

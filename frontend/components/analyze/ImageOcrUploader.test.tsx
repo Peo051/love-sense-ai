@@ -3,7 +3,17 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import ImageOcrUploader from '@/components/analyze/ImageOcrUploader';
+import { extractChatTextWithVision } from '@/lib/api';
 import { extractTextFromImage, type OcrExtractionResult } from '@/lib/ocr';
+
+vi.mock('@/lib/api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api')>();
+
+  return {
+    ...actual,
+    extractChatTextWithVision: vi.fn(),
+  };
+});
 
 vi.mock('@/lib/ocr', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/ocr')>();
@@ -141,5 +151,68 @@ describe('ImageOcrUploader', () => {
     await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
 
     expect(await screen.findByText(/không thể nhận diện chữ từ ảnh này/i)).toBeInTheDocument();
+  });
+
+  it('requires explicit consent before sending the image to AI Vision', async () => {
+    const user = userEvent.setup();
+    render(<ImageOcrUploader onTextExtracted={vi.fn()} />);
+
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), new File(['fake image'], 'chat.png', {
+      type: 'image/png',
+    }));
+    await user.click(screen.getByLabelText(/dùng ai vision để trích xuất chính xác hơn/i));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(screen.getByText(/cần đồng ý gửi ảnh này đến ai provider/i)).toBeInTheDocument();
+    expect(extractChatTextWithVision).not.toHaveBeenCalled();
+    expect(extractTextFromImage).not.toHaveBeenCalled();
+  });
+
+  it('uses AI Vision when enabled and consented', async () => {
+    const user = userEvent.setup();
+    const onTextExtracted = vi.fn();
+    vi.mocked(extractChatTextWithVision).mockResolvedValueOnce({
+      text: 'A: anh iu ngủ ngon nhó\nB: yeuemm 🥺',
+      confidence: 91,
+      warnings: [],
+      provider: 'vision',
+    });
+    render(<ImageOcrUploader onTextExtracted={onTextExtracted} />);
+
+    const file = new File(['fake image'], 'chat.png', { type: 'image/png' });
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), file);
+    await user.click(screen.getByLabelText(/dùng ai vision để trích xuất chính xác hơn/i));
+    await user.click(screen.getByLabelText(/tôi đồng ý gửi ảnh này đến ai provider/i));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(await screen.findByText(/ai vision đã trích xuất nội dung/i)).toBeInTheDocument();
+    expect(extractChatTextWithVision).toHaveBeenCalledWith(file, true);
+    expect(extractTextFromImage).not.toHaveBeenCalled();
+    expect(onTextExtracted).toHaveBeenCalledWith(
+      'A: anh iu ngủ ngon nhó\nB: yeuemm 🥺',
+      expect.objectContaining({ language: 'vision', confidence: 91 })
+    );
+  });
+
+  it('falls back to local OCR when AI Vision fails', async () => {
+    const user = userEvent.setup();
+    const onTextExtracted = vi.fn();
+    vi.mocked(extractChatTextWithVision).mockRejectedValueOnce(new Error('Vision unavailable'));
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce(createOcrResult('A: local fallback\nB: vẫn kiểm tra lại'));
+    render(<ImageOcrUploader onTextExtracted={onTextExtracted} />);
+
+    await user.upload(screen.getByLabelText(/tải ảnh chụp đoạn chat/i), new File(['fake image'], 'chat.png', {
+      type: 'image/png',
+    }));
+    await user.click(screen.getByLabelText(/dùng ai vision để trích xuất chính xác hơn/i));
+    await user.click(screen.getByLabelText(/tôi đồng ý gửi ảnh này đến ai provider/i));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    expect(await screen.findByText(/đã chuyển sang ocr local/i)).toBeInTheDocument();
+    expect(extractTextFromImage).toHaveBeenCalled();
+    expect(onTextExtracted).toHaveBeenCalledWith(
+      'A: local fallback\nB: vẫn kiểm tra lại',
+      expect.objectContaining({ language: 'vie+eng' })
+    );
   });
 });

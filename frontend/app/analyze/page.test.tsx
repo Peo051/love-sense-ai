@@ -191,7 +191,7 @@ describe('AnalyzePage', () => {
     const fetchMock = mockFetchOnce(mockAnalyzeResponse);
     render(<AnalyzePage />);
 
-    await user.click(screen.getAllByRole('checkbox')[0]);
+    await user.click(screen.getByLabelText(/lưu kết quả phân tích/i));
     await user.click(screen.getByRole('button', { name: /phân tích/i }));
 
     const requestBody = JSON.parse(fetchMock.mock.calls[0][1].body);

@@ -17,6 +17,14 @@ Love Sense AI ưu tiên phân tích do người dùng chủ động nhập, khô
 - Nếu chỉ `save_result=true`, chỉ lưu kết quả tổng hợp: cảm xúc, độ tin cậy, phân bố cảm xúc, tóm tắt, gợi ý phản hồi và cảnh báo.
 - Database có check constraint để `chat_text` chỉ tồn tại khi `save_input=true` và consent đã được chấp nhận.
 
+## OCR Ảnh Chat Và AI Vision
+
+- OCR local là mặc định và chạy trên trình duyệt.
+- AI Vision là tùy chọn nâng cao, chỉ chạy khi user bật "Dùng AI Vision" và tick consent riêng: "Tôi đồng ý gửi ảnh này đến AI provider để trích xuất nội dung."
+- Backend không lưu ảnh và không log ảnh/base64.
+- Nội dung OCR/Vision chỉ được đưa vào form để user review, không tự động phân tích.
+- Nội dung OCR không được lưu vào history nếu user chưa bật `save_input=true`.
+
 ## Consent
 
 Người dùng có quyền:

@@ -15,6 +15,13 @@ export interface AnalyzeResponse {
   warning: string;
 }
 
+export interface VisionOcrResponse {
+  text: string;
+  confidence: number;
+  warnings: string[];
+  provider: string;
+}
+
 export interface UserProfile {
   nickname: string;
   primary_language: string;
