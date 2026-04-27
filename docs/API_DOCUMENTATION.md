@@ -144,3 +144,9 @@ Các trường chính:
 - `DELETE /api/user-data`
 
 Xóa hồ sơ, lịch sử và trạng thái consent của user đang đăng nhập. Endpoint này không xóa tài khoản `users`.
+
+## Related Docs
+
+- [Privacy Design](PRIVACY_DESIGN.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [Setup Guide](../SETUP.md)

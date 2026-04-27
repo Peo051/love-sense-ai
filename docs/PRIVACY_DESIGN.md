@@ -56,3 +56,9 @@ Backend và frontend không được log:
 - Nội dung profile riêng tư.
 
 Nếu cần debug, chỉ log metadata không nhạy cảm như provider, model, mock mode, status code hoặc request id.
+
+## Related Docs
+
+- [API Documentation](API_DOCUMENTATION.md)
+- [Deployment Guide](DEPLOYMENT.md)
+- [Setup Guide](../SETUP.md)

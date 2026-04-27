@@ -20,6 +20,7 @@ export default function HistoryPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const selectedItem = useMemo(
     () => items.find((item) => item.id === selectedId) ?? items[0] ?? null,
@@ -32,10 +33,15 @@ export default function HistoryPage() {
         setItems(history.items);
         setSelectedId(history.items[0]?.id ?? null);
       })
-      .catch((error) => setErrorMessage(error instanceof Error ? error.message : 'Không thể tải lịch sử.'));
+      .catch((error) => setErrorMessage(error instanceof Error ? error.message : 'Không thể tải lịch sử.'))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const handleDeleteItem = async (id: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa lịch sử phân tích này không?')) {
+      return;
+    }
+
     setErrorMessage('');
     setStatusMessage('');
 
@@ -51,6 +57,10 @@ export default function HistoryPage() {
   };
 
   const handleClearHistory = async () => {
+    if (!window.confirm('Bạn có chắc muốn xóa toàn bộ lịch sử phân tích không?')) {
+      return;
+    }
+
     setErrorMessage('');
     setStatusMessage('');
 
@@ -83,10 +93,24 @@ export default function HistoryPage() {
         </Button>
       </div>
 
-      {statusMessage && <p className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">{statusMessage}</p>}
-      {errorMessage && <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">{errorMessage}</p>}
+      {statusMessage && (
+        <p role="status" className="mb-4 rounded-md bg-teal-50 px-4 py-3 text-sm text-teal-800">
+          {statusMessage}
+        </p>
+      )}
+      {errorMessage && (
+        <p role="alert" className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorMessage}
+        </p>
+      )}
 
-      {items.length === 0 ? (
+      {isLoading ? (
+        <Card title="Đang tải lịch sử">
+          <div className="min-h-48 rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 py-12 text-center text-sm text-slate-600">
+            Đang tải các lần phân tích đã được lưu cho tài khoản hiện tại.
+          </div>
+        </Card>
+      ) : items.length === 0 ? (
         <Card
           title="Chưa có lịch sử"
           description="Ứng dụng không lưu mặc định. Lịch sử chỉ xuất hiện khi bạn bật tùy chọn lưu kết quả tại trang phân tích."
@@ -104,7 +128,8 @@ export default function HistoryPage() {
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedId(item.id)}
-                  className={`w-full rounded-lg border px-4 py-3 text-left transition ${
+                  aria-pressed={selectedItem?.id === item.id}
+                  className={`w-full rounded-lg border px-4 py-3 text-left transition focus:outline-none focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 ${
                     selectedItem?.id === item.id
                       ? 'border-rose-300 bg-rose-50'
                       : 'border-slate-100 bg-white hover:border-rose-200'

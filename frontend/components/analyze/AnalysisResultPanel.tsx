@@ -19,7 +19,11 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
   if (loading) {
     return (
       <Card title="Đang phân tích">
-        <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center">
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-dashed border-rose-200 bg-rose-50/60 px-6 text-center"
+        >
           <HeartHandshake className="mb-4 h-10 w-10 animate-pulse text-rose-500" aria-hidden="true" />
           <p className="max-w-md text-sm leading-6 text-slate-600">
             Đang gửi đoạn chat đến backend và tạo kết quả phân tích.
@@ -32,7 +36,7 @@ export default function AnalysisResultPanel({ result = null, error = null, loadi
   if (error) {
     return (
       <Card title="Không thể phân tích" className="border-red-100 bg-red-50">
-        <div className="flex gap-3 text-red-800">
+        <div role="alert" className="flex gap-3 text-red-800">
           <AlertTriangle className="mt-1 h-5 w-5 shrink-0" aria-hidden="true" />
           <p className="text-sm leading-6">{error}</p>
         </div>

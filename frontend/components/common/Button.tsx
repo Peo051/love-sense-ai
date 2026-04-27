@@ -29,6 +29,7 @@ export default function Button({
     <button
       type={type}
       disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
       className={`${baseStyles} ${variantStyles[variant]} ${
         disabled || isLoading ? 'cursor-not-allowed opacity-60' : ''
       } ${className}`}

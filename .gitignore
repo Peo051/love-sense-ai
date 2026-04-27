@@ -7,6 +7,8 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.coverage
+htmlcov/
 .venv/
 venv/
 backend/venv/
@@ -17,9 +19,16 @@ node_modules/
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+frontend/dist/
+frontend/build/
 frontend/coverage/
 frontend/next-env.d.ts
 *.tsbuildinfo
+
+# Build artifacts
+dist/
+build/
+coverage/
 
 # Logs
 *.log
