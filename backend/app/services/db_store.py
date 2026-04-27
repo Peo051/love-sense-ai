@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.analysis_session import AnalysisSession
 from app.models.consent import Consent
 from app.models.partner_profile import PartnerProfile as PartnerProfileModel
+from app.models.preference import Preference
 from app.models.profile import Profile as ProfileModel
 from app.models.user import User
 from app.schemas.analyze_schema import AnalyzeResponse
@@ -274,6 +275,7 @@ class UserDataRepository:
         await db.execute(delete(Consent).where(Consent.user_id == user_id))
         await db.execute(delete(ProfileModel).where(ProfileModel.user_id == user_id))
         await db.execute(delete(PartnerProfileModel).where(PartnerProfileModel.user_id == user_id))
+        await db.execute(delete(Preference).where(Preference.user_id == user_id))
         await db.commit()
 
 

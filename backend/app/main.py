@@ -1,13 +1,24 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.database.connection import init_database_for_development
 from app.routes import analyze, auth, consent, health, history, profile, user_data
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_database_for_development()
+    yield
+
 
 app = FastAPI(
     title="Love Emotion API",
     description="API phân tích sắc thái cảm xúc trong hội thoại tình cảm",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(

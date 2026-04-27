@@ -12,6 +12,8 @@ psql -U postgres -d loveemotion -f schema.sql
 
 Với Supabase, mở SQL Editor và chạy nội dung `schema.sql`, hoặc dùng connection string trong `DATABASE_URL`.
 
+Backend local development có fallback SQLite file (`sqlite+aiosqlite:///./love_emotion_dev.db`) để không crash khi chưa cấu hình `DATABASE_URL`. Fallback này chỉ dành cho dev; PostgreSQL/Supabase vẫn là schema mục tiêu của thư mục `database/`.
+
 ## Chạy Migrations
 
 Nếu muốn chạy theo từng bước:
@@ -24,15 +26,17 @@ psql -U postgres -d loveemotion -f migrations/004_create_preferences.sql
 psql -U postgres -d loveemotion -f migrations/005_create_analysis_sessions.sql
 psql -U postgres -d loveemotion -f migrations/006_add_consent_and_privacy_controls.sql
 psql -U postgres -d loveemotion -f migrations/007_add_auth_scoped_models.sql
+psql -U postgres -d loveemotion -f migrations/008_harden_user_scoped_persistence.sql
 ```
 
-`007_add_auth_scoped_models.sql` đồng bộ schema với SQLAlchemy models hiện tại và thêm các field cần cho auth/user-scoped data.
+`007_add_auth_scoped_models.sql` đồng bộ schema với SQLAlchemy models hiện tại và thêm các field cần cho auth/user-scoped data. `008_harden_user_scoped_persistence.sql` đồng bộ preference constraints và thêm check constraint để `chat_text` chỉ tồn tại khi đã có consent lưu nội dung chat.
 
 ## Bảng Chính
 
 - `users`: tài khoản auth đơn giản.
 - `profiles`: hồ sơ người dùng, một bản ghi cho mỗi user.
 - `partner_profiles`: hồ sơ người yêu, một bản ghi cho mỗi user.
+- `preferences`: cài đặt giao diện/ngôn ngữ theo user.
 - `consents`: cài đặt quyền riêng tư và đồng ý lưu dữ liệu theo user.
 - `analysis_sessions`: lịch sử phân tích theo user.
 

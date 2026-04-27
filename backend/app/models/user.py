@@ -23,5 +23,6 @@ class User(Base):
 
     profile = relationship("Profile", back_populates="user", cascade="all, delete-orphan", uselist=False)
     partner_profile = relationship("PartnerProfile", back_populates="user", cascade="all, delete-orphan", uselist=False)
+    preference = relationship("Preference", back_populates="user", cascade="all, delete-orphan", uselist=False)
     consents = relationship("Consent", back_populates="user", cascade="all, delete-orphan")
     analysis_sessions = relationship("AnalysisSession", back_populates="user", cascade="all, delete-orphan")

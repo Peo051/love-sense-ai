@@ -20,12 +20,23 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Chỉnh `DATABASE_URL` trong `.env`:
+Mặc định `.env.example` dùng SQLite file để dev không cần chuẩn bị database trước:
+
+```text
+DATABASE_URL=sqlite+aiosqlite:///./love_emotion_dev.db
+DATABASE_AUTO_CREATE=true
+SECRET_KEY=change-this-for-local-dev
+```
+
+Khi dùng PostgreSQL hoặc Supabase, đổi `DATABASE_URL` và chạy schema/migrations trong `database/`:
 
 ```text
 DATABASE_URL=postgresql://user:password@localhost:5432/loveemotion
+DATABASE_AUTO_CREATE=false
 SECRET_KEY=change-this-for-local-dev
 ```
+
+Backend tự chuyển `postgresql://` hoặc `postgres://` thành driver async `postgresql+asyncpg://`.
 
 ## Chạy Server
 
@@ -85,5 +96,5 @@ Không commit `.env` hoặc API key thật. Nếu provider lỗi hoặc thiếu 
 ## Test
 
 ```powershell
-python -m pytest tests
+venv\Scripts\python.exe -m pytest tests
 ```

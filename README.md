@@ -37,7 +37,7 @@ copy .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-Cấu hình `DATABASE_URL` trong `backend/.env` trỏ đến PostgreSQL hoặc Supabase. App tự chuyển `postgresql://` thành driver async `postgresql+asyncpg://`.
+Nếu chưa có PostgreSQL/Supabase ở máy dev, giữ mặc định `DATABASE_URL=sqlite+aiosqlite:///./love_emotion_dev.db`; backend sẽ tự tạo bảng khi `APP_ENV=development`. Khi dùng PostgreSQL hoặc Supabase, cấu hình `DATABASE_URL` trong `backend/.env` và chạy schema/migrations trong `database/`. App tự chuyển `postgresql://` hoặc `postgres://` thành driver async `postgresql+asyncpg://`.
 
 Để bật 9router local, đặt trong `backend/.env`:
 
@@ -80,6 +80,7 @@ psql -U postgres -d loveemotion -f migrations/004_create_preferences.sql
 psql -U postgres -d loveemotion -f migrations/005_create_analysis_sessions.sql
 psql -U postgres -d loveemotion -f migrations/006_add_consent_and_privacy_controls.sql
 psql -U postgres -d loveemotion -f migrations/007_add_auth_scoped_models.sql
+psql -U postgres -d loveemotion -f migrations/008_harden_user_scoped_persistence.sql
 ```
 
 ## Test
@@ -89,7 +90,7 @@ Backend:
 ```powershell
 cd backend
 venv\Scripts\activate
-python -m pytest tests
+venv\Scripts\python.exe -m pytest tests
 ```
 
 Frontend:
