@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import {
@@ -23,6 +23,9 @@ import { estimateOcrQuality } from '@/lib/ocrPostprocess';
 type ImageOcrUploaderProps = {
   hasChatText?: boolean;
   onTextExtracted: (text: string, result: OcrExtractionResult, mode: 'replace' | 'append') => void;
+  title?: string;
+  description?: string;
+  uploadLabel?: string;
 };
 
 function formatFileSize(bytes: number) {
@@ -48,7 +51,13 @@ function getVisionFallbackPrefix(error: unknown) {
   return `${reason} Ứng dụng đã chuyển sang OCR local. `;
 }
 
-export default function ImageOcrUploader({ hasChatText = false, onTextExtracted }: ImageOcrUploaderProps) {
+export default function ImageOcrUploader({
+  hasChatText = false,
+  onTextExtracted,
+  title = 'Nhập từ ảnh chụp đoạn chat',
+  description = 'Tải ảnh do bạn tự chọn lên, trích xuất chữ trên trình duyệt rồi kiểm tra lại trước khi phân tích.',
+  uploadLabel = 'Tải ảnh chụp đoạn chat',
+}: ImageOcrUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const activeOcrRunRef = useRef(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -243,8 +252,8 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
 
   return (
     <Card
-      title="Nhập từ ảnh chụp đoạn chat"
-      description="Tải ảnh do bạn tự chọn lên, trích xuất chữ trên trình duyệt rồi kiểm tra lại trước khi phân tích."
+      title={title}
+      description={description}
     >
       <div className="space-y-4">
         <div className="rounded-2xl border border-dashed border-rose-300 bg-rose-50/55 p-4">
@@ -256,7 +265,7 @@ export default function ImageOcrUploader({ hasChatText = false, onTextExtracted 
               <FileImage className="h-5 w-5" aria-hidden="true" />
             </span>
             <span>
-              <span className="block font-semibold text-slate-950">Tải ảnh chụp đoạn chat</span>
+              <span className="block font-semibold text-slate-950">{uploadLabel}</span>
               <span className="mt-1 block text-xs leading-5 text-slate-500">PNG, JPG, JPEG hoặc WEBP. Tối đa 5MB.</span>
             </span>
             <input

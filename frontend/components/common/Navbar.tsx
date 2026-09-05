@@ -10,9 +10,10 @@ import { logout } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { href: '/analyze', label: 'Phân tích' },
-  { href: '/profile', label: 'Hồ sơ' },
+  { href: '/tutor', label: 'Gia sư AI' },
+  { href: '/progress', label: 'Tiến độ' },
   { href: '/history', label: 'Lịch sử' },
+  { href: '/profile', label: 'Hồ sơ' },
   { href: '/privacy', label: 'Riêng tư' },
 ];
 

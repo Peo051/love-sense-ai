@@ -7,24 +7,24 @@ import ProfilePage from './page';
 const loadedProfile = {
   user_profile: {
     nickname: 'An',
-    primary_language: 'Tiếng Việt',
-    communication_style: 'Nhẹ nhàng',
-    relationship_status: 'Đang tìm hiểu',
+    primary_language: 'C# / .NET',
+    communication_style: 'Nhập môn C# OOP',
+    relationship_status: 'Nắm vững 4 tính chất OOP',
   },
   partner_profile: {
-    nickname: 'Bình',
-    likes: 'Nhạc acoustic',
-    dislikes: 'Bị hỏi dồn',
-    texting_style: 'Trả lời chậm khi bận',
-    when_happy: 'Nhắn nhiều hơn',
-    when_sad: 'Ít nói',
-    when_angry: 'Cần không gian riêng',
+    nickname: '',
+    likes: '',
+    dislikes: '',
+    texting_style: '',
+    when_happy: '',
+    when_sad: '',
+    when_angry: '',
     likes_checkins: true,
     dislikes_repeated_questions: true,
-    height_cm: 165,
-    weight_kg: 55,
+    height_cm: null,
+    weight_kg: null,
     appearance: '',
-    private_notes: 'Ghi chú riêng',
+    private_notes: '',
   },
   updated_at: '2026-04-27T08:00:00.000Z',
 };
@@ -47,7 +47,7 @@ describe('ProfilePage', () => {
     window.localStorage.clear();
   });
 
-  it('loads profile data and saves edited profile back to the API', async () => {
+  it('loads student profile data and saves edited profile back to the API without partner UI', async () => {
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -65,7 +65,9 @@ describe('ProfilePage', () => {
 
     const nicknameInput = await screen.findByLabelText(/^Biệt danh$/i);
     expect(nicknameInput).toHaveValue('An');
-    expect(screen.getByLabelText(/biệt danh người ấy/i)).toHaveValue('Bình');
+    // Ensure no partner UI exists
+    expect(screen.queryByLabelText(/người ấy/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/chiều cao/i)).not.toBeInTheDocument();
 
     await user.clear(nicknameInput);
     await user.type(nicknameInput, 'An mới');
@@ -80,7 +82,6 @@ describe('ProfilePage', () => {
     expect(JSON.parse(String(postCall?.[1]?.body))).toEqual(
       expect.objectContaining({
         user_profile: expect.objectContaining({ nickname: 'An mới' }),
-        partner_profile: expect.objectContaining({ nickname: 'Bình' }),
       })
     );
   });

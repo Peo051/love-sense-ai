@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && isAuthenticated) {
-      router.replace('/analyze');
+      router.replace('/tutor');
     }
   }, [isAuthenticated, loading, router]);
 
@@ -31,7 +31,7 @@ export default function LoginPage() {
 
     try {
       await loginWithGoogle();
-      router.replace('/analyze');
+      router.replace('/tutor');
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Không thể đăng nhập bằng Google.');
     } finally {

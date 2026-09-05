@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import { Database, FileX2, ShieldCheck, Trash2, type LucideIcon } from 'lucide-react';
@@ -34,7 +34,7 @@ const deleteDialogCopy: Record<Exclude<PendingPrivacyDelete, null>, { title: str
   },
   profile: {
     title: 'Xóa hồ sơ cá nhân hóa?',
-    description: 'Thao tác này xóa hồ sơ của bạn và hồ sơ người ấy. Lịch sử phân tích không bị xóa trong thao tác này.',
+    description: 'Thao tác này xóa hồ sơ học viên của bạn. Lịch sử bài nộp không bị xóa trong thao tác này.',
     label: 'Xóa hồ sơ cá nhân hóa',
   },
   all: {
@@ -185,13 +185,13 @@ export default function PrivacyPage() {
         <div className="space-y-6">
           <Card title="Dữ liệu được lưu khi có consent">
             <div className="grid gap-3 text-sm text-slate-700">
-              <PrivacyInfo icon={Database} text="Hồ sơ cá nhân hóa, hồ sơ người ấy và cài đặt consent theo user_id." />
-              <PrivacyInfo icon={ShieldCheck} text="Kết quả phân tích chỉ lưu khi bật lưu lịch sử hoặc save_result." />
-              <PrivacyInfo icon={FileX2} text="Nội dung chat gốc không lưu mặc định, chỉ lưu khi save_input=true." />
+              <PrivacyInfo icon={Database} text="Hồ sơ học viên và cài đặt consent theo user_id." />
+              <PrivacyInfo icon={ShieldCheck} text="Kết quả phân tích bài nộp chỉ lưu khi bật lưu lịch sử hoặc save_result." />
+              <PrivacyInfo icon={FileX2} text="Mã nguồn gốc không lưu mặc định, chỉ lưu khi save_input=true." />
             </div>
           </Card>
 
-          <Card title="AI Vision consent" description="Ảnh chụp đoạn chat chỉ được gửi đến provider khi bạn bật tùy chọn AI Vision và tick consent riêng trong trang phân tích.">
+          <Card title="AI Vision consent" description="Ảnh chụp bài tập hoặc mã nguồn chỉ được gửi đến provider khi bạn bật tùy chọn AI Vision và tick consent riêng trong trang gia sư.">
             <div className="rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
               Backend không lưu ảnh, không log ảnh/base64 và frontend vẫn yêu cầu bạn review nội dung OCR trước khi phân tích.
             </div>
