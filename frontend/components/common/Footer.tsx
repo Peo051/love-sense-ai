@@ -5,9 +5,9 @@ export default function Footer() {
     <footer className="mt-16 border-t border-rose-100 bg-white/90">
       <div className="mx-auto grid max-w-7xl gap-4 px-4 py-7 text-sm text-slate-600 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-center lg:px-8">
         <div>
-          <p className="font-display text-xl font-extrabold tracking-tight text-slate-950">Love Sense AI</p>
+          <p className="font-display text-xl font-extrabold tracking-tight text-slate-950">CodeSense AI</p>
           <p className="mt-1 leading-6">
-            Kết quả chỉ mang tính tham khảo, không thay thế giao tiếp trực tiếp và không lưu chat nếu bạn chưa đồng ý.
+            Adaptive Programming Tutor for Beginner C# OOP Students. Hỗ trợ tư duy lập trình và hướng dẫn giải quyết bài toán từng bước.
           </p>
         </div>
         <div className="flex flex-wrap gap-4">

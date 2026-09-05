@@ -1,6 +1,8 @@
-# Love Sense AI
+# CodeSense AI
 
-**Love Sense AI** là web app hỗ trợ phân tích sắc thái cảm xúc trong đoạn hội thoại tình cảm, có cá nhân hóa theo hồ sơ người dùng và gợi ý phản hồi văn minh. Ứng dụng được thiết kế theo hướng privacy-first: người dùng chủ động nhập hoặc tải nội dung, kết quả chỉ mang tính tham khảo và không thay thế giao tiếp trực tiếp.
+**CodeSense AI** là hệ thống **Gia sư lập trình thích ứng dành cho sinh viên nhập môn Lập trình hướng đối tượng với C#** (Adaptive Programming Tutor for Beginner C# OOP Students). Hệ thống hỗ trợ sinh viên phân tích lỗi code, nhận gợi ý và hướng dẫn tư duy từng bước (Socratic tutoring), cá nhân hóa theo tiến độ học tập và bảo mật dữ liệu.
+
+> **Ghi chú chuyển hướng (Pivot Note - APT-002):** Dự án được chuyển đổi từ sản phẩm ban đầu sang nền tảng CodeSense AI. Trạng thái baseline nguyên bản của Love Sense AI đã được đóng băng và bảo lưu tại git tag `love-sense-ai-final` và tài liệu [docs/pivot/BASELINE.md](docs/pivot/BASELINE.md). Báo cáo phân loại chuyển đổi tên được lưu tại [docs/pivot/RENAME_REPORT.md](docs/pivot/RENAME_REPORT.md).
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi)

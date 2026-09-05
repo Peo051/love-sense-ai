@@ -1,6 +1,6 @@
-# Love Sense AI Documentation
+# CodeSense AI Documentation
 
-This folder keeps the long-form project documents used for setup, demo, deployment, privacy review, and API reference.
+This folder keeps the long-form project documents used for setup, demo, deployment, privacy review, and API reference for **CodeSense AI** (Adaptive Programming Tutor for Beginner C# OOP Students).
 
 ## Start Here
 

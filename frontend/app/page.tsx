@@ -1,4 +1,4 @@
-﻿import {
+import {
   ArrowRight,
   CheckCircle2,
   HeartHandshake,
@@ -89,16 +89,18 @@ export default function HomePage() {
           <div className="landing-fade-up max-w-3xl space-y-8">
             <Badge tone="teal">
               <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-              Privacy-first • Manual input • Consent-based
+              CodeSense AI • Adaptive Programming Tutor
             </Badge>
 
             <div className="space-y-5">
               <h1 className="max-w-4xl font-display text-4xl font-extrabold leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
-                Hiểu sắc thái hội thoại. Phản hồi bình tĩnh hơn.
+                CodeSense AI
               </h1>
+              <p className="max-w-2xl text-xl font-bold text-rose-600 sm:text-2xl">
+                Adaptive Programming Tutor for Beginner C# OOP Students
+              </p>
               <p className="max-w-2xl text-base font-medium leading-8 text-slate-700 sm:text-lg">
-                Nhập đoạn chat thủ công, kiểm tra nội dung trích xuất từ ảnh và nhận gợi ý phản hồi tham khảo — không tự
-                truy cập tin nhắn, không lưu mặc định.
+                Hệ thống gia sư lập trình thích ứng hỗ trợ sinh viên học lập trình hướng đối tượng (OOP) với C#, phân tích mã nguồn, phát hiện lỗi cú pháp/logic và gợi ý hướng tư duy từng bước.
               </p>
             </div>
 
@@ -149,8 +151,7 @@ export default function HomePage() {
             Một không gian rõ ràng để nhìn lại hội thoại
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Từng phần của Love Sense AI được thiết kế để hỗ trợ giao tiếp tốt hơn, không phán xét và không thay thế trao
-            đổi trực tiếp.
+            Từng phần của CodeSense AI được thiết kế để hỗ trợ học lập trình hiệu quả, phát triển tư duy giải thuật độc lập và không phụ thuộc vào code giải sẵn.
           </p>
         </div>
 
@@ -200,10 +201,9 @@ export default function HomePage() {
             <ShieldCheck className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h2 className="text-xl font-bold text-slate-950">Giao tiếp tốt hơn, không kết luận thay bạn</h2>
+            <h2 className="text-xl font-bold text-slate-950">Gia sư đồng hành, hướng dẫn tư duy từng bước</h2>
             <p className="mt-2 max-w-4xl text-base leading-7 text-slate-700">
-              Love Sense AI không kết luận chắc chắn cảm xúc của người khác. Kết quả chỉ hỗ trợ bạn giao tiếp bình tĩnh
-              và tôn trọng hơn.
+              CodeSense AI đồng hành cùng bạn giải quyết bài tập lập trình C# OOP: phát hiện lỗi sai, đưa ra gợi ý gợi mở (Socratic tutoring) và giúp bạn tự làm chủ kiến thức.
             </p>
           </div>
         </div>

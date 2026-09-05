@@ -58,7 +58,7 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <Card title="Tiếp tục với Google" description="Love Sense AI dùng Firebase Authentication để xác thực Google an toàn.">
+        <Card title="Tiếp tục với Google" description="CodeSense AI dùng Firebase Authentication để xác thực Google an toàn.">
           <div className="space-y-5">
             {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 

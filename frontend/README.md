@@ -1,6 +1,6 @@
-# Love Sense AI Frontend
+# CodeSense AI Frontend
 
-Frontend Next.js cho Love Sense AI. Ứng dụng dùng Firebase Google Login, gọi backend FastAPI qua `NEXT_PUBLIC_API_BASE_URL`/`NEXT_PUBLIC_API_URL` và giữ nguyên demo mode cho `/analyze` khi user chưa đăng nhập.
+Frontend Next.js cho CodeSense AI (Adaptive Programming Tutor for Beginner C# OOP Students). Ứng dụng dùng Firebase Google Login, gọi backend FastAPI qua `NEXT_PUBLIC_API_BASE_URL`/`NEXT_PUBLIC_API_URL` và hỗ trợ demo mode khi user chưa đăng nhập.
 
 ## Công Nghệ
 

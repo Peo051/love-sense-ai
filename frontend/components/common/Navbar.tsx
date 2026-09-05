@@ -1,6 +1,6 @@
 'use client';
 
-import { HeartHandshake, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { Code2, LogIn, LogOut, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -39,10 +39,10 @@ export default function Navbar() {
             onClick={() => setIsOpen(false)}
           >
             <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-gradient-to-br from-rose-500 to-rose-700 text-white shadow-[4px_4px_0_rgba(127,29,29,0.16)] sm:h-10 sm:w-10">
-              <HeartHandshake className="h-5 w-5" aria-hidden="true" />
+              <Code2 className="h-5 w-5" aria-hidden="true" />
             </span>
             <span className="truncate">
-              Love Sense <span className="text-rose-600">AI</span>
+              CodeSense <span className="text-rose-600">AI</span>
             </span>
           </Link>
 

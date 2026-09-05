@@ -27,7 +27,7 @@ export function AuthLoadingState() {
   return (
     <LoadingState
       title="Đang kiểm tra phiên đăng nhập"
-      description="Love Sense AI đang kiểm tra Firebase ID Token trước khi tải dữ liệu cá nhân."
+      description="CodeSense AI đang kiểm tra Firebase ID Token trước khi tải dữ liệu cá nhân."
     />
   );
 }

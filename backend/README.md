@@ -1,6 +1,6 @@
-# Love Emotion Backend
+# CodeSense AI Backend
 
-Backend FastAPI cho Love Emotion Web.
+Backend FastAPI cho CodeSense AI (Adaptive Programming Tutor for Beginner C# OOP Students).
 
 ## Công Nghệ
 

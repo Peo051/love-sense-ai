@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     frontend_url: str = DEFAULT_FRONTEND_URL
 
     api_v1_str: str = "/api/v1"
-    project_name: str = "Love Emotion API"
+    project_name: str = "CodeSense AI API"
     allowed_origins: str = DEFAULT_ALLOWED_ORIGINS
 
     database_url: str = DEFAULT_DATABASE_URL

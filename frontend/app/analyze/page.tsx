@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { LockKeyhole, MessageSquareText, ShieldCheck, Sparkles } from 'lucide-react';
@@ -42,7 +42,7 @@ export default function AnalyzePage() {
           <SectionHeader
             eyebrow="AI dashboard"
             title="Phân tích sắc thái hội thoại"
-            description="Nhập đoạn chat thủ công, thêm bối cảnh cần thiết và nhận gợi ý phản hồi tham khảo. Love Sense AI không tự truy cập tin nhắn và không lưu chat nếu bạn chưa đồng ý."
+            description="Nhập đoạn chat thủ công, thêm bối cảnh cần thiết và nhận gợi ý phản hồi tham khảo. CodeSense AI không tự truy cập tin nhắn và không lưu chat nếu bạn chưa đồng ý."
           />
           <div className="flex flex-wrap gap-2 lg:justify-end">
             <Badge tone="rose">

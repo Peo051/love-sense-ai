@@ -28,8 +28,8 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Love Sense AI - Phân tích sắc thái hội thoại',
-  description: 'Ứng dụng hỗ trợ phân tích sắc thái hội thoại và gợi ý phản hồi nhẹ nhàng, ưu tiên quyền riêng tư.',
+  title: 'CodeSense AI - Adaptive Programming Tutor for Beginner C# OOP Students',
+  description: 'Hệ thống gia sư lập trình thích ứng hỗ trợ sinh viên học lập trình hướng đối tượng C# OOP, phân tích code và gợi ý tư duy từng bước.',
   icons: {
     icon: [
       { url: '/logo.svg', type: 'image/svg+xml' },
