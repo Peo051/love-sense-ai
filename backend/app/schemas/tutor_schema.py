@@ -8,10 +8,17 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 class HintLevel(IntEnum):
     """
     Cấp độ gợi ý sư phạm:
-    - LEVEL_1: Câu hỏi gợi mở / Socratic questions / chỉ dẫn định hướng tổng quát
-    - LEVEL_2: Manh mối logic / Giải thích khái niệm OOP liên quan
-    - LEVEL_3: Hướng dẫn chi tiết từng bước khắc phục (không giải hộ toàn bộ bài)
+    - SOCRATIC_QUESTION = 1: Câu hỏi gợi mở Socratic, định hướng tư duy tổng quan.
+    - CONCEPTUAL_EXPLANATION = 2: Giải thích khái niệm/nguyên lý OOP liên quan và manh mối logic.
+    - DIRECTED_HINT = 3: Gợi ý có định hướng từng bước (không đưa mã giải hoàn chỉnh).
+    - EXPLICIT_SOLUTION = 4: Giải pháp rõ ràng kèm mã sửa lỗi cụ thể (chỉ khi được cấu hình).
     """
+    SOCRATIC_QUESTION = 1
+    CONCEPTUAL_EXPLANATION = 2
+    DIRECTED_HINT = 3
+    EXPLICIT_SOLUTION = 4
+
+    # Aliases tương thích ngược
     POINTING = 1
     CONCEPTUAL = 2
     CONCRETE = 3
@@ -173,18 +180,22 @@ class TutorResponse(BaseModel):
     hint_level: int = Field(
         default=1,
         ge=1,
-        le=3,
-        description="Mức độ gợi ý của phản hồi (1, 2, hoặc 3)",
+        le=4,
+        description="Mức độ gợi ý của phản hồi (1: Socratic question, 2: Conceptual explanation, 3: Directed hint, 4: Explicit solution)",
     )
     solution_revealed: bool = Field(
         default=False,
-        description="Đánh dấu phản hồi có đưa ra mã giải trọn vẹn hay không (mặc định False)",
+        description="Đánh dấu phản hồi có đưa ra mã giải trọn vẹn hay không (chỉ được phép khi hint_level = 4)",
     )
     next_action: str = Field(
         ...,
         min_length=1,
         max_length=500,
         description="Hành động cụ thể gợi ý cho sinh viên thực hiện tiếp theo",
+    )
+    prompt_version: str = Field(
+        default="v1",
+        description="Phiên bản prompt được áp dụng để sinh phản hồi",
     )
     session_id: Optional[str] = Field(
         default=None,
@@ -252,8 +263,8 @@ class TutorRequest(BaseModel):
     hint_level: int = Field(
         default=1,
         ge=1,
-        le=3,
-        description="Mức độ gợi ý yêu cầu (1: Chỉ dẫn định hướng, 2: Manh mối khái niệm, 3: Chi tiết từng bước)",
+        le=4,
+        description="Mức độ gợi ý yêu cầu (1: Socratic question, 2: Conceptual explanation, 3: Directed hint, 4: Explicit solution)",
     )
     save_input: bool = Field(
         default=False,

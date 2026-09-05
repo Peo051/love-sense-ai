@@ -66,12 +66,18 @@ class TutorOutputValidator:
             )
 
         # Đảm bảo hint_level đồng nhất với yêu cầu nếu LLM trả thiếu hoặc lệch
-        if "hint_level" not in parsed_data or parsed_data["hint_level"] not in (1, 2, 3):
+        if "hint_level" not in parsed_data or parsed_data["hint_level"] not in (1, 2, 3, 4):
             parsed_data["hint_level"] = requested_hint_level
 
-        # Kiểm tra nguyên tắc sư phạm: solution_revealed mặc định là False
-        if "solution_revealed" not in parsed_data:
+        # Kiểm tra nguyên tắc sư phạm: chỉ cho phép solution_revealed = True khi hint_level = 4
+        if requested_hint_level < 4:
             parsed_data["solution_revealed"] = False
+        elif "solution_revealed" not in parsed_data:
+            parsed_data["solution_revealed"] = True
+
+        # Đảm bảo metadata prompt_version
+        if "prompt_version" not in parsed_data or not parsed_data["prompt_version"]:
+            parsed_data["prompt_version"] = "v1"
 
         try:
             response_model = TutorResponse.model_validate(parsed_data)

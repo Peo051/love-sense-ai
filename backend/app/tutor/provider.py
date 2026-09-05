@@ -106,6 +106,7 @@ class DeterministicMockTutorProvider:
             "hint_level": 1,
             "solution_revealed": False,
             "next_action": "Thử tìm hiểu vai trò của từ khóa 'this' khi gán giá trị trong constructor.",
+            "prompt_version": "v1",
         }
 
     def set_response(self, response: str | dict[str, Any]) -> None:

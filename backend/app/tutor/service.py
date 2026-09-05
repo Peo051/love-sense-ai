@@ -166,13 +166,16 @@ class TutorService:
                 teaching_strategy = "socratic_questioning"
             elif requested_hint_level == 2:
                 teaching_strategy = "conceptual_clue"
+            elif requested_hint_level == 3:
+                teaching_strategy = "directed_hint"
             else:
-                teaching_strategy = "step_by_step_scaffolding"
+                teaching_strategy = "explicit_solution_scaffolding"
 
-        # 6. Construct TutorResponse hoàn chỉnh với timestamp
+        # 6. Construct TutorResponse hoàn chỉnh với timestamp và prompt_version
         response_dict = response.model_dump()
         response_dict["teaching_strategy"] = teaching_strategy
         response_dict["hint_level"] = requested_hint_level
+        response_dict["prompt_version"] = getattr(response, "prompt_version", "v1")
         response_dict["created_at"] = datetime.now(timezone.utc)
 
         return TutorResponse.model_validate(response_dict)

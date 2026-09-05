@@ -160,7 +160,7 @@ class TestTutorRequestSchema:
                 student_question="Q" * 2001,
             )
 
-    @pytest.mark.parametrize("invalid_hint", [0, -1, 4, 10])
+    @pytest.mark.parametrize("invalid_hint", [0, -1, 5, 10])
     def test_invalid_hint_level_raises_error(self, invalid_hint):
         with pytest.raises(ValidationError):
             TutorRequest(
@@ -168,6 +168,15 @@ class TestTutorRequestSchema:
                 student_code="class A {}",
                 hint_level=invalid_hint,
             )
+
+    def test_valid_hint_levels_one_to_four(self):
+        for lvl in [1, 2, 3, 4]:
+            req = TutorRequest(
+                problem_statement="Đề bài hợp lệ với các mức gợi ý.",
+                student_code="class A {}",
+                hint_level=lvl,
+            )
+            assert req.hint_level == lvl
 
     def test_optional_fields_clean_whitespace(self):
         request = TutorRequest(
