@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.firebase import initialize_firebase_admin
 from app.database.connection import init_database_for_development
-from app.routes import analyze, auth, consent, health, history, ocr, profile, user_data
+from app.routes import analyze, auth, consent, health, history, ocr, profile, tutor, user_data
 
 
 @asynccontextmanager
@@ -39,6 +39,7 @@ app.include_router(history.router, prefix="/api", tags=["history"])
 app.include_router(consent.router, prefix="/api", tags=["consent"])
 app.include_router(user_data.router, prefix="/api", tags=["user-data"])
 app.include_router(auth.router, prefix="/api", tags=["auth"])
+app.include_router(tutor.router, prefix="/api/tutor", tags=["tutor"])
 
 
 @app.get("/")

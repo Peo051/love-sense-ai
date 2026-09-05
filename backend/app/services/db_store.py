@@ -235,6 +235,57 @@ class HistoryRepository:
         return item
 
     @staticmethod
+    async def save_tutor_session(
+        db: AsyncSession,
+        user_id: str,
+        *,
+        problem_statement: str,
+        student_code: str,
+        topic: str | None = None,
+        result: Any,
+        save_input: bool = False,
+        save_result: bool = True,
+    ) -> AnalysisSession | None:
+        if not (save_result or save_input):
+            return None
+
+        privacy_consent = await ConsentRepository.get_consent(db, user_id, "privacy_settings")
+        if not privacy_consent.history_enabled:
+            return None
+
+        accepted_at = utc_now()
+        issue_type = getattr(result.diagnosis, "issue_type", "diagnostic_feedback")
+        confidence = getattr(result.diagnosis, "confidence", 1.0)
+        summary = f"Chẩn đoán OOP: {issue_type} (Mức {result.hint_level})"
+        context_note = f"Chủ đề: {topic or 'C# OOP'}. Đề bài: {problem_statement[:150]}"
+
+        item = AnalysisSession(
+            user_id=user_id,
+            overall_emotion=issue_type,
+            confidence=confidence,
+            emotion_distribution={
+                "knowledge_components": result.knowledge_components,
+                "hint_level": result.hint_level,
+                "teaching_strategy": result.teaching_strategy,
+                "prompt_version": getattr(result, "prompt_version", "v1"),
+            },
+            summary=summary,
+            context_note=context_note,
+            suggested_reply=result.tutor_response,
+            warning=result.next_action,
+            save_input=save_input,
+            save_result=save_result,
+            consent_type="tutor_submission",
+            is_accepted=True,
+            accepted_at=accepted_at,
+            chat_text=student_code if save_input else None,
+        )
+        db.add(item)
+        await db.commit()
+        await db.refresh(item)
+        return item
+
+    @staticmethod
     async def delete_history_item(db: AsyncSession, user_id: str, analysis_id: str) -> bool:
         result = await db.execute(
             delete(AnalysisSession).where(
