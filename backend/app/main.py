@@ -17,8 +17,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Love Emotion API",
-    description="API phân tích sắc thái cảm xúc trong hội thoại tình cảm",
+    title="CodeSense AI API",
+    description="API hệ thống gia sư lập trình thích ứng (Adaptive Programming Tutor for Beginner C# OOP Students)",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -43,12 +43,12 @@ app.include_router(auth.router, prefix="/api", tags=["auth"])
 
 @app.get("/")
 async def root():
-    return {"message": "Love Emotion API"}
+    return {"message": "CodeSense AI API"}
 
 
 @app.get("/health")
 async def root_health_check():
     return {
         "status": "healthy",
-        "service": "Love Emotion API",
+        "service": "CodeSense AI API",
     }

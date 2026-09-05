@@ -1,4 +1,6 @@
-# Love Emotion Web - Setup MVP
+# CodeSense AI - Setup MVP
+
+**CodeSense AI**: Adaptive Programming Tutor for Beginner C# OOP Students (tiền thân Love Emotion Web).
 
 ## Yêu cầu
 

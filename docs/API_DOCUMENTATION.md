@@ -15,7 +15,7 @@ Kiểm tra backend đang chạy.
 ```json
 {
   "status": "healthy",
-  "service": "Love Emotion API"
+  "service": "CodeSense AI API"
 }
 ```
 

@@ -1,10 +1,10 @@
-# Love Sense AI Frontend Design Guide
+# CodeSense AI Frontend Design Guide
 
-This document defines the visual direction, product tone, page patterns, and implementation rules for the Love Sense AI frontend. It is written for human developers and AI coding agents so future UI work stays consistent, privacy-safe, and easy to review.
+> **Ghi chú chuyển hướng (Pivot Note - APT-002):** Hướng dẫn thiết kế giao diện cho **CodeSense AI** - *Adaptive Programming Tutor for Beginner C# OOP Students*. Kế thừa nền tảng hệ thống thiết kế frontend từ Love Sense AI.
 
 ## 1. Brand Direction
 
-**App name:** Love Sense AI
+**App name:** CodeSense AI (Research: Adaptive Programming Tutor for Beginner C# OOP Students)
 
 Love Sense AI is a web app that helps users analyze the emotional tone of romantic conversations they manually enter. The app provides gentle response suggestions and keeps privacy as a core product value.
 

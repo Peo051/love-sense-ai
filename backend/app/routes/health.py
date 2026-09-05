@@ -6,5 +6,5 @@ router = APIRouter()
 async def health_check():
     return {
         "status": "healthy",
-        "service": "Love Emotion API"
+        "service": "CodeSense AI API"
     }

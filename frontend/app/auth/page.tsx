@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { FormEvent, useState } from 'react';
 import { KeyRound, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
@@ -67,7 +67,7 @@ export default function AuthPage() {
                 Đăng nhập để quản lý dữ liệu của riêng bạn
               </h1>
               <p className="text-sm leading-6 text-slate-600">
-                Tài khoản giúp Love Sense AI tách hồ sơ, lịch sử và consent theo từng người dùng. Ứng dụng không tự
+                Tài khoản giúp CodeSense AI tách hồ sơ, lịch sử và consent theo từng người dùng. Ứng dụng không tự
                 truy cập tin nhắn và không lưu chat nếu bạn chưa bật consent.
               </p>
             </div>
