@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,6 @@ from app.models.partner_profile import PartnerProfile as PartnerProfileModel
 from app.models.preference import Preference
 from app.models.profile import Profile as ProfileModel
 from app.models.user import User
-from app.schemas.analyze_schema import AnalyzeResponse
 from app.schemas.consent_schema import ConsentSettings, ConsentUpdate
 from app.schemas.history_schema import HistoryItem, HistoryListResponse
 from app.schemas.profile_schema import PartnerProfile, ProfileResponse, ProfileUpsert, UserProfile
@@ -204,7 +204,7 @@ class HistoryRepository:
         user_id: str,
         *,
         chat_text: str,
-        result: AnalyzeResponse,
+        result: Any,
         save_input: bool,
         save_result: bool,
     ) -> AnalysisSession | None:
