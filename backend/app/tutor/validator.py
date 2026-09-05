@@ -4,7 +4,8 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from app.schemas.tutor_schema import TutorResponse
+from app.schemas.tutor_schema import DiagnosisCategory, TutorResponse
+from app.tutor.diagnosis import DiagnosisSubsystem
 
 
 class TutorOutputValidationError(Exception):
@@ -45,6 +46,7 @@ class TutorOutputValidator:
     ) -> TutorResponse:
         """
         Parse chuỗi văn bản từ LLM thành JSON và validate qua Pydantic schema TutorResponse.
+        Đồng thời chuẩn hóa category và issue_type theo C# Beginner Taxonomy.
         """
         if not raw_output or not raw_output.strip():
             raise TutorOutputValidationError("LLM trả về phản hồi rỗng.", raw_output=raw_output)
@@ -64,6 +66,19 @@ class TutorOutputValidator:
                 "Dữ liệu JSON từ LLM phải là một JSON object/dictionary.",
                 raw_output=raw_output,
             )
+
+        # Chuẩn hóa diagnosis theo taxonomy
+        if "diagnosis" in parsed_data and isinstance(parsed_data["diagnosis"], dict):
+            norm_diag = DiagnosisSubsystem.normalize_diagnosis(parsed_data["diagnosis"])
+            parsed_data["diagnosis"] = norm_diag.model_dump()
+
+            # Quy tắc sư phạm cốt lõi: No-bug cases tuyệt đối không gán misconception
+            if norm_diag.category == DiagnosisCategory.NO_BUG:
+                parsed_data["possible_misconception"] = None
+                parsed_data["diagnosis"]["possible_misconception"] = None
+            elif norm_diag.category == DiagnosisCategory.INSUFFICIENT_CONTEXT:
+                parsed_data["possible_misconception"] = None
+                parsed_data["diagnosis"]["possible_misconception"] = None
 
         # Đảm bảo hint_level đồng nhất với yêu cầu nếu LLM trả thiếu hoặc lệch
         if "hint_level" not in parsed_data or parsed_data["hint_level"] not in (1, 2, 3, 4):

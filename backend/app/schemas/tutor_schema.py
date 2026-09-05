@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum, IntEnum
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -30,47 +30,26 @@ class IssueSeverity(str, Enum):
     ERROR = "error"
 
 
-class TutorDiagnosis(BaseModel):
+class DiagnosisCategory(str, Enum):
     """
-    Kết quả chẩn đoán kỹ thuật về bài làm của sinh viên.
+    8 phân nhóm chẩn đoán cốt lõi của CodeSense AI Tutor:
+    - COMPILE_ERROR: Lỗi biên dịch cú pháp hoặc kiểu (syntax error, type mismatch, missing member).
+    - RUNTIME_ERROR: Lỗi phát sinh trong quá trình thực thi (StackOverflow do đệ quy thuộc tính, NullReference, chia cho 0).
+    - LOGIC_ERROR: Lỗi sai lệch logic xử lý hoặc cập nhật trạng thái (shadowing, setter validation, sai công thức tính toán).
+    - CONCEPTUAL_MISUSE: Dùng sai khái niệm OOP (nhầm lẫn static/instance, vi phạm đóng gói encapsulation, sai constructor).
+    - REQUIREMENT_VIOLATION: Vi phạm yêu cầu đặc tả của bài toán (thiếu member, sai method signature, sai access modifier).
+    - NO_BUG: Mã nguồn hoàn toàn chính xác, đáp ứng yêu cầu và chuẩn OOP. Không bịa đặt lỗi!
+    - INSUFFICIENT_CONTEXT: Mã nguồn chưa hoàn chỉnh hoặc quá ngắn để đưa ra kết luận.
+    - UNKNOWN: Chưa xác định hoặc không thuộc các phân loại trên.
     """
-    issue_type: str = Field(
-        ...,
-        min_length=1,
-        max_length=100,
-        description="Loại lỗi (ví dụ: syntax_error, semantic_error, logical_error, conceptual_misconception, oop_design_flaw, none)",
-    )
-    severity: str = Field(
-        default="warning",
-        description="Mức độ nghiêm trọng của vấn đề (info, warning, error)",
-    )
-    location: Optional[str] = Field(
-        default=None,
-        max_length=255,
-        description="Vị trí trong mã nguồn sinh viên (ví dụ: dòng code, tên method, tên class)",
-    )
-    confidence: float = Field(
-        ...,
-        ge=0.0,
-        le=1.0,
-        description="Độ tin cậy của chẩn đoán (thang điểm 0.0 - 1.0)",
-    )
-
-    @field_validator("issue_type", "severity")
-    @classmethod
-    def strip_and_lower(cls, value: str) -> str:
-        trimmed = value.strip().lower()
-        if not trimmed:
-            raise ValueError("Field must not be empty.")
-        return trimmed
-
-    @field_validator("location")
-    @classmethod
-    def clean_location(cls, value: Optional[str]) -> Optional[str]:
-        if value is None:
-            return None
-        trimmed = value.strip()
-        return trimmed if trimmed else None
+    COMPILE_ERROR = "compile_error"
+    RUNTIME_ERROR = "runtime_error"
+    LOGIC_ERROR = "logic_error"
+    CONCEPTUAL_MISUSE = "conceptual_misuse"
+    REQUIREMENT_VIOLATION = "requirement_violation"
+    NO_BUG = "no_bug"
+    INSUFFICIENT_CONTEXT = "insufficient_context"
+    UNKNOWN = "unknown"
 
 
 class PossibleMisconception(BaseModel):
@@ -143,6 +122,116 @@ class TutorEvidence(BaseModel):
         if not trimmed:
             raise ValueError("Evidence reason must not be empty.")
         return trimmed
+
+
+class TutorDiagnosis(BaseModel):
+    """
+    Kết quả chẩn đoán kỹ thuật về bài làm của sinh viên.
+    Bao gồm 8 nhóm phân loại chuẩn: compile_error, runtime_error, logic_error,
+    conceptual_misuse, requirement_violation, no_bug, insufficient_context, unknown.
+    """
+    category: DiagnosisCategory = Field(
+        default=DiagnosisCategory.UNKNOWN,
+        description="Nhóm phân loại chẩn đoán (compile_error, runtime_error, logic_error, conceptual_misuse, requirement_violation, no_bug, insufficient_context, unknown)",
+    )
+    issue_type: str = Field(
+        ...,
+        min_length=1,
+        max_length=100,
+        description="Loại lỗi (ví dụ: syntax_error, recursive_property_accessor, parameter_field_shadowing, no_issue_detected)",
+    )
+    severity: str = Field(
+        default="warning",
+        description="Mức độ nghiêm trọng của vấn đề (info, warning, error)",
+    )
+    location: Optional[str] = Field(
+        default=None,
+        max_length=255,
+        description="Vị trí trong mã nguồn sinh viên (ví dụ: dòng code, tên method, tên class)",
+    )
+    confidence: float = Field(
+        ...,
+        ge=0.0,
+        le=1.0,
+        description="Độ tin cậy của chẩn đoán (thang điểm 0.0 - 1.0)",
+    )
+    evidence: Optional[TutorEvidence] = Field(
+        default=None,
+        description="Bằng chứng trích từ mã nguồn liên quan đến chẩn đoán",
+    )
+    knowledge_components: list[str] = Field(
+        default_factory=list,
+        description="Thành phần kiến thức liên quan đến chẩn đoán",
+    )
+    possible_misconception: Optional[PossibleMisconception] = Field(
+        default=None,
+        description="Giả định ngộ nhận liên quan đến chẩn đoán nếu có bằng chứng",
+    )
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def validate_category(cls, value: Any) -> DiagnosisCategory:
+        if isinstance(value, DiagnosisCategory):
+            return value
+        if not value or not isinstance(value, str):
+            return DiagnosisCategory.UNKNOWN
+        cleaned = value.strip().lower()
+        alias_map = {
+            "syntax_error": DiagnosisCategory.COMPILE_ERROR,
+            "compile_error": DiagnosisCategory.COMPILE_ERROR,
+            "syntax": DiagnosisCategory.COMPILE_ERROR,
+            "runtime_error": DiagnosisCategory.RUNTIME_ERROR,
+            "runtime": DiagnosisCategory.RUNTIME_ERROR,
+            "stackoverflow": DiagnosisCategory.RUNTIME_ERROR,
+            "logic_error": DiagnosisCategory.LOGIC_ERROR,
+            "logical_error": DiagnosisCategory.LOGIC_ERROR,
+            "semantic_error": DiagnosisCategory.LOGIC_ERROR,
+            "conceptual_misuse": DiagnosisCategory.CONCEPTUAL_MISUSE,
+            "conceptual_misconception": DiagnosisCategory.CONCEPTUAL_MISUSE,
+            "requirement_violation": DiagnosisCategory.REQUIREMENT_VIOLATION,
+            "no_bug": DiagnosisCategory.NO_BUG,
+            "none": DiagnosisCategory.NO_BUG,
+            "correct": DiagnosisCategory.NO_BUG,
+            "valid": DiagnosisCategory.NO_BUG,
+            "no_issue": DiagnosisCategory.NO_BUG,
+            "insufficient_context": DiagnosisCategory.INSUFFICIENT_CONTEXT,
+            "incomplete_code": DiagnosisCategory.INSUFFICIENT_CONTEXT,
+            "incomplete": DiagnosisCategory.INSUFFICIENT_CONTEXT,
+            "unknown": DiagnosisCategory.UNKNOWN,
+        }
+        if cleaned in alias_map:
+            return alias_map[cleaned]
+        for cat in DiagnosisCategory:
+            if cleaned == cat.value:
+                return cat
+        return DiagnosisCategory.UNKNOWN
+
+    @field_validator("issue_type", "severity")
+    @classmethod
+    def strip_and_lower(cls, value: str) -> str:
+        trimmed = value.strip().lower()
+        if not trimmed:
+            raise ValueError("Field must not be empty.")
+        return trimmed
+
+    @field_validator("location")
+    @classmethod
+    def clean_location(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed if trimmed else None
+
+    @model_validator(mode="after")
+    def enforce_pedagogical_safety(self) -> "TutorDiagnosis":
+        # Không gán ngộ nhận khi là no_bug hoặc insufficient_context
+        if self.category == DiagnosisCategory.NO_BUG:
+            self.possible_misconception = None
+            if self.severity != "info":
+                self.severity = "info"
+        elif self.category == DiagnosisCategory.INSUFFICIENT_CONTEXT:
+            self.possible_misconception = None
+        return self
 
 
 class TutorResponse(BaseModel):
@@ -219,6 +308,35 @@ class TutorResponse(BaseModel):
         if not trimmed:
             raise ValueError("Field must not be empty or whitespace only.")
         return trimmed
+
+    @model_validator(mode="after")
+    def sync_diagnosis_details(self) -> "TutorResponse":
+        # Đồng bộ evidence, knowledge_components, possible_misconception giữa diagnosis và top-level
+        if self.diagnosis.category == DiagnosisCategory.NO_BUG:
+            self.possible_misconception = None
+            self.diagnosis.possible_misconception = None
+            if self.diagnosis.severity != "info":
+                self.diagnosis.severity = "info"
+        elif self.diagnosis.category == DiagnosisCategory.INSUFFICIENT_CONTEXT:
+            self.possible_misconception = None
+            self.diagnosis.possible_misconception = None
+
+        if self.evidence and not self.diagnosis.evidence:
+            self.diagnosis.evidence = self.evidence
+        elif self.diagnosis.evidence and not self.evidence:
+            self.evidence = self.diagnosis.evidence
+
+        if self.knowledge_components and not self.diagnosis.knowledge_components:
+            self.diagnosis.knowledge_components = list(self.knowledge_components)
+        elif self.diagnosis.knowledge_components and not self.knowledge_components:
+            self.knowledge_components = list(self.diagnosis.knowledge_components)
+
+        if self.possible_misconception and not self.diagnosis.possible_misconception:
+            self.diagnosis.possible_misconception = self.possible_misconception
+        elif self.diagnosis.possible_misconception and not self.possible_misconception:
+            self.possible_misconception = self.diagnosis.possible_misconception
+
+        return self
 
 
 # Alias để tương thích tên gọi
