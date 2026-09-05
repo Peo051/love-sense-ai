@@ -13,7 +13,7 @@ from app.services.rate_limiter import analyze_rate_limiter
 import app.models as app_models  # noqa: F401 - import models before metadata.create_all
 
 test_engine = create_async_engine(
-    "sqlite+aiosqlite:///:memory:",
+    "sqlite+aiosqlite:///file:testdb?mode=memory&cache=shared&uri=true",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )

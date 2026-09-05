@@ -165,10 +165,10 @@ export default function AuthPage() {
                 Đăng xuất khỏi trình duyệt này
               </button>
               <Link
-                href="/analyze"
+                href="/tutor"
                 className="rounded-md font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2 hover:text-rose-700"
               >
-                Quay lại phân tích
+                Quay lại Gia sư AI
               </Link>
             </div>
           </form>

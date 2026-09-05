@@ -1,12 +1,14 @@
 import {
   ArrowRight,
+  BookOpen,
   CheckCircle2,
-  HeartHandshake,
+  Code2,
   History,
+  Lightbulb,
   LockKeyhole,
-  MessageSquareText,
   ShieldCheck,
   Sparkles,
+  Terminal,
   Trash2,
   UserRound,
 } from 'lucide-react';
@@ -19,57 +21,57 @@ import PageShell from '@/components/common/PageShell';
 
 const trustItems = [
   {
-    icon: MessageSquareText,
-    title: 'Nhập thủ công',
-    description: 'Bạn tự nhập đoạn hội thoại cần xem lại.',
+    icon: Code2,
+    title: 'Học chủ động',
+    description: 'Nhập hoặc tải ảnh chụp đoạn mã C# OOP để nhận phân tích chi tiết.',
   },
   {
     icon: LockKeyhole,
-    title: 'Không lưu mặc định',
-    description: 'Nội dung chat chỉ lưu khi bạn đồng ý rõ ràng.',
+    title: 'Bảo mật mã nguồn',
+    description: 'Mã nguồn và bài tập của học viên chỉ lưu khi có consent rõ ràng.',
   },
   {
     icon: Trash2,
-    title: 'Có quyền xóa dữ liệu',
-    description: 'Xóa lịch sử, hồ sơ hoặc toàn bộ dữ liệu bất cứ lúc nào.',
+    title: 'Quyền kiểm soát dữ liệu',
+    description: 'Xóa lịch sử thực hành, hồ sơ học tập bất cứ khi nào bạn muốn.',
   },
 ];
 
 const features = [
   {
-    icon: HeartHandshake,
-    title: 'Phân tích sắc thái hội thoại',
-    description: 'Nhận định các tín hiệu cảm xúc có thể xuất hiện trong đoạn chat, luôn kèm độ tin cậy và cảnh báo an toàn.',
+    icon: Code2,
+    title: 'Gia sư thích ứng C# OOP',
+    description: 'Hỗ trợ sinh viên nắm vững các khái niệm then chốt: Class, Object, Encapsulation, Inheritance, Polymorphism.',
   },
   {
     icon: Sparkles,
-    title: 'Gợi ý phản hồi nhẹ nhàng',
-    description: 'Ưu tiên cách trả lời bình tĩnh, tôn trọng, không gây áp lực và không thao túng cảm xúc.',
+    title: 'Phương pháp gợi mở Socratic',
+    description: 'Không đưa ngay đáp án giải sẵn; gợi ý từng bước để học viên tự nhận biết lỗi và phát triển tư duy.',
   },
   {
     icon: UserRound,
-    title: 'Hồ sơ cá nhân hóa',
-    description: 'Thêm phong cách giao tiếp, thói quen phản hồi và bối cảnh riêng để gợi ý phù hợp hơn.',
+    title: 'Hồ sơ học viên cá nhân hóa',
+    description: 'Lưu trình độ hiện tại và mục tiêu môn học để hệ thống điều chỉnh độ khó của gợi ý.',
   },
   {
     icon: History,
-    title: 'Lịch sử có consent',
-    description: 'Chỉ lưu kết quả hoặc chat gốc khi bạn bật tùy chọn đồng ý lưu dữ liệu.',
+    title: 'Lịch sử thực hành & bài nộp',
+    description: 'Xem lại các lỗi lập trình đã sửa và theo dõi tiến độ tiến bộ qua từng bài tập.',
   },
 ];
 
 const steps = [
   {
-    title: 'Nhập đoạn chat',
-    description: 'Dán hoặc nhập thủ công vài dòng hội thoại bạn muốn nhìn lại một cách bình tĩnh.',
+    title: '1. Nhập hoặc quét code',
+    description: 'Dán đoạn mã C# OOP hoặc tải ảnh chụp code từ màn hình IDE / bài tập giảng đường.',
   },
   {
-    title: 'Thêm bối cảnh',
-    description: 'Bổ sung phong cách giao tiếp, trạng thái hoặc điều cần lưu ý để kết quả bớt máy móc.',
+    title: '2. Xác định vấn đề OOP',
+    description: 'Mô tả vướng mắc bạn đang gặp phải: lỗi cú pháp, ngoại lệ runtime hoặc tư duy thiết kế lớp.',
   },
   {
-    title: 'Nhận phân tích tham khảo',
-    description: 'Xem sắc thái tổng quan, phân bố cảm xúc và một gợi ý phản hồi nhẹ nhàng.',
+    title: '3. Nhận gợi ý từng bước',
+    description: 'Hệ thống phân tích và đưa ra gợi ý logic mở dần để bạn tự tay hoàn thiện mã nguồn.',
   },
 ];
 
@@ -100,13 +102,13 @@ export default function HomePage() {
                 Adaptive Programming Tutor for Beginner C# OOP Students
               </p>
               <p className="max-w-2xl text-base font-medium leading-8 text-slate-700 sm:text-lg">
-                Hệ thống gia sư lập trình thích ứng hỗ trợ sinh viên học lập trình hướng đối tượng (OOP) với C#, phân tích mã nguồn, phát hiện lỗi cú pháp/logic và gợi ý hướng tư duy từng bước.
+                Gia sư lập trình thích ứng dành cho sinh viên nhập môn Lập trình hướng đối tượng (OOP) C#. Hướng dẫn tư duy giải thuật, phát hiện lỗi cú pháp/logic và đưa ra gợi ý từng bước.
               </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Link href="/analyze" className={`${primaryCtaClass} w-full sm:w-auto`}>
-                Bắt đầu phân tích
+              <Link href="/tutor" className={`${primaryCtaClass} w-full sm:w-auto`}>
+                Học cùng Gia sư AI
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
               <Link href="/privacy" className={`${secondaryCtaClass} w-full sm:w-auto`}>
@@ -115,7 +117,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid gap-3 text-sm font-semibold text-slate-700 sm:grid-cols-3">
-              {['Nhập thủ công', 'Kết quả chỉ tham khảo', 'Bạn kiểm soát dữ liệu'].map((item) => (
+              {['Học tập chủ động', 'Gợi ý từng bước Socratic', 'Bảo mật mã nguồn'].map((item) => (
                 <div key={item} className="flex items-center gap-2 rounded-2xl border border-rose-100 bg-white/80 px-3 py-2 shadow-sm shadow-rose-100/60">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden="true" />
                   <span>{item}</span>
@@ -146,12 +148,12 @@ export default function HomePage() {
 
       <section className="space-y-6">
         <div className="mx-auto max-w-3xl text-center">
-          <Badge tone="slate">Feature blocks</Badge>
+          <Badge tone="slate">Tính năng cốt lõi</Badge>
           <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-950 sm:text-4xl">
-            Một không gian rõ ràng để nhìn lại hội thoại
+            Môi trường học lập trình OOP cá nhân hóa
           </h2>
           <p className="mt-4 text-base leading-7 text-slate-600">
-            Từng phần của CodeSense AI được thiết kế để hỗ trợ học lập trình hiệu quả, phát triển tư duy giải thuật độc lập và không phụ thuộc vào code giải sẵn.
+            CodeSense AI được thiết kế để hỗ trợ sinh viên tự tin giải quyết bài tập lập trình, thấu hiểu nguyên lý thiết kế hướng đối tượng và làm chủ kỹ năng gỡ lỗi.
           </p>
         </div>
 
@@ -174,10 +176,10 @@ export default function HomePage() {
       <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.07)] sm:p-8">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
           <div>
-            <Badge tone="rose">Cách hoạt động</Badge>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-950">Ba bước, không phức tạp</h2>
+            <Badge tone="rose">Quy trình học tập</Badge>
+            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-950">Ba bước rèn luyện tư duy</h2>
             <p className="mt-4 text-base leading-7 text-slate-600">
-              Luồng phân tích được giữ ngắn để bạn tập trung vào bối cảnh thật và cách phản hồi phù hợp.
+              Quy trình tinh gọn giúp bạn tập trung vào bản chất bài toán và cách thiết kế cấu trúc lớp đối tượng chuẩn xác.
             </p>
           </div>
 
@@ -198,7 +200,7 @@ export default function HomePage() {
       <section className="rounded-[2rem] border border-teal-200 bg-teal-50 p-6 shadow-[0_16px_45px_rgba(15,118,110,0.08)] sm:p-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
           <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-teal-200 bg-white text-teal-700 shadow-sm">
-            <ShieldCheck className="h-5 w-5" aria-hidden="true" />
+            <Lightbulb className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
             <h2 className="text-xl font-bold text-slate-950">Gia sư đồng hành, hướng dẫn tư duy từng bước</h2>
@@ -213,18 +215,18 @@ export default function HomePage() {
         <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <Badge tone="rose" className="border-white/10 bg-white/10 text-rose-100">
-              Demo ready
+              C# OOP Tutor
             </Badge>
-            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">Bắt đầu với một đoạn chat ngắn</h2>
+            <h2 className="mt-4 font-display text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl">Bắt đầu buổi học lập trình C#</h2>
             <p className="mt-3 max-w-2xl text-base leading-7 text-slate-300">
-              Nhập vài dòng hội thoại, thêm bối cảnh cần thiết và xem gợi ý phản hồi tham khảo trong vài giây.
+              Dán đoạn code bài tập hoặc tải ảnh đề bài để nhận gợi ý hướng dẫn từ Gia sư CodeSense AI.
             </p>
           </div>
           <Link
-            href="/analyze"
+            href="/tutor"
             className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-white bg-white px-6 py-3 text-sm font-extrabold text-slate-950 transition hover:-translate-y-0.5 hover:bg-rose-50 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2 focus:ring-offset-slate-950 sm:w-auto"
           >
-            Phân tích ngay
+            Trải nghiệm Gia sư AI
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         </div>

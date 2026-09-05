@@ -45,3 +45,13 @@ export function InfoAlert({ children, className = '' }: { children: ReactNode; c
     </AlertShell>
   );
 }
+
+export function WarningAlert({ children, className = '' }: { children: ReactNode; className?: string }) {
+  return (
+    <AlertShell role="alert" className={cn('border-amber-900 bg-amber-50 text-amber-950', className)}>
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" aria-hidden="true" />
+      <div>{children}</div>
+    </AlertShell>
+  );
+}
+

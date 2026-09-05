@@ -1,4 +1,42 @@
+import asyncio
 from uuid import uuid4
+
+from app.models.analysis_session import AnalysisSession
+from tests.conftest import TestingSessionLocal
+
+
+def seed_history_session(
+    user_id: str,
+    *,
+    chat_text: str | None = None,
+    save_input: bool = False,
+    save_result: bool = True,
+    summary: str = "Tóm tắt bài tập",
+    overall_emotion: str = "Đạt yêu cầu",
+) -> str:
+    async def _insert():
+        async with TestingSessionLocal() as session:
+            item = AnalysisSession(
+                user_id=user_id,
+                overall_emotion=overall_emotion,
+                confidence=0.85,
+                emotion_distribution={"pass": 1.0},
+                summary=summary,
+                context_note="",
+                suggested_reply="Tiếp tục phát huy",
+                warning="Cảnh báo tham khảo",
+                save_input=save_input,
+                save_result=save_result,
+                consent_type="analysis_submission",
+                is_accepted=True,
+                chat_text=chat_text if save_input else None,
+            )
+            session.add(item)
+            await session.commit()
+            await session.refresh(item)
+            return item.id
+
+    return asyncio.run(_insert())
 
 
 def register_and_login(client, email: str | None = None):
@@ -153,60 +191,12 @@ def test_profile_delete_is_scoped_to_current_user(client):
     assert user_b_profile["user_profile"]["nickname"] == "User B"
 
 
-def test_analyze_does_not_save_history_by_default(client, auth_headers):
-    response = client.post(
-        "/api/analyze",
-        headers=auth_headers,
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": False,
-            "save_result": False,
-        },
-    )
-    assert response.status_code == 200
-
-    history_response = client.get("/api/history", headers=auth_headers)
-    assert history_response.status_code == 200
-    assert history_response.json()["items"] == []
-
-
-def test_analyze_saves_result_without_original_chat_when_allowed(client, auth_headers):
-    response = client.post(
-        "/api/analyze",
-        headers=auth_headers,
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": False,
-            "save_result": True,
-        },
-    )
-    assert response.status_code == 200
-
-    history_response = client.get("/api/history", headers=auth_headers)
-    items = history_response.json()["items"]
-    assert len(items) == 1
-    assert items[0]["save_result"] is True
-    assert items[0]["save_input"] is False
-    assert items[0]["chat_text"] is None
-
-
 def test_clear_history_removes_history_but_keeps_profile(client, auth_headers):
     client.post("/api/profile", headers=auth_headers, json=sample_profile_payload())
+    user_id = client.get("/api/me", headers=auth_headers).json()["id"]
 
-    for chat_text in ["Em mệt thôi.", "Hôm nay em cần yên tĩnh."]:
-        response = client.post(
-            "/api/analyze",
-            headers=auth_headers,
-            json={
-                "chat_text": chat_text,
-                "profile_context": "",
-                "save_input": False,
-                "save_result": True,
-            },
-        )
-        assert response.status_code == 200
+    seed_history_session(user_id, summary="Bài 1")
+    seed_history_session(user_id, summary="Bài 2")
 
     history_response = client.get("/api/history", headers=auth_headers)
     assert len(history_response.json()["items"]) == 2
@@ -217,90 +207,33 @@ def test_clear_history_removes_history_but_keeps_profile(client, auth_headers):
     assert client.get("/api/profile", headers=auth_headers).json()["user_profile"]["nickname"] == "An"
 
 
-def test_analyze_saves_original_chat_only_with_explicit_consent(client, auth_headers):
-    response = client.post(
-        "/api/analyze",
-        headers=auth_headers,
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": True,
-            "save_result": True,
-        },
-    )
-    assert response.status_code == 200
-
-    history_response = client.get("/api/history", headers=auth_headers)
-    item = history_response.json()["items"][0]
-    assert item["chat_text"] == "Em mệt thôi."
-    assert item["save_input"] is True
-
-
-def test_analyze_public_request_does_not_save_even_when_save_requested(client):
-    response = client.post(
-        "/api/analyze",
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": True,
-            "save_result": True,
-        },
-    )
-    assert response.status_code == 200
-
-
 def test_each_user_only_sees_own_history(client):
     user_a_headers = register_and_login(client)
     user_b_headers = register_and_login(client)
+    user_a_id = client.get("/api/me", headers=user_a_headers).json()["id"]
 
-    client.post(
-        "/api/analyze",
-        headers=user_a_headers,
-        json={
-            "chat_text": "User A chat",
-            "profile_context": "",
-            "save_input": True,
-            "save_result": True,
-        },
-    )
+    seed_history_session(user_a_id, chat_text="User A code", save_input=True)
 
     user_a_history = client.get("/api/history", headers=user_a_headers).json()["items"]
     user_b_history = client.get("/api/history", headers=user_b_headers).json()["items"]
 
     assert len(user_a_history) == 1
-    assert user_a_history[0]["chat_text"] == "User A chat"
+    assert user_a_history[0]["chat_text"] == "User A code"
     assert user_b_history == []
 
 
 def test_history_detail_delete_and_clear_are_scoped_to_current_user(client):
     user_a_headers = register_and_login(client)
     user_b_headers = register_and_login(client)
+    user_a_id = client.get("/api/me", headers=user_a_headers).json()["id"]
+    user_b_id = client.get("/api/me", headers=user_b_headers).json()["id"]
 
-    client.post(
-        "/api/analyze",
-        headers=user_a_headers,
-        json={
-            "chat_text": "User A private chat",
-            "profile_context": "",
-            "save_input": True,
-            "save_result": True,
-        },
-    )
-    client.post(
-        "/api/analyze",
-        headers=user_b_headers,
-        json={
-            "chat_text": "User B private chat",
-            "profile_context": "",
-            "save_input": True,
-            "save_result": True,
-        },
-    )
+    item_a_id = seed_history_session(user_a_id, chat_text="User A code", save_input=True)
+    seed_history_session(user_b_id, chat_text="User B code", save_input=True)
 
-    user_a_item = client.get("/api/history", headers=user_a_headers).json()["items"][0]
-    assert client.get(f"/api/history/{user_a_item['id']}", headers=user_b_headers).status_code == 404
-    assert client.delete(f"/api/history/{user_a_item['id']}", headers=user_b_headers).status_code == 404
-    assert client.get(f"/api/history/{user_a_item['id']}", headers=user_a_headers).status_code == 200
+    assert client.get(f"/api/history/{item_a_id}", headers=user_b_headers).status_code == 404
+    assert client.delete(f"/api/history/{item_a_id}", headers=user_b_headers).status_code == 404
+    assert client.get(f"/api/history/{item_a_id}", headers=user_a_headers).status_code == 200
 
     clear_b_response = client.delete("/api/history", headers=user_b_headers)
     assert clear_b_response.status_code == 200
@@ -308,12 +241,14 @@ def test_history_detail_delete_and_clear_are_scoped_to_current_user(client):
 
     user_a_history = client.get("/api/history", headers=user_a_headers).json()["items"]
     assert len(user_a_history) == 1
-    assert user_a_history[0]["chat_text"] == "User A private chat"
+    assert user_a_history[0]["chat_text"] == "User A code"
 
 
 def test_delete_user_data_is_scoped_to_current_user(client):
     user_a_headers = register_and_login(client)
     user_b_headers = register_and_login(client)
+    user_a_id = client.get("/api/me", headers=user_a_headers).json()["id"]
+    user_b_id = client.get("/api/me", headers=user_b_headers).json()["id"]
 
     client.post("/api/profile", headers=user_a_headers, json=sample_profile_payload("User A"))
     client.post("/api/profile", headers=user_b_headers, json=sample_profile_payload("User B"))
@@ -329,17 +264,8 @@ def test_delete_user_data_is_scoped_to_current_user(client):
         },
     )
 
-    for headers, chat_text in [(user_a_headers, "User A chat"), (user_b_headers, "User B chat")]:
-        client.post(
-            "/api/analyze",
-            headers=headers,
-            json={
-                "chat_text": chat_text,
-                "profile_context": "",
-                "save_input": False,
-                "save_result": True,
-            },
-        )
+    seed_history_session(user_a_id, summary="User A session")
+    seed_history_session(user_b_id, summary="User B session")
 
     delete_response = client.delete("/api/user-data", headers=user_a_headers)
     assert delete_response.status_code == 200
@@ -351,39 +277,20 @@ def test_delete_user_data_is_scoped_to_current_user(client):
     assert client.get("/api/profile", headers=user_b_headers).json()["user_profile"]["nickname"] == "User B"
     user_b_history = client.get("/api/history", headers=user_b_headers).json()["items"]
     assert len(user_b_history) == 1
-    assert user_b_history[0]["chat_text"] is None
     assert client.get("/api/consent", headers=user_b_headers).json()["is_accepted"] is True
 
 
 def test_delete_history_item_and_all_user_data(client, auth_headers):
     client.post("/api/profile", headers=auth_headers, json=sample_profile_payload())
+    user_id = client.get("/api/me", headers=auth_headers).json()["id"]
 
-    client.post(
-        "/api/analyze",
-        headers=auth_headers,
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": False,
-            "save_result": True,
-        },
-    )
-    item_id = client.get("/api/history", headers=auth_headers).json()["items"][0]["id"]
+    item_id = seed_history_session(user_id, summary="Session 1")
 
     delete_response = client.delete(f"/api/history/{item_id}", headers=auth_headers)
     assert delete_response.status_code == 200
     assert client.get("/api/history", headers=auth_headers).json()["items"] == []
 
-    client.post(
-        "/api/analyze",
-        headers=auth_headers,
-        json={
-            "chat_text": "Em mệt thôi.",
-            "profile_context": "",
-            "save_input": False,
-            "save_result": True,
-        },
-    )
+    seed_history_session(user_id, summary="Session 2")
     assert len(client.get("/api/history", headers=auth_headers).json()["items"]) == 1
 
     clear_response = client.delete("/api/user-data", headers=auth_headers)
@@ -391,3 +298,4 @@ def test_delete_history_item_and_all_user_data(client, auth_headers):
     assert client.get("/api/history", headers=auth_headers).json()["items"] == []
     assert client.get("/api/consent", headers=auth_headers).json()["is_accepted"] is False
     assert client.get("/api/profile", headers=auth_headers).json()["user_profile"]["nickname"] == ""
+

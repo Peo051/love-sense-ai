@@ -7,14 +7,11 @@ import httpx
 from pydantic import ValidationError
 
 from app.core.config import settings
-from app.schemas.analyze_schema import AnalyzeResponse, EvidenceItem
 from app.schemas.ocr_schema import VisionOcrResponse
-from app.services.analysis_output_validator import validate_analysis_output
-from app.services.analysis_policy import SYSTEM_PROMPT, WARNING_MESSAGE
 
 
 class LLMClientError(Exception):
-    """Raised when the configured LLM provider cannot return a valid analysis."""
+    """Raised when the configured LLM provider cannot return a valid response."""
 
     def __init__(self, message: str, *, retryable: bool = False, status_code: int | None = None):
         super().__init__(message)
@@ -28,25 +25,26 @@ class OpenAICompatibleLLMClient:
     def __init__(self, transport: httpx.AsyncBaseTransport | None = None):
         self._transport = transport
 
-    async def analyze_emotion(self, chat_text: str, profile_context: str = "") -> AnalyzeResponse:
+    async def chat_completion(
+        self,
+        messages: list[dict[str, Any]],
+        *,
+        model: str | None = None,
+        temperature: float = 0.2,
+        max_tokens: int = 1000,
+    ) -> str:
+        """Thực hiện gọi generic Chat Completion với retry và timeout."""
         self._validate_settings()
 
         payload = {
-            "model": settings.llm_model,
-            "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": self._build_user_prompt(chat_text, profile_context),
-                },
-            ],
-            "temperature": 0.2,
-            "max_tokens": 900,
+            "model": model or settings.llm_model,
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
         }
 
         response_body = await self._post_with_retries(payload)
-        parsed_result = self._parse_response(response_body)
-        return validate_analysis_output(parsed_result, chat_text, profile_context)
+        return self._extract_choice_content(response_body)
 
     async def extract_chat_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
         model_name = settings.vision_ocr_model.strip() or settings.llm_model.strip()
@@ -59,7 +57,7 @@ class OpenAICompatibleLLMClient:
                 {
                     "role": "system",
                     "content": (
-                        "Bạn là bộ trích xuất chữ từ ảnh chụp đoạn chat. "
+                        "Bạn là bộ trích xuất chữ từ ảnh chụp màn hình bài tập lập trình hoặc đoạn văn bản. "
                         "Chỉ trích xuất nội dung nhìn thấy trong ảnh, không suy đoán cảm xúc, "
                         "không thêm kết luận và không tạo thông tin không có trong ảnh."
                     ),
@@ -70,10 +68,10 @@ class OpenAICompatibleLLMClient:
                         {
                             "type": "text",
                             "text": (
-                                "Hãy đọc ảnh chụp đoạn hội thoại và trả về JSON hợp lệ theo schema: "
+                                "Hãy đọc ảnh chụp và trả về JSON hợp lệ theo schema: "
                                 '{"text":"...", "confidence": 0-100, "warnings":["..."]}. '
-                                "Giữ xuống dòng giữa các tin nhắn. Nếu không chắc người gửi, không tự gán tên. "
-                                "Nếu ảnh mờ, chữ nhỏ, emoji hoặc nền làm khó đọc, thêm cảnh báo ngắn trong warnings."
+                                "Giữ nguyên định dạng dòng code hoặc văn bản. "
+                                "Nếu ảnh mờ, chữ nhỏ hoặc khó đọc, thêm cảnh báo ngắn trong warnings."
                             ),
                         },
                         {
@@ -138,6 +136,17 @@ class OpenAICompatibleLLMClient:
         except ValueError as exc:
             raise LLMClientError("LLM provider không trả HTTP JSON hợp lệ.") from exc
 
+    def _extract_choice_content(self, response_body: dict[str, Any]) -> str:
+        try:
+            content = response_body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as exc:
+            raise LLMClientError("LLM provider trả response không đúng định dạng chat completions.") from exc
+
+        if not isinstance(content, str) or not content.strip():
+            raise LLMClientError("LLM provider không trả nội dung văn bản.")
+
+        return content
+
     def _validate_settings(self) -> None:
         missing_fields = [
             field
@@ -186,45 +195,8 @@ class OpenAICompatibleLLMClient:
         model_terms = ("model", "modality", "vision", "input")
         return any(term in response_text for term in unsupported_terms) and any(term in response_text for term in model_terms)
 
-    def _build_user_prompt(self, chat_text: str, profile_context: str) -> str:
-        return (
-            "Hãy phân tích đoạn chat sau và trả về JSON đúng schema.\n"
-            "Yêu cầu quan trọng:\n"
-            "- Dựa trên câu chữ trong đoạn chat, không suy đoán quá mức.\n"
-            "- Trích tối đa 4 câu làm bằng chứng trong field evidence theo dạng {quote,label,reason}.\n"
-            "- Phân biệt trung lập thật với thiếu dữ liệu; không gom thân mật/trêu đùa/quan tâm vào trung lập.\n"
-            "- Nếu đoạn chat đến từ OCR hoặc có thể sai nhận diện, thêm uncertainty_reasons và giảm confidence phù hợp.\n"
-            "- Nếu có dấu hiệu thân mật/trêu đùa/quan tâm rõ ràng, hãy phản ánh sắc thái đó thay vì trả trung lập thuần.\n"
-            "- Không kết luận chắc chắn cảm xúc hoặc ý định của người khác.\n\n"
-            f"Đoạn chat:\n{chat_text}\n\n"
-            f"Bối cảnh cá nhân hóa:\n{profile_context or 'Không có bối cảnh bổ sung.'}"
-        )
-
-    def _parse_response(self, response_body: dict[str, Any]) -> AnalyzeResponse:
-        try:
-            content = response_body["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise LLMClientError("LLM provider trả response không đúng định dạng chat completions.") from exc
-
-        if not isinstance(content, str) or not content.strip():
-            raise LLMClientError("LLM provider không trả nội dung phân tích.")
-
-        try:
-            raw_result = json.loads(self._extract_json(content))
-            result = AnalyzeResponse.model_validate(raw_result)
-        except (json.JSONDecodeError, ValidationError) as exc:
-            raise LLMClientError("LLM provider không trả JSON hợp lệ theo schema phân tích.") from exc
-
-        return self._normalize_result(result)
-
     def _parse_vision_response(self, response_body: dict[str, Any]) -> VisionOcrResponse:
-        try:
-            content = response_body["choices"][0]["message"]["content"]
-        except (KeyError, IndexError, TypeError) as exc:
-            raise LLMClientError("Vision provider trả response không đúng định dạng chat completions.") from exc
-
-        if not isinstance(content, str) or not content.strip():
-            raise LLMClientError("Vision provider không trả nội dung OCR.")
+        content = self._extract_choice_content(response_body)
 
         try:
             raw_result = json.loads(self._extract_json(content))
@@ -255,57 +227,3 @@ class OpenAICompatibleLLMClient:
             raise json.JSONDecodeError("No JSON object found", cleaned, 0)
         return cleaned[start : end + 1]
 
-    def _normalize_result(self, result: AnalyzeResponse) -> AnalyzeResponse:
-        confidence = min(1.0, max(0.0, float(result.confidence)))
-        distribution = {
-            emotion: min(1.0, max(0.0, float(score)))
-            for emotion, score in result.emotion_distribution.items()
-        }
-        evidence = self._normalize_evidence_list(result.evidence, limit=4)
-        uncertainty_reasons = self._normalize_string_list(result.uncertainty_reasons, limit=4)
-        input_quality = result.input_quality.strip().lower() if result.input_quality else "medium"
-        if input_quality not in {"good", "medium", "low"}:
-            input_quality = "medium"
-
-        if confidence < 0.45 and not uncertainty_reasons:
-            uncertainty_reasons = ["Đoạn chat còn ít dữ liệu nên cần đọc kết quả ở mức tham khảo."]
-
-        # Backend là lớp bảo vệ cuối cùng cho thông điệp an toàn, kể cả khi LLM trả thiếu hoặc sửa cảnh báo.
-        warning = result.warning if "tham khảo" in result.warning.lower() else WARNING_MESSAGE
-
-        return AnalyzeResponse(
-            overall_emotion=result.overall_emotion,
-            confidence=confidence,
-            emotion_distribution=distribution or {"trung_lập": 1.0},
-            summary=result.summary,
-            context_note=result.context_note,
-            suggested_reply=result.suggested_reply,
-            warning=warning,
-            tone=result.tone,
-            evidence=evidence,
-            uncertainty_reasons=uncertainty_reasons,
-            input_quality=input_quality,
-            reply_style=result.reply_style,
-        )
-
-    def _normalize_string_list(self, values: list[str], *, limit: int) -> list[str]:
-        cleaned_values: list[str] = []
-        for value in values:
-            if not isinstance(value, str):
-                continue
-            cleaned = value.strip()
-            if cleaned:
-                cleaned_values.append(cleaned)
-
-        return cleaned_values[:limit]
-
-    def _normalize_evidence_list(self, values: list[EvidenceItem], *, limit: int) -> list[EvidenceItem]:
-        cleaned_values: list[EvidenceItem] = []
-        for value in values:
-            quote = value.quote.strip()
-            label = value.label.strip() or "tín hiệu hội thoại"
-            reason = value.reason.strip() or "Câu này được dùng làm căn cứ tham khảo cho phân tích."
-            if quote:
-                cleaned_values.append(EvidenceItem(quote=quote, label=label, reason=reason))
-
-        return cleaned_values[:limit]

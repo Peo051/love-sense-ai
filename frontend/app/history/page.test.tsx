@@ -50,7 +50,7 @@ describe('HistoryPage', () => {
     expect(await screen.findAllByText('mệt mỏi / né tránh nhẹ')).toHaveLength(2);
     expect(screen.getByText('72% tin cậy')).toBeInTheDocument();
     expect(screen.getAllByText('Đoạn chat có thể cho thấy người kia đang mệt.').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText('Không lưu vì bạn chưa đồng ý lưu nội dung chat.')).toBeInTheDocument();
+    expect(screen.getByText('Không lưu vì bạn chưa đồng ý lưu mã nguồn.')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       'http://127.0.0.1:8000/api/history',
       expect.objectContaining({
@@ -75,12 +75,12 @@ describe('HistoryPage', () => {
     render(<HistoryPage />);
 
     expect(await screen.findAllByText('mệt mỏi / né tránh nhẹ')).toHaveLength(2);
-    await user.click(screen.getByRole('button', { name: /xóa toàn bộ lịch sử phân tích/i }));
+    await user.click(screen.getByRole('button', { name: /xóa toàn bộ lịch sử thực hành/i }));
 
     const dialog = await screen.findByRole('alertdialog', { name: /xóa toàn bộ lịch sử/i });
-    await user.click(within(dialog).getByRole('button', { name: /xóa toàn bộ lịch sử/i }));
+    await user.click(within(dialog).getByRole('button', { name: /xóa toàn bộ/i }));
 
-    await waitFor(() => expect(screen.getByText('Đã xóa toàn bộ lịch sử phân tích.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Đã xóa toàn bộ lịch sử thực hành.')).toBeInTheDocument());
     expect(screen.getByText('Chưa có lịch sử')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
       'http://127.0.0.1:8000/api/history',

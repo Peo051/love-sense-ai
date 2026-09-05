@@ -1,11 +1,11 @@
-﻿import { LockKeyhole, MessageCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { Code2, Cpu, Lightbulb, LockKeyhole, ShieldCheck } from 'lucide-react';
 
 import Badge from '@/components/common/Badge';
 
-const emotionBars = [
-  { label: 'mệt mỏi', value: '35%', width: 'w-[35%]' },
-  { label: 'né tránh nhẹ', value: '25%', width: 'w-[25%]' },
-  { label: 'trung lập', value: '20%', width: 'w-[20%]' },
+const oopMetrics = [
+  { label: 'Tính đóng gói (Encapsulation)', value: '95%', width: 'w-[95%]' },
+  { label: 'Xử lý ngoại lệ (Exception Handling)', value: '85%', width: 'w-[85%]' },
+  { label: 'Nguyên lý OOP sạch (Clean OOP)', value: '90%', width: 'w-[90%]' },
 ];
 
 export default function HeroVisual() {
@@ -22,48 +22,55 @@ export default function HeroVisual() {
 
           <div className="relative mb-4 flex flex-col gap-3 min-[430px]:flex-row min-[430px]:items-center min-[430px]:justify-between">
             <div className="min-w-0">
-              <p className="text-sm font-black text-slate-950">Bản xem trước phân tích</p>
-              <p className="text-xs text-slate-500">Nhập thủ công, không lưu mặc định</p>
+              <p className="text-sm font-black text-slate-950">Gia sư C# OOP Demo</p>
+              <p className="text-xs text-slate-500">Phân tích code thích ứng & gợi ý tư duy</p>
             </div>
             <Badge tone="teal" className="max-w-full shrink-0 whitespace-normal text-left">
               <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" />
-              Không lưu chat nếu chưa đồng ý
+              Bảo mật mã nguồn học viên
             </Badge>
           </div>
 
           <div className="relative grid gap-4">
-            <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-slate-600">Mock chat</p>
-                <span className="hidden rounded-full border border-slate-200 bg-white px-2.5 py-1 font-mono text-xs font-bold uppercase text-slate-600 min-[390px]:inline-flex">
-                  Manual input
+            <div className="rounded-2xl border border-slate-200 bg-slate-950 p-4 font-mono text-xs text-slate-200 shadow-sm">
+              <div className="mb-2 flex items-center justify-between border-b border-slate-800 pb-2">
+                <span className="flex items-center gap-1.5 text-rose-400 font-bold">
+                  <Code2 className="h-3.5 w-3.5" />
+                  BankAccount.cs
                 </span>
+                <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">C# 12 / .NET 8</span>
               </div>
-              <div className="space-y-2 text-sm leading-6 text-slate-700">
-                <ChatLine speaker="A" text="Em sao vậy?" />
-                <ChatLine speaker="B" text="Không sao." muted />
-                <ChatLine speaker="A" text="Anh thấy em hơi lạ." />
-                <ChatLine speaker="B" text="Em mệt thôi." muted />
-              </div>
+              <pre className="overflow-x-auto leading-relaxed text-slate-300">
+                <code>
+                  <span className="text-purple-400">public class</span> <span className="text-yellow-300">BankAccount</span> {'{\n'}
+                  {'  '}<span className="text-purple-400">private decimal</span> _balance;{'\n\n'}
+                  {'  '}<span className="text-purple-400">public void</span> <span className="text-blue-400">Withdraw</span>(<span className="text-purple-400">decimal</span> amount) {'{\n'}
+                  {'    '}<span className="text-purple-400">if</span> (amount &lt;= 0 || amount &gt; _balance){'\n'}
+                  {'      '}<span className="text-purple-400">throw new</span> <span className="text-yellow-300">InvalidOperationException</span>();{'\n'}
+                  {'    '}_balance -= amount;{'\n'}
+                  {'  }'}{'\n'}
+                  {'}'}
+                </code>
+              </pre>
             </div>
 
             <div className="rounded-2xl border border-rose-200 bg-white p-4 shadow-sm shadow-rose-100">
-              <div className="mb-4 flex items-start justify-between gap-3">
+              <div className="mb-3 flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-rose-600">AI result</p>
-                  <p className="mt-1 break-words text-lg font-bold text-slate-950">mệt mỏi / né tránh nhẹ</p>
+                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-rose-600">Socratic Diagnosis</p>
+                  <p className="mt-1 break-words text-base font-bold text-slate-950">Phân tích tính đóng gói (Encapsulation)</p>
                 </div>
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-rose-100 text-rose-600">
-                  <Sparkles className="h-5 w-5 animate-pulse" aria-hidden="true" />
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-rose-200 bg-rose-100 text-rose-600">
+                  <Cpu className="h-4 w-4" aria-hidden="true" />
                 </span>
               </div>
 
-              <div className="space-y-3">
-                {emotionBars.map((bar) => (
+              <div className="space-y-2.5">
+                {oopMetrics.map((bar) => (
                   <div key={bar.label}>
                     <div className="mb-1 flex justify-between text-xs font-medium text-slate-600">
                       <span>{bar.label}</span>
-                      <span>{bar.value}</span>
+                      <span className="font-mono font-bold text-slate-900">{bar.value}</span>
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                       <div className={`h-full rounded-full bg-gradient-to-r from-rose-500 to-teal-500 ${bar.width}`} />
@@ -73,38 +80,27 @@ export default function HeroVisual() {
               </div>
             </div>
 
-            <div className="hidden rounded-2xl border border-teal-200 bg-teal-50/90 p-4 shadow-sm sm:block">
+            <div className="rounded-2xl border border-teal-200 bg-teal-50/90 p-4 shadow-sm">
               <div className="flex gap-3">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-teal-200 bg-white text-teal-700">
-                  <MessageCircle className="h-5 w-5" aria-hidden="true" />
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-teal-200 bg-white text-teal-700">
+                  <Lightbulb className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-emerald-700">Gợi ý phản hồi</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">
-                    “Em nghỉ một chút nha, khi nào muốn nói anh vẫn ở đây nghe em.”
+                  <p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-teal-800">Gợi ý tư duy từng bước</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-700">
+                    “Thuộc tính <code className="rounded bg-teal-100/70 px-1 py-0.5 font-mono text-teal-900">_balance</code> đã được bảo vệ đúng cách bằng access modifier <code className="rounded bg-teal-100/70 px-1 py-0.5 font-mono text-teal-900">private</code>. Hãy suy nghĩ thêm: lớp con kế thừa có cần truy xuất số dư không và bạn nên dùng <code className="rounded bg-teal-100/70 px-1 py-0.5 font-mono text-teal-900">protected</code> hay Property public?”
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-3 text-xs font-bold text-slate-700 shadow-sm">
+            <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/80 px-4 py-2.5 text-xs font-bold text-slate-700 shadow-sm">
               <ShieldCheck className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-              Kết quả chỉ mang tính tham khảo và ưu tiên quyền riêng tư.
+              Hướng dẫn gợi mở tư duy, không giải hộ đáp án hoàn chỉnh.
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function ChatLine({ speaker, text, muted = false }: { speaker: string; text: string; muted?: boolean }) {
-  return (
-    <div className="flex items-start gap-2">
-      <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-white font-mono text-xs font-bold text-rose-600">
-        {speaker}
-      </span>
-      <span className={muted ? 'text-slate-500' : 'text-slate-800'}>{text}</span>
     </div>
   );
 }

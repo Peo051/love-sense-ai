@@ -18,10 +18,10 @@ export default function Footer() {
             Quyền riêng tư
           </Link>
           <Link
-            href="/analyze"
+            href="/tutor"
             className="rounded-md font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-rose-100 focus:ring-offset-2 hover:text-rose-700"
           >
-            Phân tích hội thoại
+            Gia sư lập trình
           </Link>
         </div>
       </div>
