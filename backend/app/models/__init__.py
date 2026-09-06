@@ -5,6 +5,7 @@ from app.models.learning_session import LearningSession, StudentAttempt, TutorMe
 from app.models.partner_profile import PartnerProfile
 from app.models.preference import Preference
 from app.models.profile import Profile
+from app.models.student_profile import StudentProfile
 from app.models.user import User
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "Preference",
     "Profile",
     "StudentAttempt",
+    "StudentProfile",
     "TutorMessage",
     "User",
 ]

@@ -10,6 +10,7 @@ from app.models.learning_session import LearningSession
 from app.models.partner_profile import PartnerProfile as PartnerProfileModel
 from app.models.preference import Preference
 from app.models.profile import Profile as ProfileModel
+from app.models.student_profile import StudentProfile
 from app.models.user import User
 from app.schemas.consent_schema import ConsentSettings, ConsentUpdate
 from app.schemas.history_schema import HistoryItem, HistoryListResponse
@@ -384,6 +385,7 @@ class UserDataRepository:
     async def delete_all_user_data(db: AsyncSession, user_id: str) -> None:
         await db.execute(delete(AnalysisSession).where(AnalysisSession.user_id == user_id))
         await db.execute(delete(LearningSession).where(LearningSession.user_id == user_id))
+        await db.execute(delete(StudentProfile).where(StudentProfile.user_id == user_id))
         await db.execute(delete(Consent).where(Consent.user_id == user_id))
         await db.execute(delete(ProfileModel).where(ProfileModel.user_id == user_id))
         await db.execute(delete(PartnerProfileModel).where(PartnerProfileModel.user_id == user_id))
