@@ -1,0 +1,214 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "VietCSharpTutorSample",
+  "description": "Đặc tả chuẩn hóa 25 trường cho một mẫu dữ liệu trong bộ dữ liệu VietCSharpTutor-600.",
+  "type": "object",
+  "required": [
+    "id",
+    "language",
+    "topic",
+    "difficulty",
+    "problem_family_id",
+    "problem_statement_vi",
+    "student_code",
+    "compiler_error",
+    "expected_behavior",
+    "bug_status",
+    "error_category",
+    "bug_type",
+    "bug_location",
+    "knowledge_components",
+    "possible_misconception",
+    "reference_diagnosis",
+    "evidence",
+    "hint_1",
+    "hint_2",
+    "hint_3",
+    "reference_solution",
+    "explanation_vi",
+    "source_type",
+    "split",
+    "review_status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^vct-[0-9]{3,4}$",
+      "description": "Định danh duy nhất của mẫu dữ liệu, ví dụ: vct-001."
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "vi"
+      ],
+      "description": "Ngôn ngữ tự nhiên giải thích sư phạm (vi)."
+    },
+    "topic": {
+      "type": "string",
+      "enum": [
+        "class_object",
+        "field_property",
+        "getter_setter",
+        "constructor_this",
+        "method_parameter",
+        "encapsulation_validation",
+        "static_instance",
+        "inheritance_polymorphism",
+        "correct_code",
+        "insufficient_context"
+      ],
+      "description": "Chủ đề OOP của mẫu dữ liệu."
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "easy",
+        "medium"
+      ],
+      "description": "Độ khó sư phạm của bài toán."
+    },
+    "problem_family_id": {
+      "type": "string",
+      "pattern": "^fam-[a-z0-9-]+$",
+      "description": "Mã họ bài toán dùng để phân bổ split không rò rỉ (zero leakage)."
+    },
+    "problem_statement_vi": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Đề bài bài tập lập trình C# OOP bằng tiếng Việt."
+    },
+    "student_code": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Đoạn mã nguồn C# học viên nộp."
+    },
+    "compiler_error": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Thông báo lỗi biên dịch Roslyn / C# (nếu có) hoặc null."
+    },
+    "expected_behavior": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Mô tả hành vi đúng và kết quả mong đợi."
+    },
+    "bug_status": {
+      "type": "string",
+      "enum": [
+        "has_bug",
+        "no_bug",
+        "insufficient_context"
+      ],
+      "description": "Trạng thái lỗi của bài làm học viên."
+    },
+    "error_category": {
+      "type": "string",
+      "enum": [
+        "compile_error",
+        "runtime_error",
+        "logic_error",
+        "conceptual_misuse",
+        "requirement_violation",
+        "no_bug",
+        "insufficient_context"
+      ],
+      "description": "Phân loại lỗi chuẩn hóa."
+    },
+    "bug_type": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Mã lỗi kỹ thuật cụ thể (hoặc 'no_bug' / 'code_too_brief')."
+    },
+    "bug_location": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Vị trí đoạn mã hoặc dòng gây lỗi, hoặc null khi no_bug/insufficient_context."
+    },
+    "knowledge_components": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Danh sách các mã kỹ năng OOP liên quan thuộc Taxonomy."
+    },
+    "possible_misconception": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Giả thuyết ngộ nhận của học viên hoặc null."
+    },
+    "reference_diagnosis": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Chẩn đoán tham chiếu chuẩn mực từ chuyên gia."
+    },
+    "evidence": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Bằng chứng trích dẫn trực tiếp từ student_code hoặc null khi no_bug."
+    },
+    "hint_1": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Gợi ý mức 1: Câu hỏi gợi mở Socratic, tuyệt đối không lộ code sửa."
+    },
+    "hint_2": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Gợi ý mức 2: Giải thích khái niệm / nguyên lý OOP trọng tâm."
+    },
+    "hint_3": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Gợi ý mức 3: Hướng dẫn định hướng từng bước giải quyết."
+    },
+    "reference_solution": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Mã nguồn sửa lỗi chuẩn mực tham chiếu."
+    },
+    "explanation_vi": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Giải thích sư phạm chi tiết bằng tiếng Việt."
+    },
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "expert_authored",
+        "controlled_mutation",
+        "classroom_observation",
+        "synthetic_student_error"
+      ],
+      "description": "Nguồn gốc tạo mẫu dữ liệu."
+    },
+    "split": {
+      "type": "string",
+      "enum": [
+        "dev",
+        "validation",
+        "test"
+      ],
+      "description": "Tập phân bổ dữ liệu."
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "approved"
+      ],
+      "description": "Trạng thái thẩm định của mẫu."
+    }
+  },
+  "additionalProperties": false
+}
