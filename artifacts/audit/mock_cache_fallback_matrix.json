@@ -1,0 +1,135 @@
+{
+  "metadata": {
+    "task": "APT-046",
+    "title": "Mock Cache and Fallback Audit",
+    "auditor_role": "Independent Research Auditor",
+    "version": "codesense-research-v1.0",
+    "branch": "audit/evaluation-integrity-v1"
+  },
+  "configuration_checks": [
+    {
+      "scenario": "mock=true (Chế độ mock được bật tường minh hoặc mặc định)",
+      "runner_behavior": "USES MOCK",
+      "manifest_recorded": "Ghi nhận 'mock_mode': true trong manifest.json",
+      "ground_truth_access": "Có toàn quyền truy cập và sao chép 100% nhãn vàng ground truth",
+      "risk_classification": "CRITICAL",
+      "finding": "Hệ thống chạy nhánh mock nội bộ trong runner.py, trực tiếp gán các trường nhãn vàng vào prediction dict. Điểm số 100% hoàn toàn nhân tạo."
+    },
+    {
+      "scenario": "provider missing (Tham số --provider bị bỏ trống hoặc truyền None)",
+      "runner_behavior": "USES MOCK",
+      "manifest_recorded": "Ghi nhận giá trị provider tương ứng mà không xác thực",
+      "ground_truth_access": "Vẫn truy cập và sao chép ground truth bình thường",
+      "risk_classification": "CRITICAL",
+      "finding": "Runner không hề kiểm tra tính hợp lệ hay sự tồn tại của provider adapter. Quá trình sinh kết quả vẫn chạy trơn tru."
+    },
+    {
+      "scenario": "provider exception (Provider ném ngoại lệ mạng, HTTP 500, lỗi xác thực)",
+      "runner_behavior": "USES MOCK (Không bao giờ xảy ra lỗi)",
+      "manifest_recorded": "Không ghi nhận lỗi nào vì không có lệnh gọi mạng",
+      "ground_truth_access": "Truy cập trực tiếp trong bộ nhớ",
+      "risk_classification": "CRITICAL",
+      "finding": "Do runner.py không hề tích hợp client mạng cho evaluation, provider exception không bao giờ phát sinh. Kết quả nghiên cứu được sinh ra hoàn toàn độc lập với trạng thái của LLM provider."
+    },
+    {
+      "scenario": "timeout (Mạng trễ hoặc API hết hạn thời gian phản hồi)",
+      "runner_behavior": "USES MOCK (Không bao giờ timeout)",
+      "manifest_recorded": "Ghi nhận độ trễ giả lập latency_ms từ 150ms đến 420ms",
+      "ground_truth_access": "Truy cập trực tiếp bộ nhớ",
+      "risk_classification": "CRITICAL",
+      "finding": "Độ trễ được tính bằng random.uniform(150.0, 420.0). Không có cuộc gọi mạng thực tế nào diễn ra."
+    },
+    {
+      "scenario": "invalid response (Mô hình trả về JSON hỏng, text rỗng hoặc sai schema)",
+      "runner_behavior": "USES MOCK (Luôn sinh JSON chuẩn 100%)",
+      "manifest_recorded": "Ghi nhận 'json_valid': true",
+      "ground_truth_access": "Dữ liệu được lấy từ ground truth nên luôn hợp lệ cú pháp",
+      "risk_classification": "CRITICAL",
+      "finding": "Không có bộ phân tích chuỗi (raw text parser) nào chạy. Dict kết quả được tạo trực tiếp từ Python code nên JSON valid rate luôn đạt 100% một cách giả tạo."
+    },
+    {
+      "scenario": "fallback activation (Kích hoạt mô hình dự phòng khi mô hình chính gặp sự cố)",
+      "runner_behavior": "FAILS LOUDLY / NOT IMPLEMENTED",
+      "manifest_recorded": "Không có trường fallback trong evaluation manifest",
+      "ground_truth_access": "Không có",
+      "risk_classification": "LOW",
+      "finding": "Trong backend/app/evaluation/, không có cơ chế fallback nào được cài đặt. Runner chỉ chạy duy nhất nhánh mock nội bộ."
+    },
+    {
+      "scenario": "cached prediction reuse (Tái sử dụng các tệp dự đoán đã chạy trước đó)",
+      "runner_behavior": "USES CACHE (Tái sử dụng offline)",
+      "manifest_recorded": "Không ghi vết trong tệp metrics nếu chạy evaluate_metrics.py offline",
+      "ground_truth_access": "Không trực tiếp (đọc từ predictions.jsonl cũ)",
+      "risk_classification": "MEDIUM",
+      "finding": "Các script evaluate_metrics.py và analyze_results.py đọc tệp predictions.jsonl đã lưu để tính điểm mà không hề biết các dự đoán đó do LLM thật hay do mock sao chép nhãn vàng sinh ra."
+    },
+    {
+      "scenario": "No API key available (Không cấu hình bất kỳ API key nào: OPENAI_API_KEY, GEMINI_API_KEY)",
+      "runner_behavior": "DOES NOT FAIL LOUDLY - USES MOCK",
+      "manifest_recorded": "Ghi nhận run thành công trọn vẹn, exit code 0",
+      "ground_truth_access": "Toàn quyền sao chép nhãn vàng",
+      "risk_classification": "CRITICAL",
+      "finding": "Bằng chứng vật lý tối thượng: Toàn bộ quy trình đánh giá nghiên cứu có thể chạy hoàn chỉnh, sinh đầy đủ dự đoán và đạt điểm số tuyệt đối 100% trong môi trường hoàn toàn ngắt mạng (offline) và không có bất kỳ API key nào."
+    }
+  ],
+  "mechanisms_audited": [
+    {
+      "name": "EvaluationRunner Internal Mock Engine",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "204-347",
+      "trigger_condition": "Luôn luôn được kích hoạt trong mọi cuộc gọi run()",
+      "research_run_accessibility": "CÓ - 100% các run nghiên cứu chính thức đều bắt nguồn từ đây",
+      "test_only_accessibility": "KHÔNG - Đây là runner nghiên cứu chính thức",
+      "ground_truth_access": "TRUY CẬP VÀ SAO CHÉP TRỰC TIẾP",
+      "prediction_construction": "Gán trực tiếp từ biến sample",
+      "manifest_visibility": "Ghi nhận 'mock_mode': self.mock",
+      "classification": "CRITICAL"
+    },
+    {
+      "name": "AblationRunner Internal Mock Engine",
+      "file": "backend/app/evaluation/ablation.py",
+      "function": "AblationRunner._predict_sample",
+      "lines": "185-330",
+      "trigger_condition": "Luôn luôn được kích hoạt khi chạy run_ablation.py",
+      "research_run_accessibility": "CÓ - 100% các run ablation đều bắt nguồn từ đây",
+      "test_only_accessibility": "KHÔNG",
+      "ground_truth_access": "TRUY CẬP VÀ SAO CHÉP TRỰC TIẾP, nhúng reference_solution",
+      "prediction_construction": "Gán trực tiếp từ biến sample theo 5 cấu hình",
+      "manifest_visibility": "Ghi manifest riêng",
+      "classification": "CRITICAL"
+    },
+    {
+      "name": "DeterministicMockTutorProvider (Unit Test Mock)",
+      "file": "backend/app/tutor/provider.py",
+      "function": "DeterministicMockTutorProvider.generate_response",
+      "lines": "72-161",
+      "trigger_condition": "Được khởi tạo trong unit tests với canned response",
+      "research_run_accessibility": "KHÔNG - Runner không sử dụng lớp này",
+      "test_only_accessibility": "CÓ - Được cách ly đúng chuẩn trong tests/ conftest.py",
+      "ground_truth_access": "KHÔNG có quyền truy cập dataset",
+      "prediction_construction": "Trả về chuỗi JSON mẫu cố định",
+      "manifest_visibility": "Không áp dụng",
+      "classification": "LOW"
+    },
+    {
+      "name": "Vision OCR Mock Mode",
+      "file": "backend/app/services/vision_ocr_service.py",
+      "function": "VisionOCRService.extract_code",
+      "lines": "Đọc LLM_MOCK_MODE",
+      "trigger_condition": "LLM_MOCK_MODE=true trong .env",
+      "research_run_accessibility": "KHÔNG - Không tham gia vào benchmark C#",
+      "test_only_accessibility": "CÓ - Dùng cho kiểm thử frontend/OCR",
+      "ground_truth_access": "Không có",
+      "prediction_construction": "Trả về code C# mẫu cố định",
+      "manifest_visibility": "Không áp dụng",
+      "classification": "LOW"
+    }
+  ],
+  "auditor_summary": {
+    "can_generate_metrics_without_real_llm": true,
+    "has_real_llm_execution_path_in_runner": false,
+    "does_runner_fail_without_api_key": false,
+    "overall_integrity_rating": "COMPROMISED (CRITICAL)"
+  }
+}
