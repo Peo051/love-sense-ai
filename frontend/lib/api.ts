@@ -9,6 +9,12 @@ import type {
   HistoryListResponse,
   ProfilePayload,
   ProfileResponse,
+  TutorHintRequest,
+  TutorHintResponse,
+  TutorRequest,
+  TutorResponse,
+  TutorVerifyRequest,
+  TutorVerifyResponse,
   VisionOcrResponse,
 } from './types';
 
@@ -483,3 +489,37 @@ export async function saveConsent(consent: ConsentSettings): Promise<ConsentSett
 export async function deleteUserData(): Promise<void> {
   await requestJson<{ deleted: boolean }>('/api/user-data', { method: 'DELETE' }, 'Không thể xóa dữ liệu cá nhân.');
 }
+
+export async function analyzeTutorCode(payload: TutorRequest): Promise<TutorResponse> {
+  return requestJson<TutorResponse>(
+    '/api/tutor/analyze',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể phân tích mã nguồn lúc này. Vui lòng thử lại sau.'
+  );
+}
+
+export async function requestTutorNextHint(payload: TutorHintRequest): Promise<TutorHintResponse> {
+  return requestJson<TutorHintResponse>(
+    '/api/tutor/hint',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lấy gợi ý tiếp theo lúc này. Vui lòng thử lại sau.'
+  );
+}
+
+export async function verifyTutorRetry(payload: TutorVerifyRequest): Promise<TutorVerifyResponse> {
+  return requestJson<TutorVerifyResponse>(
+    '/api/tutor/verify',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể xác minh lần thử lại lúc này. Vui lòng thử lại sau.'
+  );
+}
+

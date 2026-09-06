@@ -101,3 +101,112 @@ export interface AuthUser {
   picture?: string | null;
   is_active: boolean;
 }
+
+export type TutorDiagnosisCategory =
+  | 'compile_error'
+  | 'runtime_error'
+  | 'logic_error'
+  | 'conceptual_misuse'
+  | 'requirement_violation'
+  | 'no_bug'
+  | 'insufficient_context'
+  | 'unknown';
+
+export interface TutorEvidence {
+  code: string;
+  reason: string;
+}
+
+export interface PossibleMisconception {
+  type: string;
+  description: string;
+  confidence: number;
+}
+
+export interface TutorDiagnosis {
+  category: TutorDiagnosisCategory;
+  issue_type: string;
+  severity: 'info' | 'warning' | 'error' | string;
+  location?: string | null;
+  confidence: number;
+  evidence?: TutorEvidence | null;
+  knowledge_components: string[];
+  possible_misconception?: PossibleMisconception | null;
+}
+
+export interface TutorRequest {
+  problem_statement: string;
+  student_code: string;
+  programming_language?: string;
+  compiler_error?: string | null;
+  student_question?: string | null;
+  topic?: string | null;
+  hint_level?: number;
+  save_input?: boolean;
+  save_result?: boolean;
+}
+
+export interface TutorResponse {
+  diagnosis: TutorDiagnosis;
+  knowledge_components: string[];
+  possible_misconception?: PossibleMisconception | null;
+  evidence?: TutorEvidence | null;
+  teaching_strategy: string;
+  tutor_response: string;
+  hint_level: number;
+  highest_hint_level_used: number;
+  solution_revealed: boolean;
+  next_action: string;
+  prompt_version?: string;
+  session_id?: string | null;
+  created_at?: string | null;
+  validator_actions?: string[];
+  guest_context_token?: string | null;
+}
+
+export interface TutorHintRequest {
+  session_id?: string | null;
+  guest_context_token?: string | null;
+  current_hint_level: number;
+  current_diagnosis?: TutorDiagnosis | null;
+  student_code?: string | null;
+  student_followup_message?: string | null;
+}
+
+export interface TutorHintResponse {
+  hint_level: number;
+  highest_hint_level_used: number;
+  tutor_response: string;
+  solution_revealed: boolean;
+  next_action: string;
+  teaching_strategy: string;
+  session_id?: string | null;
+  guest_context_token?: string | null;
+}
+
+export type VerificationStatus =
+  | 'likely_resolved'
+  | 'still_present'
+  | 'new_issue'
+  | 'needs_execution_to_confirm';
+
+export interface TutorVerifyRequest {
+  original_problem: string;
+  revised_student_code: string;
+  previous_code?: string | null;
+  original_diagnosis?: TutorDiagnosis | null;
+  session_id?: string | null;
+  guest_context_token?: string | null;
+}
+
+export interface TutorVerifyResponse {
+  status: VerificationStatus;
+  resolved: boolean;
+  remaining_issues: string[];
+  new_issues: string[];
+  feedback: string;
+  next_action: string;
+  disclaimer: string;
+  diagnosis?: TutorDiagnosis | null;
+}
+
