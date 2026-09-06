@@ -1,4 +1,9 @@
 # Evaluation package
+from app.evaluation.firewall import (
+    FORBIDDEN_FIREWALL_FIELDS,
+    GroundTruthFirewall,
+    GroundTruthLeakageError,
+)
 from app.evaluation.schemas import (
     ALLOWED_MODEL_INPUT_FIELDS,
     FORBIDDEN_GOLD_FIELDS,
@@ -16,6 +21,9 @@ __all__ = [
     "GroundTruth",
     "EvaluationMetadata",
     "EvaluationRecord",
+    "GroundTruthFirewall",
+    "GroundTruthLeakageError",
+    "FORBIDDEN_FIREWALL_FIELDS",
     "FORBIDDEN_GOLD_FIELDS",
     "ALLOWED_MODEL_INPUT_FIELDS",
     "GROUND_TRUTH_SENTINEL_71F2",

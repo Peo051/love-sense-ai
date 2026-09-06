@@ -47,7 +47,12 @@ class OpenAITutorProvider(TutorLLMProvider):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
+        from app.evaluation.firewall import GroundTruthFirewall
         from app.evaluation.schemas import assert_not_ground_truth
+
+        # Fail-closed runtime firewall check immediately before provider invocation
+        GroundTruthFirewall.default().inspect(messages, base_path="messages")
+
         assert_not_ground_truth(messages)
         for msg in messages:
             assert_not_ground_truth(msg)
@@ -142,7 +147,12 @@ class DeterministicMockTutorProvider(TutorLLMProvider):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
+        from app.evaluation.firewall import GroundTruthFirewall
         from app.evaluation.schemas import assert_not_ground_truth
+
+        # Fail-closed runtime firewall check immediately before provider invocation
+        GroundTruthFirewall.default().inspect(messages, base_path="messages")
+
         assert_not_ground_truth(messages)
         for msg in messages:
             assert_not_ground_truth(msg)
