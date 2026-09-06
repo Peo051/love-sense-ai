@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from app.schemas.tutor_schema import TutorDiagnosis, TutorRequest, TutorResponse
+from app.tutor.context_builder import LearnerPersonalizationContext, StudentContextBuilder
 from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.hint_manager import HintManager, HintPayload, HintSessionState
 from app.tutor.prompts import build_tutor_system_prompt, build_tutor_user_prompt
@@ -47,14 +48,21 @@ class TutorService:
         self,
         llm_provider: Optional[TutorLLMProvider] = None,
         hint_manager: Optional[HintManager] = None,
+        context_builder: Optional[StudentContextBuilder] = None,
     ):
         self._llm_provider: TutorLLMProvider = llm_provider or OpenAITutorProvider()
         self._hint_manager: HintManager = hint_manager or HintManager()
+        self._context_builder: StudentContextBuilder = context_builder or StudentContextBuilder()
 
     @property
     def hint_manager(self) -> HintManager:
         """Truy cập đối tượng HintManager."""
         return self._hint_manager
+
+    @property
+    def context_builder(self) -> StudentContextBuilder:
+        """Truy cập đối tượng StudentContextBuilder."""
+        return self._context_builder
 
     async def generate_feedback(
         self,
@@ -62,6 +70,7 @@ class TutorService:
         session_id: Optional[str] = None,
         allow_jump_to_solution: bool = False,
         reference_solution: Optional[str] = None,
+        learner_context: Optional[LearnerPersonalizationContext] = None,
     ) -> TutorResponse:
         """
         Thực hiện chu trình điều phối hướng dẫn học tập cho một yêu cầu từ sinh viên.
@@ -91,6 +100,7 @@ class TutorService:
             student_question=normalized_inputs["student_question"],
             topic=normalized_inputs["topic"],
             hint_level=effective_hint_level,
+            learner_context=learner_context,
         )
 
         # 3. Request structured diagnosis
@@ -166,6 +176,7 @@ class TutorService:
         student_question: Optional[str],
         topic: Optional[str],
         hint_level: int,
+        learner_context: Optional[LearnerPersonalizationContext] = None,
     ) -> list[dict[str, str]]:
         """Xây dựng prompt theo phương pháp Socratic và mức độ gợi ý mong muốn."""
         system_prompt = build_tutor_system_prompt(hint_level=hint_level)
@@ -176,6 +187,8 @@ class TutorService:
             student_question=student_question,
             topic=topic,
             hint_level=hint_level,
+            personalization=learner_context,
+            context_builder=self._context_builder,
         )
         return [
             {"role": "system", "content": system_prompt},

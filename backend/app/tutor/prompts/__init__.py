@@ -4,6 +4,12 @@ Package prompts phiên bản hóa của CodeSense AI Tutor.
 
 from typing import Optional
 
+from app.tutor.context_builder import (
+    CodeSubmissionContext,
+    LearnerPersonalizationContext,
+    StudentContextBuilder,
+    TokenBudgetConfig,
+)
 from app.tutor.prompts.diagnosis_v1 import DIAGNOSIS_SCHEMA_PROMPT_V1
 from app.tutor.prompts.hint_v1 import (
     HINT_LEVEL_POLICY_V1,
@@ -17,10 +23,14 @@ from app.tutor.prompts.verification_v1 import (
 )
 
 __all__ = [
+    "CodeSubmissionContext",
     "DIAGNOSIS_SCHEMA_PROMPT_V1",
     "HINT_LEVEL_POLICY_V1",
+    "LearnerPersonalizationContext",
     "PROMPT_VERSION",
     "SYSTEM_POLICY_V1",
+    "StudentContextBuilder",
+    "TokenBudgetConfig",
     "VERIFICATION_CHECKLIST_V1",
     "build_tutor_system_prompt",
     "build_tutor_user_prompt",
@@ -80,51 +90,30 @@ def build_tutor_user_prompt(
     student_question: Optional[str] = None,
     topic: Optional[str] = None,
     hint_level: int = 1,
+    personalization: Optional[LearnerPersonalizationContext] = None,
+    current_diagnosis: Optional[dict] = None,
+    hint_history: Optional[list[dict]] = None,
+    context_builder: Optional[StudentContextBuilder] = None,
 ) -> str:
     """
     Sinh user prompt có cấu trúc và bao bọc toàn bộ dữ liệu người dùng nộp
     bên trong các thẻ phân định ranh giới dữ liệu không tin cậy (untrusted data boundaries).
+    Áp dụng phân tách ranh giới nghiêm ngặt giữa <submitted_code_evidence>
+    và <learner_pedagogical_context> thông qua StudentContextBuilder.
     """
-    sections = [
-        "=== ĐỀ BÀI BÀI TẬP ===\n"
-        "<untrusted_problem_statement>\n"
-        f"{problem_statement.strip()}\n"
-        "</untrusted_problem_statement>",
-
-        "=== MÃ NGUỒN C# CỦA SINH VIÊN (DỮ LIỆU ĐẦU VÀO CẦN CHẨN ĐOÁN) ===\n"
-        "<untrusted_student_code>\n"
-        f"{student_code.strip()}\n"
-        "</untrusted_student_code>",
-    ]
-
-    if compiler_error and compiler_error.strip():
-        sections.append(
-            "=== THÔNG BÁO LỖI BIÊN DỊCH (COMPILER ERROR) ===\n"
-            "<untrusted_compiler_error>\n"
-            f"{compiler_error.strip()}\n"
-            "</untrusted_compiler_error>"
-        )
-
-    if student_question and student_question.strip():
-        sections.append(
-            "=== CÂU HỎI CỦA SINH VIÊN ===\n"
-            "<untrusted_student_question>\n"
-            f"{student_question.strip()}\n"
-            "</untrusted_student_question>"
-        )
-
-    if topic and topic.strip():
-        sections.append(
-            "=== CHỦ ĐỀ OOP ĐANG HỌC ===\n"
-            f"{topic.strip()}"
-        )
-
-    req_section = (
-        "=== YÊU CẦU GIA SƯ ===\n"
-        f"- Cấp độ gợi ý: Mức {hint_level}\n"
-        "- Ngôn ngữ: C# (chỉ hỗ trợ C# V1)\n"
-        "- Phân tích kỹ nội dung trong các thẻ <untrusted_*> và trả về JSON đúng cấu trúc yêu cầu."
+    builder = context_builder or StudentContextBuilder()
+    submission = CodeSubmissionContext(
+        problem_statement=problem_statement,
+        student_code=student_code,
+        compiler_error=compiler_error,
+        student_question=student_question,
+        topic=topic,
+        current_diagnosis=current_diagnosis,
+        hint_history=hint_history or [],
     )
-    sections.append(req_section)
+    return builder.build_user_prompt(
+        submission=submission,
+        personalization=personalization,
+        hint_level=hint_level,
+    )
 
-    return "\n\n".join(sections)

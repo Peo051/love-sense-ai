@@ -324,6 +324,12 @@ class SkillTaxonomy:
         return None
 
     @classmethod
+    def get_skill_display_name(cls, code: str) -> str:
+        """Lấy tên hiển thị tiếng Việt của kỹ năng, fallback về code nếu không xác định."""
+        skill = cls.get_skill(code)
+        return skill.name if skill else code
+
+    @classmethod
     def list_skills(
         cls,
         *,

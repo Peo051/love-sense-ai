@@ -19,6 +19,7 @@ from app.schemas.tutor_schema import (
 )
 from app.services.db_store import ConsentRepository, HistoryRepository
 from app.services.rate_limiter import analyze_rate_limiter
+from app.tutor.context_builder import StudentContextBuilder
 from app.tutor.guest_context import GuestContextError, GuestContextSigner, GuestContextTamperedError
 from app.tutor.hint_manager import HintManager
 from app.tutor.service import TutorService, TutorServiceError
@@ -95,8 +96,23 @@ async def analyze_code(
         )
 
     # 3. Điều phối qua TutorService
+    learner_context = None
+    if current_user:
+        try:
+            target_skills = [request.topic] if request.topic else []
+            learner_context = await StudentContextBuilder.load_and_build_learner_context(
+                db=db,
+                user_id=current_user.id,
+                relevant_skills=target_skills,
+            )
+        except Exception as exc:
+            logger.warning("Không thể tải learner context cho user %s: %s", current_user.id, str(exc))
+
     try:
-        feedback_result = await tutor_service.generate_feedback(request)
+        feedback_result = await tutor_service.generate_feedback(
+            request,
+            learner_context=learner_context,
+        )
     except TutorServiceError as exc:
         logger.error("TutorService báo lỗi [%s]: %s", exc.error_code, exc.message)
         if exc.error_code == "provider_error":
