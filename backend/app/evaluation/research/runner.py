@@ -55,6 +55,12 @@ from app.evaluation.research.provider import (
     sanitize_error_message,
     validate_research_provider,
 )
+from app.evaluation.research.schemas import (
+    ResearchMessage,
+    ResearchModelRequest,
+    ResearchProviderResponse,
+    ResearchUsage,
+)
 from app.evaluation.schemas import GroundTruth, ModelInput, assert_not_ground_truth
 
 logger = logging.getLogger(__name__)
@@ -312,18 +318,27 @@ class ResearchRunner:
             "duration_sec": total_duration,
         }
 
-    def _call_provider(self, messages: List[Dict[str, Any]], temperature: float, max_tokens: int) -> str:
-        """Gửi prompt tới provider và nhận phản hồi văn bản thực tế."""
+    def _call_provider(
+        self,
+        request: ResearchModelRequest,
+    ) -> ResearchProviderResponse:
+        """Gửi ResearchModelRequest tới provider và nhận ResearchProviderResponse thực tế (APT-057)."""
         if self.provider_client is None:
             raise RuntimeError(
                 f"System {self.system} cannot produce prediction without a configured LLM provider. "
                 "Direct ground-truth copying has been completely removed (APT-053)."
             )
 
-        if hasattr(self.provider_client, "generate_response_sync"):
-            return self.provider_client.generate_response_sync(messages, temperature=temperature, max_tokens=max_tokens)
+        if hasattr(self.provider_client, "generate"):
+            gen = self.provider_client.generate(request)
+        else:
+            messages = [{"role": m.role, "content": m.content} for m in request.messages]
+            gen = self.provider_client.generate_response(
+                messages,
+                temperature=request.temperature or 0.2,
+                max_tokens=request.max_output_tokens or 1500,
+            )
 
-        gen = self.provider_client.generate_response(messages, temperature=temperature, max_tokens=max_tokens)
         if inspect.isawaitable(gen):
             try:
                 loop = asyncio.get_running_loop()
@@ -332,10 +347,29 @@ class ResearchRunner:
 
             if loop and loop.is_running():
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    return executor.submit(asyncio.run, gen).result()
+                    result = executor.submit(asyncio.run, gen).result()
             else:
-                return asyncio.run(gen)
-        return str(gen)
+                result = asyncio.run(gen)
+        else:
+            result = gen
+
+        if isinstance(result, ResearchProviderResponse):
+            return result
+
+        return ResearchProviderResponse(
+            provider=self.provider,
+            requested_model=self.model,
+            returned_model=None,
+            raw_text=str(result),
+            request_id=None,
+            provider_response_id=None,
+            finish_reason=None,
+            usage=None,
+            provider_response_received=True,
+            raw_metadata={},
+            latency_ms=None,
+            response_format_mode=request.response_format_mode,
+        )
 
     def _predict_single(self, sample: Any) -> Dict[str, Any]:
         """
@@ -387,19 +421,42 @@ class ResearchRunner:
         else:
             raise ValueError(f"Hệ thống không xác định: {self.system}")
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
+        research_messages = [
+            ResearchMessage(role="system", content=system_prompt),
+            ResearchMessage(role="user", content=user_prompt),
         ]
 
-        # 5. Fail-Closed Firewall quét toàn bộ messages trước khi gọi provider
-        GroundTruthFirewall.default().inspect(messages, base_path=f"runner.{self.system}.messages")
-
-        # 6. Gọi Provider thực tế và đo đạc độ trễ
-        t0 = time.time()
         temperature = 0.2 if self.system in ("C", "D") else 0.7
-        raw_response = self._call_provider(messages, temperature=temperature, max_tokens=1024)
-        latency_ms = round((time.time() - t0) * 1000, 2)
+        format_mode = "json" if self.system in ("C", "D") else "text"
+        model_request = ResearchModelRequest(
+            run_id=self.run_id,
+            sample_id=model_input.sample_id,
+            system_name=self.system,
+            model=self.model,
+            messages=research_messages,
+            temperature=temperature,
+            max_output_tokens=1024,
+            response_format_mode=format_mode,
+        )
+
+        # 5. Fail-Closed Firewall quét toàn bộ request trước khi gọi provider
+        GroundTruthFirewall.default().inspect(
+            model_request,
+            sample_id=model_input.sample_id,
+            run_id=self.run_id,
+            base_path=f"runner.{self.system}.request",
+        )
+
+        # 6. Gọi Provider thực tế và nhận envelope ResearchProviderResponse
+        t0 = time.time()
+        provider_resp = self._call_provider(model_request)
+        latency_ms = (
+            provider_resp.latency_ms
+            if provider_resp.latency_ms is not None
+            else round((time.time() - t0) * 1000, 2)
+        )
+
+        raw_response = provider_resp.raw_text
 
         # 6.1. Từ chối phản hồi rỗng từ provider (APT-056)
         if raw_response is None or not isinstance(raw_response, str) or not raw_response.strip():
@@ -410,9 +467,11 @@ class ResearchRunner:
                 attempts=getattr(self.provider_client, "last_attempts", 1),
             )
 
-        prompt_chars = sum(len(m.get("content", "")) for m in messages)
-        prompt_tokens = max(1, prompt_chars // 4)
-        completion_tokens = max(1, len(raw_response) // 4)
+        # 6.2. Thu thập token usage chính thức từ provider (APT-057 - tuyệt đối không ước lượng)
+        usage_dict = provider_resp.usage.model_dump() if provider_resp.usage else None
+        prompt_tokens = provider_resp.usage.input_tokens if provider_resp.usage else None
+        completion_tokens = provider_resp.usage.output_tokens if provider_resp.usage else None
+        total_tokens = provider_resp.usage.total_tokens if provider_resp.usage else None
 
         # 7. Parser: Bóc tách cấu trúc từ chuỗi phản hồi thô của provider
         parsed, json_valid, parse_actions = parse_provider_output(raw_response, self.system)
@@ -442,17 +501,24 @@ class ResearchRunner:
             parse_actions=parse_actions,
         )
 
-        # 9. Đóng gói Prediction từ dữ liệu đã qua kiểm định với đầy đủ provenance (APT-056)
+        # 9. Đóng gói Prediction từ dữ liệu đã qua kiểm định với đầy đủ provenance (APT-056 / APT-057)
         return {
             "id": model_input.sample_id,
             "model": self.model,
-            "requested_model": self.model,
+            "requested_model": provider_resp.requested_model,
+            "returned_model": provider_resp.returned_model,
             "provider": self.provider,
+            "request_id": provider_resp.request_id,
+            "provider_response_id": provider_resp.provider_response_id,
+            "finish_reason": provider_resp.finish_reason,
             "provider_response_received": True,
             "prompt_version": self.prompt_version,
             "latency_ms": latency_ms,
+            "usage": usage_dict,
             "prompt_tokens": prompt_tokens,
             "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "raw_response": raw_response,
             "bug_status": validated_data.get("bug_status"),
             "error_category": validated_data.get("error_category"),
             "bug_type": validated_data.get("bug_type"),
@@ -471,14 +537,14 @@ class ResearchRunner:
 
 
 def main():
-    """CLI Runner cho Nghiên cứu thực nghiệm (Research Evaluation CLI) (APT-056)."""
+    """CLI Runner cho Nghiên cứu thực nghiệm (Research Evaluation CLI) (APT-054 / APT-056 / APT-057)."""
     parser = argparse.ArgumentParser(
-        description="VietCSharpTutor Research Evaluation Runner CLI (APT-054 / APT-056)"
+        description="VietCSharpTutor Research Evaluation Runner CLI (APT-054 / APT-056 / APT-057)"
     )
     parser.add_argument("--system", type=str, required=True, choices=["A", "B", "C", "D"], help="Hệ thống cần đánh giá: A, B, C, hoặc D")
     parser.add_argument("--split", type=str, default="dev", choices=["dev", "validation", "test"], help="Phân vùng dữ liệu: dev, validation, test")
     parser.add_argument("--model", type=str, default="gpt-4o-mini", help="Tên mô hình LLM thực tế")
-    parser.add_argument("--provider", type=str, default="openai", choices=["openai", "azure"], help="Nhà cung cấp LLM thực tế (không hỗ trợ mock/fake)")
+    parser.add_argument("--provider", type=str, default="openai", choices=["openai"], help="Nhà cung cấp LLM thực tế (không hỗ trợ mock/fake)")
     parser.add_argument("--dataset", type=str, default=None, help="Đường dẫn file dataset")
     parser.add_argument("--output-dir", type=str, default=None, help="Thư mục xuất kết quả")
     parser.add_argument("--seed", type=int, default=42, help="Seed ngẫu nhiên")

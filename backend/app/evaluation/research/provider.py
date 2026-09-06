@@ -15,12 +15,19 @@ import asyncio
 import logging
 import os
 import re
+import time
 from typing import Any, Dict, List, Optional
 
 import httpx
 
 from app.core.config import settings
 from app.evaluation.firewall import GroundTruthFirewall
+from app.evaluation.research.schemas import (
+    ResearchMessage,
+    ResearchModelRequest,
+    ResearchProviderResponse,
+    ResearchUsage,
+)
 from app.evaluation.schemas import assert_not_ground_truth
 from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 
@@ -241,7 +248,7 @@ class ResearchRetryPolicy:
 
 class ResearchProvider(ABC):
     """
-    Interface bắt buộc cho mọi Provider phục vụ nghiên cứu thực nghiệm khoa học.
+    Interface bắt buộc cho mọi Provider phục vụ nghiên cứu thực nghiệm khoa học (APT-057).
     Bất kỳ provider nào kế thừa interface này đều được coi là một Real Provider.
     """
 
@@ -253,7 +260,28 @@ class ResearchProvider(ABC):
     def is_fake_test_provider(self) -> bool:
         return False
 
+    @property
     @abstractmethod
+    def provider_name(self) -> str:
+        """Tên định danh chuẩn tắc của provider (ví dụ: 'openai')."""
+        pass
+
+    @property
+    @abstractmethod
+    def model_name(self) -> str:
+        """Định danh mô hình được cấu hình bất biến cho run."""
+        pass
+
+    @abstractmethod
+    async def generate(
+        self,
+        request: ResearchModelRequest,
+    ) -> ResearchProviderResponse:
+        """
+        Gửi yêu cầu đã được thẩm định tới LLM thực tế và nhận phản hồi envelope bảo toàn.
+        """
+        pass
+
     async def generate_response(
         self,
         messages: List[Dict[str, Any]],
@@ -261,13 +289,50 @@ class ResearchProvider(ABC):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
-        """Gửi prompt tới LLM thực tế và nhận phản hồi thô."""
-        pass
+        """
+        Cơ chế tương thích ngược (backwards-compatible) cho các caller truyền thống.
+        Chuyển tiếp qua generate() sau khi bọc vào ResearchModelRequest.
+        """
+        # 1. Fail-closed Firewall quét toàn bộ messages
+        GroundTruthFirewall.default().inspect(messages, base_path="research_provider.messages")
+
+        # 2. Kiểm tra type-level không có GroundTruth
+        assert_not_ground_truth(messages)
+        for msg in messages:
+            assert_not_ground_truth(msg)
+            if isinstance(msg, dict):
+                assert_not_ground_truth(msg.get("content"))
+
+        typed_msgs: List[ResearchMessage] = []
+        for m in messages:
+            if isinstance(m, ResearchMessage):
+                typed_msgs.append(m)
+            elif isinstance(m, dict):
+                role = str(m.get("role") or "user")
+                if role not in ("system", "user", "assistant"):
+                    role = "user"
+                content = str(m.get("content") or "")
+                typed_msgs.append(ResearchMessage(role=role, content=content))
+            else:
+                typed_msgs.append(ResearchMessage(role="user", content=str(m)))
+
+        req = ResearchModelRequest(
+            run_id="compat_run",
+            sample_id="compat_sample",
+            system_name="COMPAT",
+            model=self.model_name,
+            messages=typed_msgs,
+            temperature=temperature,
+            max_output_tokens=max_tokens,
+            response_format_mode="text",
+        )
+        resp = await self.generate(req)
+        return resp.raw_text
 
 
 class OpenAIResearchProvider(ResearchProvider):
     """
-    Triển khai ResearchProvider dựa trên OpenAI-compatible API với Fail-Loud Provider Error Policy (APT-056).
+    Triển khai ResearchProvider dựa trên OpenAI-compatible API với Fail-Loud Provider Error Policy (APT-056 / APT-057).
     Tuyệt đối không hỗ trợ mock hay canned responses.
     Thực thi bounded deterministic retries cho các lỗi transient và dừng ngay lập tức khi gặp fatal errors.
     """
@@ -304,6 +369,14 @@ class OpenAIResearchProvider(ResearchProvider):
         self.last_attempts: int = 0
 
     @property
+    def provider_name(self) -> str:
+        return "openai"
+
+    @property
+    def model_name(self) -> str:
+        return self._model or "gpt-4o-mini"
+
+    @property
     def api_key(self) -> Optional[str]:
         return self._api_key or getattr(self._client, "_api_key", None)
 
@@ -330,33 +403,46 @@ class OpenAIResearchProvider(ResearchProvider):
         )
         return url.rstrip("/")
 
-    async def generate_response(
+    async def generate(
         self,
-        messages: List[Dict[str, Any]],
-        *,
-        temperature: float = 0.2,
-        max_tokens: int = 1500,
-    ) -> str:
-        # 1. Fail-closed Firewall quét toàn bộ messages
-        GroundTruthFirewall.default().inspect(messages, base_path="research_provider.messages")
+        request: ResearchModelRequest,
+    ) -> ResearchProviderResponse:
+        # 0. Kiểm tra type của request
+        if not isinstance(request, ResearchModelRequest):
+            raise TypeError(
+                f"ResearchProvider.generate requires ResearchModelRequest, got {type(request).__name__}. "
+                "Direct dataset records or generic dicts are strictly forbidden."
+            )
 
-        # 2. Kiểm tra type-level không có GroundTruth
-        assert_not_ground_truth(messages)
-        for msg in messages:
-            assert_not_ground_truth(msg)
-            if isinstance(msg, dict):
-                assert_not_ground_truth(msg.get("content"))
+        # 1. Fail-closed Firewall quét toàn bộ request
+        GroundTruthFirewall.default().inspect(
+            request,
+            sample_id=request.sample_id,
+            run_id=request.run_id,
+            base_path="research_provider.request",
+        )
+
+        # 2. Type-level ground truth assertion
+        assert_not_ground_truth(request)
 
         # 3. Model identifier verification (No silent model substitution)
-        if not self._model or not isinstance(self._model, str) or not self._model.strip():
+        if not self.model_name or not isinstance(self.model_name, str) or not self.model_name.strip():
             raise ResearchProviderConfigurationError("Model identifier must be configured and cannot be empty.")
 
-        payload = {
-            "model": self._model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens,
+        if request.model != self.model_name:
+            raise ResearchProviderConfigurationError(
+                f"Model mismatch: request model '{request.model}' != provider configured model '{self.model_name}'. "
+                "Silent model substitution is strictly prohibited."
+            )
+
+        payload: Dict[str, Any] = {
+            "model": self.model_name,
+            "messages": [{"role": m.role, "content": m.content} for m in request.messages],
+            "temperature": request.temperature,
+            "max_tokens": request.max_output_tokens,
         }
+        if request.response_format_mode == "json":
+            payload["response_format"] = {"type": "json_object"}
 
         api_key = self._get_api_key()
         base_url = self._get_base_url()
@@ -370,6 +456,7 @@ class OpenAIResearchProvider(ResearchProvider):
 
         for attempt in range(1, max_attempts + 1):
             self.last_attempts = attempt
+            t_start = time.time()
             try:
                 async with httpx.AsyncClient(
                     timeout=settings.llm_timeout_seconds,
@@ -380,7 +467,7 @@ class OpenAIResearchProvider(ResearchProvider):
                         headers=headers,
                         json=payload,
                     )
-
+                latency_ms = round((time.time() - t_start) * 1000, 2)
                 status_code = response.status_code
 
                 # Fatal non-retryable authentication failures
@@ -472,8 +559,50 @@ class OpenAIResearchProvider(ResearchProvider):
                         attempts=attempt,
                     )
 
-                # Thành công nhận phản hồi thô từ real provider
-                return content
+                # Trích xuất metadata một cách trung thực (không bịa đặt hay ước tính)
+                request_id = (
+                    response.headers.get("x-request-id")
+                    or response.headers.get("request-id")
+                    or None
+                )
+                provider_response_id = res_json.get("id") or None
+                returned_model = res_json.get("model") or None
+                finish_reason = choice_obj.get("finish_reason") or None
+
+                usage: Optional[ResearchUsage] = None
+                usage_raw = res_json.get("usage")
+                if isinstance(usage_raw, dict) and "prompt_tokens" in usage_raw and "completion_tokens" in usage_raw:
+                    usage = ResearchUsage(
+                        input_tokens=int(usage_raw.get("prompt_tokens", 0)),
+                        output_tokens=int(usage_raw.get("completion_tokens", 0)),
+                        total_tokens=int(
+                            usage_raw.get(
+                                "total_tokens",
+                                usage_raw.get("prompt_tokens", 0) + usage_raw.get("completion_tokens", 0),
+                            )
+                        ),
+                    )
+
+                # Lưu safe metadata (loại trừ authorization hay api keys)
+                safe_metadata: Dict[str, Any] = {}
+                for safe_key in ("system_fingerprint", "created", "object"):
+                    if safe_key in res_json:
+                        safe_metadata[safe_key] = res_json[safe_key]
+
+                return ResearchProviderResponse(
+                    provider=self.provider_name,
+                    requested_model=request.model,
+                    returned_model=returned_model,
+                    raw_text=content,
+                    request_id=request_id,
+                    provider_response_id=provider_response_id,
+                    finish_reason=finish_reason,
+                    usage=usage,
+                    provider_response_received=True,
+                    raw_metadata=safe_metadata,
+                    latency_ms=latency_ms,
+                    response_format_mode=request.response_format_mode,
+                )
 
             except (httpx.TimeoutException, asyncio.TimeoutError) as exc:
                 last_exception = ResearchProviderTimeoutError(
@@ -524,10 +653,11 @@ def validate_research_provider(
     allow_test_doubles: bool = False,
 ) -> Any:
     """
-    Hàm kiểm tra preflight bắt buộc trước khi thực thi nghiên cứu đánh giá (APT-055).
+    Hàm kiểm tra preflight bắt buộc trước khi thực thi nghiên cứu đánh giá (APT-055 / APT-057).
 
     QUY TẮC BẮT BUỘC:
-    1. Provider configured: Không được rỗng, không phải mock/fake, phải là real provider ('openai', 'azure').
+    1. Provider configured: Không được rỗng, không phải mock/fake, chỉ chấp nhận real provider ('openai').
+       Provider 'azure' bị từ chối rõ ràng cho đến khi có adapter chuyên biệt.
     2. Model configured: Không được rỗng, không phải mock/fake identifier ('mock-tutor-v1', v.v.).
     3. Research mode enabled: Từ chối dứt khoát FakeTestProvider trừ khi có allow_test_doubles=True.
     4. Required credential present: Phải có API key hợp lệ cho provider thực tế.
@@ -547,12 +677,18 @@ def validate_research_provider(
         if norm_provider in ("mock", "fake"):
             raise ResearchProviderConfigurationError(
                 f"Provider '{provider}' is strictly forbidden in research evaluation. "
-                "Mock and fake providers are strictly prohibited in research mode (e.g., 'openai', 'azure' required)."
+                "Mock and fake providers are strictly prohibited in research mode ('openai' required)."
             )
 
-        if norm_provider not in ("openai", "azure"):
+        if norm_provider == "azure":
             raise ResearchProviderConfigurationError(
-                f"Unsupported research provider '{provider}'. Supported real providers are: 'openai', 'azure'."
+                "Unsupported research provider 'azure'. Only 'openai' currently has an active real provider adapter. "
+                "Azure support is deferred until a dedicated AzureResearchProvider is implemented."
+            )
+
+        if norm_provider != "openai":
+            raise ResearchProviderConfigurationError(
+                f"Unsupported research provider '{provider}'. Supported real provider is: 'openai'."
             )
 
     # 2. Kiểm tra Model
@@ -593,7 +729,6 @@ def validate_research_provider(
             or getattr(provider_client, "_api_key", None)
             or getattr(getattr(provider_client, "_client", None), "_api_key", None)
             or (os.environ.get("OPENAI_API_KEY") if norm_provider == "openai" else None)
-            or (os.environ.get("AZURE_OPENAI_API_KEY") if norm_provider == "azure" else None)
             or (settings.llm_api_key if settings.llm_api_key and settings.llm_api_key.strip() else None)
         )
 

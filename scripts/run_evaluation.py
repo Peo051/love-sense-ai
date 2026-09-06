@@ -33,7 +33,7 @@ def main():
     parser.add_argument("--system", type=str, required=True, choices=["A", "B", "C", "D"], help="Hệ thống cần đánh giá: A, B, C, hoặc D")
     parser.add_argument("--split", type=str, default="dev", choices=["dev", "validation", "test"], help="Phân vùng dữ liệu: dev, validation, test")
     parser.add_argument("--model", type=str, default="gpt-4o-mini", help="Tên mô hình LLM thực tế")
-    parser.add_argument("--provider", type=str, default="openai", choices=["openai", "azure"], help="Nhà cung cấp LLM thực tế (chỉ chấp nhận real provider)")
+    parser.add_argument("--provider", type=str, default="openai", choices=["openai"], help="Nhà cung cấp LLM thực tế (chỉ chấp nhận real provider)")
     parser.add_argument("--dataset", type=str, default=None, help="Đường dẫn file dataset")
     parser.add_argument("--output-dir", type=str, default=None, help="Thư mục xuất kết quả")
     parser.add_argument("--seed", type=int, default=42, help="Seed ngẫu nhiên")

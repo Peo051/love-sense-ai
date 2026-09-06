@@ -1,0 +1,27 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "task": "APT-057",
+  "title": "Harden Real Research Provider Adapter",
+  "status": "PASS",
+  "providers": [
+    "openai"
+  ],
+  "raw_response_preserved": true,
+  "usage_estimation_allowed": false,
+  "model_substitution_allowed": false,
+  "ground_truth_access": false,
+  "metadata_access": false,
+  "azure_status": "deferred_no_decorative_choice",
+  "tests": {
+    "targeted_passed": 18,
+    "targeted_total": 18,
+    "regression_suite_passed": 63,
+    "regression_suite_total": 63,
+    "full_backend_passed": 363,
+    "full_backend_total": 363
+  },
+  "remaining_risks": [
+    "External quota exhaustion on upstream OpenAI provider causing PARTIAL runs",
+    "Formal latency distribution and cost aggregation deferred to APT-058"
+  ]
+}

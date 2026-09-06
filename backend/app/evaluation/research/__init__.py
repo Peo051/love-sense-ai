@@ -31,11 +31,21 @@ from app.evaluation.research.provider import (
     sanitize_error_message,
     validate_research_provider,
 )
+from app.evaluation.research.schemas import (
+    ResearchMessage,
+    ResearchModelRequest,
+    ResearchProviderResponse,
+    ResearchUsage,
+)
 from app.evaluation.research.runner import ResearchFailureRecord, ResearchRunner
 
 __all__ = [
     "ResearchRunner",
     "ResearchFailureRecord",
+    "ResearchMessage",
+    "ResearchUsage",
+    "ResearchModelRequest",
+    "ResearchProviderResponse",
     "ResearchProvider",
     "OpenAIResearchProvider",
     "ResearchRetryPolicy",
