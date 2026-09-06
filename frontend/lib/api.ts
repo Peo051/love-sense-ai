@@ -1,14 +1,28 @@
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
+  AttemptCreateRequest,
   AuthToken,
   AuthUser,
   ConsentSettings,
   EvidenceItem,
   HistoryItem,
   HistoryListResponse,
+  LearningSessionDetail,
+  LearningSessionSummary,
+  MessageCreateRequest,
   ProfilePayload,
   ProfileResponse,
+  SessionCreateRequest,
+  StudentAttemptResponse,
+  StudentProgressDashboardResponse,
+  TutorHintRequest,
+  TutorHintResponse,
+  TutorMessageResponse,
+  TutorRequest,
+  TutorResponse,
+  TutorVerifyRequest,
+  TutorVerifyResponse,
   VisionOcrResponse,
 } from './types';
 
@@ -483,3 +497,110 @@ export async function saveConsent(consent: ConsentSettings): Promise<ConsentSett
 export async function deleteUserData(): Promise<void> {
   await requestJson<{ deleted: boolean }>('/api/user-data', { method: 'DELETE' }, 'Không thể xóa dữ liệu cá nhân.');
 }
+
+export async function analyzeTutorCode(payload: TutorRequest): Promise<TutorResponse> {
+  return requestJson<TutorResponse>(
+    '/api/tutor/analyze',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể phân tích mã nguồn lúc này. Vui lòng thử lại sau.'
+  );
+}
+
+export async function requestTutorNextHint(payload: TutorHintRequest): Promise<TutorHintResponse> {
+  return requestJson<TutorHintResponse>(
+    '/api/tutor/hint',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lấy gợi ý tiếp theo lúc này. Vui lòng thử lại sau.'
+  );
+}
+
+export async function verifyTutorRetry(payload: TutorVerifyRequest): Promise<TutorVerifyResponse> {
+  return requestJson<TutorVerifyResponse>(
+    '/api/tutor/verify',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể xác minh lần thử lại lúc này. Vui lòng thử lại sau.'
+  );
+}
+
+export async function createLearningSession(payload: SessionCreateRequest): Promise<LearningSessionDetail> {
+  return requestJson<LearningSessionDetail>(
+    '/api/sessions',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể tạo phiên học tập lúc này.'
+  );
+}
+
+export async function listLearningSessions(): Promise<LearningSessionSummary[]> {
+  return requestJson<LearningSessionSummary[]>(
+    '/api/sessions',
+    undefined,
+    'Không thể tải danh sách phiên học tập.'
+  );
+}
+
+export async function getLearningSession(sessionId: string): Promise<LearningSessionDetail> {
+  return requestJson<LearningSessionDetail>(
+    `/api/sessions/${sessionId}`,
+    undefined,
+    'Không thể tải chi tiết phiên học tập.'
+  );
+}
+
+export async function deleteLearningSession(sessionId: string): Promise<void> {
+  await requestJson<{ deleted: boolean }>(
+    `/api/sessions/${sessionId}`,
+    { method: 'DELETE' },
+    'Không thể xóa phiên học tập.'
+  );
+}
+
+export async function addSessionAttempt(
+  sessionId: string,
+  payload: AttemptCreateRequest
+): Promise<StudentAttemptResponse> {
+  return requestJson<StudentAttemptResponse>(
+    `/api/sessions/${sessionId}/attempts`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lưu lần thử vào phiên học.'
+  );
+}
+
+export async function addSessionMessage(
+  sessionId: string,
+  payload: MessageCreateRequest
+): Promise<TutorMessageResponse> {
+  return requestJson<TutorMessageResponse>(
+    `/api/sessions/${sessionId}/messages`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lưu tin nhắn vào phiên học.'
+  );
+}
+
+export async function getProgressDashboard(): Promise<StudentProgressDashboardResponse> {
+  return requestJson<StudentProgressDashboardResponse>(
+    '/api/progress/dashboard',
+    undefined,
+    'Không thể tải dữ liệu tiến độ học tập lúc này.'
+  );
+}
+
+
+

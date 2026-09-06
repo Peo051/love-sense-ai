@@ -46,7 +46,7 @@ class OpenAICompatibleLLMClient:
         response_body = await self._post_with_retries(payload)
         return self._extract_choice_content(response_body)
 
-    async def extract_chat_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
+    async def extract_programming_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
         model_name = settings.vision_ocr_model.strip() or settings.llm_model.strip()
         self._validate_vision_settings(model_name)
 
@@ -57,9 +57,11 @@ class OpenAICompatibleLLMClient:
                 {
                     "role": "system",
                     "content": (
-                        "Bạn là bộ trích xuất chữ từ ảnh chụp màn hình bài tập lập trình hoặc đoạn văn bản. "
-                        "Chỉ trích xuất nội dung nhìn thấy trong ảnh, không suy đoán cảm xúc, "
-                        "không thêm kết luận và không tạo thông tin không có trong ảnh."
+                        "Bạn là chuyên gia OCR và phân tích tài liệu lập trình C# OOP. "
+                        "Nhiệm vụ của bạn là nhận diện chính xác văn bản từ ảnh chụp màn hình bài tập, đoạn mã C#, hoặc thông báo lỗi biên dịch/terminal. "
+                        "Chỉ trích xuất nội dung nhìn thấy trong ảnh, không tự ý sửa lỗi code của học viên, "
+                        "không thêm kết luận và không tạo thông tin không có trong ảnh. "
+                        "Giữ nguyên thụt lề mã nguồn và các ký tự cú pháp C#."
                     ),
                 },
                 {
@@ -68,10 +70,16 @@ class OpenAICompatibleLLMClient:
                         {
                             "type": "text",
                             "text": (
-                                "Hãy đọc ảnh chụp và trả về JSON hợp lệ theo schema: "
-                                '{"text":"...", "confidence": 0-100, "warnings":["..."]}. '
-                                "Giữ nguyên định dạng dòng code hoặc văn bản. "
-                                "Nếu ảnh mờ, chữ nhỏ hoặc khó đọc, thêm cảnh báo ngắn trong warnings."
+                                "Hãy đọc ảnh chụp và trích xuất thành JSON hợp lệ theo cấu trúc sau:\n"
+                                "{\n"
+                                '  "text": "toàn bộ văn bản nhìn thấy trong ảnh",\n'
+                                '  "problem_statement": "yêu cầu đề bài hoặc đặc tả bài toán nếu có trong ảnh (hoặc null)",\n'
+                                '  "student_code": "đoạn mã nguồn C# nếu có trong ảnh, giữ nguyên định dạng dòng và thụt lề (hoặc null)",\n'
+                                '  "compiler_error": "thông báo lỗi biên dịch/terminal hoặc mã lỗi CSxxxx nếu có trong ảnh (hoặc null)",\n'
+                                '  "confidence": 0-100,\n'
+                                '  "warnings": ["cảnh báo nếu ảnh mờ, bị cắt chữ, hoặc code khó đọc"]\n'
+                                "}\n"
+                                "Nếu ảnh chỉ chứa một phần (ví dụ chỉ có mã C# hoặc chỉ có lỗi compiler), hãy điền trường tương ứng và để các trường khác là null."
                             ),
                         },
                         {
@@ -82,11 +90,15 @@ class OpenAICompatibleLLMClient:
                 },
             ],
             "temperature": 0,
-            "max_tokens": 900,
+            "max_tokens": 1200,
         }
 
         response_body = await self._post_with_retries(payload)
         return self._parse_vision_response(response_body)
+
+    async def extract_chat_text_from_image(self, image_bytes: bytes, mime_type: str) -> VisionOcrResponse:
+        """Alias tương thích ngược cho extract_programming_text_from_image."""
+        return await self.extract_programming_text_from_image(image_bytes, mime_type)
 
     async def _post_with_retries(self, payload: dict[str, Any]) -> dict[str, Any]:
         max_retries = max(0, settings.llm_max_retries)
@@ -211,6 +223,9 @@ class OpenAICompatibleLLMClient:
 
         return VisionOcrResponse(
             text=result.text,
+            problem_statement=result.problem_statement,
+            student_code=result.student_code,
+            compiler_error=result.compiler_error,
             confidence=confidence,
             warnings=warnings,
             provider="vision",

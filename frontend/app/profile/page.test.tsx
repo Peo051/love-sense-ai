@@ -64,7 +64,7 @@ describe('ProfilePage', () => {
     render(<ProfilePage />);
 
     const nicknameInput = await screen.findByLabelText(/^Biệt danh$/i);
-    expect(nicknameInput).toHaveValue('An');
+    await waitFor(() => expect(nicknameInput).toHaveValue('An'));
     // Ensure no partner UI exists
     expect(screen.queryByLabelText(/người ấy/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/chiều cao/i)).not.toBeInTheDocument();

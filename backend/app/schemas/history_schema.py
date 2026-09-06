@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -9,7 +9,7 @@ class HistoryItem(BaseModel):
     analyzed_at: datetime
     overall_emotion: str
     confidence: float
-    emotion_distribution: dict[str, float]
+    emotion_distribution: dict[str, Any]
     summary: str
     context_note: str
     suggested_reply: str
