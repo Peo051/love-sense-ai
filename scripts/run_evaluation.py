@@ -37,8 +37,6 @@ def main():
     parser.add_argument("--dataset", type=str, default=None, help="Đường dẫn file dataset")
     parser.add_argument("--output-dir", type=str, default=None, help="Thư mục xuất kết quả")
     parser.add_argument("--seed", type=int, default=42, help="Seed ngẫu nhiên")
-    parser.add_argument("--allow-test-doubles", action="store_true", default=False, help=argparse.SUPPRESS)
-
     args = parser.parse_args()
 
     dataset_path = Path(args.dataset) if args.dataset else None
@@ -53,15 +51,30 @@ def main():
             dataset_path=dataset_path,
             output_dir=output_dir,
             seed=args.seed,
-            allow_test_doubles=args.allow_test_doubles,
+            allow_test_doubles=False,
         )
 
         result = runner.run()
         print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
+        print(f"Trạng thái run: {result['run_status']}")
         print(f"File dự đoán: {result['predictions_path']}")
+        print(f"File thất bại: {result['failure_report_path']}")
         print(f"File manifest: {result['manifest_path']}")
+
+        if result["run_status"] == "COMPLETE":
+            sys.exit(0)
+        elif result["run_status"] == "PARTIAL":
+            sys.stderr.write(f"\n[RESEARCH RUN PARTIAL] {result['failed_samples']} mẫu gặp sự cố.\n")
+            sys.exit(2)
+        else:
+            sys.stderr.write(f"\n[RESEARCH RUN FAILED] Toàn bộ mẫu thất bại hoặc run bị hủy.\n")
+            sys.exit(1)
+
     except ResearchProviderConfigurationError as exc:
         sys.stderr.write(f"\n[RESEARCH CONFIGURATION ERROR] {str(exc)}\n")
+        sys.exit(1)
+    except Exception as exc:
+        sys.stderr.write(f"\n[RESEARCH FATAL ERROR] {str(exc)}\n")
         sys.exit(1)
 
 

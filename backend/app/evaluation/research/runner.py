@@ -29,6 +29,8 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
+from pydantic import BaseModel, ConfigDict, Field
+
 from app.evaluation.firewall import GroundTruthFirewall
 from app.evaluation.prompts import (
     PROMPT_VERSIONS,
@@ -47,11 +49,39 @@ from app.evaluation.research.provider import (
     OpenAIResearchProvider,
     ResearchProvider,
     ResearchProviderConfigurationError,
+    ResearchProviderError,
+    ResearchProviderResponseError,
+    ResearchProviderSchemaError,
+    sanitize_error_message,
     validate_research_provider,
 )
 from app.evaluation.schemas import GroundTruth, ModelInput, assert_not_ground_truth
 
 logger = logging.getLogger(__name__)
+
+
+class ResearchFailureRecord(BaseModel):
+    """
+    Bản ghi định kiểu chi tiết cho mẫu gặp lỗi trong nghiên cứu đánh giá (APT-056).
+    Tuyệt đối không lưu trữ credentials, Authorization headers, hay toàn bộ code học sinh.
+    """
+
+    run_id: str
+    sample_id: Optional[str] = None
+    provider: str
+    model: str
+    attempts: int = 1
+    failure_type: str  # "TIMEOUT", "NETWORK_ERROR", "RATE_LIMIT", "AUTHENTICATION_ERROR", "HTTP_5XX", "EMPTY_RESPONSE", "MALFORMED_RESPONSE", "SCHEMA_ERROR", "CONFIGURATION_ERROR"
+    http_status: Optional[int] = None
+    retryable: bool = False
+    timestamp: str
+    message_safe: str
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
 
 
 class ResearchRunner:
@@ -73,6 +103,7 @@ class ResearchRunner:
         student_context: Optional[Dict[str, Any]] = None,
         *,
         allow_test_doubles: bool = False,
+        allow_partial: bool = True,
     ):
         self.system = system.upper()
         if self.system not in ("A", "B", "C", "D"):
@@ -88,6 +119,9 @@ class ResearchRunner:
         self.prompt_version = PROMPT_VERSIONS[self.system]
         self.student_context = student_context
         self.allow_test_doubles = allow_test_doubles
+        self.allow_partial = allow_partial
+        self.caching_enabled = False  # APT-056: cache disabled by default
+        self.failures: List[ResearchFailureRecord] = []
 
         # Preflight validation bắt buộc trước khi thực thi nghiên cứu (APT-055)
         self.provider_client = validate_research_provider(
@@ -145,22 +179,85 @@ class ResearchRunner:
         manifest_file = self.output_dir / "manifest.json"
 
         predictions: List[Dict[str, Any]] = []
+        self.failures = []
         t0_total = time.time()
 
         for idx, sample in enumerate(samples, start=1):
-            pred = self._predict_single(sample)
-            predictions.append(pred)
+            sample_id = None
+            if isinstance(sample, dict):
+                sample_id = sample.get("id") or sample.get("sample_id")
+            elif hasattr(sample, "sample_id"):
+                sample_id = sample.sample_id
+
+            try:
+                pred = self._predict_single(sample)
+                predictions.append(pred)
+            except ResearchProviderConfigurationError:
+                # Configuration error aborts entire run immediately!
+                raise
+            except ResearchProviderError as exc:
+                # Sample-level provider failure (APT-056)
+                failure_rec = ResearchFailureRecord(
+                    run_id=self.run_id,
+                    sample_id=sample_id,
+                    provider=self.provider,
+                    model=self.model,
+                    attempts=getattr(exc, "attempts", 1),
+                    failure_type=getattr(exc, "failure_type", "PROVIDER_ERROR"),
+                    http_status=getattr(exc, "http_status", None),
+                    retryable=getattr(exc, "retryable", False),
+                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    message_safe=getattr(exc, "message_safe", sanitize_error_message(str(exc))),
+                )
+                self.failures.append(failure_rec)
+                logger.warning(
+                    "[SAMPLE FAILED] Mẫu %s thất bại: %s (%s). Không tạo prediction.",
+                    sample_id,
+                    failure_rec.failure_type,
+                    failure_rec.message_safe,
+                )
+                if not self.allow_partial:
+                    raise
+            except Exception:
+                # Integrity / firewall violation aborts run
+                raise
+
             if idx % 30 == 0 or idx == len(samples):
-                print(f"  Đã hoàn thành {idx}/{len(samples)} mẫu...")
+                print(f"  Đã xử lý {idx}/{len(samples)} mẫu (thành công: {len(predictions)}, lỗi: {len(self.failures)})...")
 
         total_duration = time.time() - t0_total
 
-        # 1. Ghi file predictions.jsonl
+        # 1. Ghi file predictions.jsonl (chỉ chứa các dự đoán thành công từ Real Provider)
         with open(predictions_file, "w", encoding="utf-8") as f:
             for pred in predictions:
                 f.write(json.dumps(pred, ensure_ascii=False) + "\n")
 
-        # 2. Tạo và ghi immutable run manifest (hoàn toàn không có mock_mode)
+        # 2. Xác định trạng thái run: COMPLETE, PARTIAL, FAILED (APT-056)
+        total_samples_count = len(samples)
+        successful_count = len(predictions)
+        failed_count = len(self.failures)
+
+        if failed_count == 0 and successful_count == total_samples_count:
+            run_status = "COMPLETE"
+        elif successful_count > 0 and failed_count > 0:
+            run_status = "PARTIAL"
+        else:
+            run_status = "FAILED"
+
+        # 3. Tạo artifact failure_report.json
+        failure_report_file = self.output_dir / "failure_report.json"
+        failure_report = {
+            "run_id": self.run_id,
+            "run_status": run_status,
+            "total_samples": total_samples_count,
+            "successful_samples": successful_count,
+            "failed_samples": failed_count,
+            "failures": [f.model_dump() for f in self.failures],
+        }
+        with open(failure_report_file, "w", encoding="utf-8") as f:
+            json.dump(failure_report, f, ensure_ascii=False, indent=2)
+
+        # 4. Tạo và ghi immutable run manifest (chứa provenance, run_status, failure_report)
         system_descriptions = {
             "A": "Baseline A: Direct LLM Debugging Prompt",
             "B": "Baseline B: Generic Tutor Prompt",
@@ -183,20 +280,35 @@ class ResearchRunner:
             execution_duration_sec=total_duration,
             temperature=0.2 if self.system in ("C", "D") else 0.7,
             max_output_tokens=1024,
+            extra_config={
+                "run_status": run_status,
+                "successful_samples": successful_count,
+                "failed_samples": failed_count,
+                "failure_report_path": str(failure_report_file),
+                "caching_enabled": self.caching_enabled,
+            },
         )
+        manifest["run_status"] = run_status
+        manifest["successful_samples"] = successful_count
+        manifest["failed_samples"] = failed_count
 
         with open(manifest_file, "w", encoding="utf-8") as f:
             json.dump(manifest, f, ensure_ascii=False, indent=2)
 
-        print(f"\nĐÃ HOÀN THÀNH RUN THỰC NGHIỆM:")
-        print(f"- Predictions: {predictions_file}")
+        print(f"\nĐÃ HOÀN THÀNH RUN THỰC NGHIỆM ({run_status}):")
+        print(f"- Predictions: {predictions_file} ({successful_count} mẫu thành công)")
+        print(f"- Failures: {failure_report_file} ({failed_count} mẫu thất bại)")
         print(f"- Manifest: {manifest_file}")
 
         return {
             "run_id": self.run_id,
+            "run_status": run_status,
             "predictions_path": str(predictions_file),
             "manifest_path": str(manifest_file),
-            "total_samples": len(samples),
+            "failure_report_path": str(failure_report_file),
+            "total_samples": total_samples_count,
+            "successful_samples": successful_count,
+            "failed_samples": failed_count,
             "duration_sec": total_duration,
         }
 
@@ -220,10 +332,7 @@ class ResearchRunner:
 
             if loop and loop.is_running():
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    return executor.submit(
-                        asyncio.run,
-                        self.provider_client.generate_response(messages, temperature=temperature, max_tokens=max_tokens),
-                    ).result()
+                    return executor.submit(asyncio.run, gen).result()
             else:
                 return asyncio.run(gen)
         return str(gen)
@@ -292,12 +401,39 @@ class ResearchRunner:
         raw_response = self._call_provider(messages, temperature=temperature, max_tokens=1024)
         latency_ms = round((time.time() - t0) * 1000, 2)
 
+        # 6.1. Từ chối phản hồi rỗng từ provider (APT-056)
+        if raw_response is None or not isinstance(raw_response, str) or not raw_response.strip():
+            raise ResearchProviderResponseError(
+                "Empty provider response received.",
+                http_status=200,
+                failure_type="EMPTY_RESPONSE",
+                attempts=getattr(self.provider_client, "last_attempts", 1),
+            )
+
         prompt_chars = sum(len(m.get("content", "")) for m in messages)
         prompt_tokens = max(1, prompt_chars // 4)
         completion_tokens = max(1, len(raw_response) // 4)
 
         # 7. Parser: Bóc tách cấu trúc từ chuỗi phản hồi thô của provider
         parsed, json_valid, parse_actions = parse_provider_output(raw_response, self.system)
+
+        # 7.1. Hệ thống C và D bắt buộc định dạng JSON có cấu trúc (APT-056)
+        if self.system in ("C", "D"):
+            if not json_valid:
+                raise ResearchProviderSchemaError(
+                    f"System {self.system} requires structured JSON diagnosis, but provider returned unparseable text.",
+                    http_status=200,
+                    failure_type="MALFORMED_RESPONSE",
+                    attempts=getattr(self.provider_client, "last_attempts", 1),
+                )
+            bug_status = parsed.get("bug_status")
+            if bug_status not in ("has_bug", "no_bug", "insufficient_context"):
+                raise ResearchProviderSchemaError(
+                    f"System {self.system} output missing mandatory valid 'bug_status' (got '{bug_status}').",
+                    http_status=200,
+                    failure_type="SCHEMA_ERROR",
+                    attempts=getattr(self.provider_client, "last_attempts", 1),
+                )
 
         # 8. Non-Gold Validator: Kiểm định tính hợp lệ mà KHÔNG truy cập Ground Truth
         validated_data, validator_actions = validate_prediction_non_gold(
@@ -306,11 +442,13 @@ class ResearchRunner:
             parse_actions=parse_actions,
         )
 
-        # 9. Đóng gói Prediction từ dữ liệu đã qua kiểm định
+        # 9. Đóng gói Prediction từ dữ liệu đã qua kiểm định với đầy đủ provenance (APT-056)
         return {
             "id": model_input.sample_id,
             "model": self.model,
+            "requested_model": self.model,
             "provider": self.provider,
+            "provider_response_received": True,
             "prompt_version": self.prompt_version,
             "latency_ms": latency_ms,
             "prompt_tokens": prompt_tokens,
@@ -333,9 +471,9 @@ class ResearchRunner:
 
 
 def main():
-    """CLI Runner cho Nghiên cứu thực nghiệm (Research Evaluation CLI)."""
+    """CLI Runner cho Nghiên cứu thực nghiệm (Research Evaluation CLI) (APT-056)."""
     parser = argparse.ArgumentParser(
-        description="VietCSharpTutor Research Evaluation Runner CLI (APT-054)"
+        description="VietCSharpTutor Research Evaluation Runner CLI (APT-054 / APT-056)"
     )
     parser.add_argument("--system", type=str, required=True, choices=["A", "B", "C", "D"], help="Hệ thống cần đánh giá: A, B, C, hoặc D")
     parser.add_argument("--split", type=str, default="dev", choices=["dev", "validation", "test"], help="Phân vùng dữ liệu: dev, validation, test")
@@ -362,10 +500,25 @@ def main():
         )
         result = runner.run()
         print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
+        print(f"Trạng thái run: {result['run_status']}")
         print(f"File dự đoán: {result['predictions_path']}")
+        print(f"File thất bại: {result['failure_report_path']}")
         print(f"File manifest: {result['manifest_path']}")
+
+        if result["run_status"] == "COMPLETE":
+            sys.exit(0)
+        elif result["run_status"] == "PARTIAL":
+            sys.stderr.write(f"\n[RESEARCH RUN PARTIAL] {result['failed_samples']} mẫu gặp lỗi.\n")
+            sys.exit(2)
+        else:
+            sys.stderr.write(f"\n[RESEARCH RUN FAILED] Toàn bộ mẫu thất bại hoặc run bị hủy.\n")
+            sys.exit(1)
+
     except ResearchProviderConfigurationError as exc:
         sys.stderr.write(f"\n[RESEARCH CONFIGURATION ERROR] {str(exc)}\n")
+        sys.exit(1)
+    except Exception as exc:
+        sys.stderr.write(f"\n[RESEARCH FATAL ERROR] {str(exc)}\n")
         sys.exit(1)
 
 

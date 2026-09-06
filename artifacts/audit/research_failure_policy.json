@@ -1,0 +1,45 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "policy_name": "ResearchEvaluationFailLoudPolicy",
+  "version": "1.0.0",
+  "task": "APT-056",
+  "core_principle": "NO VALID REAL PROVIDER RESPONSE -> NO VALID RESEARCH PREDICTION",
+  "rules": {
+    "no_mock_fallback": true,
+    "no_ground_truth_fallback": true,
+    "no_heuristic_default_prediction": true,
+    "no_silent_model_substitution": true,
+    "no_silent_provider_substitution": true,
+    "cache_enabled_by_default": false
+  },
+  "retry_policy": {
+    "max_attempts": 3,
+    "base_delay_seconds": 0.1,
+    "backoff_factor": 2.0,
+    "max_delay_seconds": 5.0,
+    "retryable_http_statuses": [408, 429, 500, 502, 503, 504],
+    "retryable_exceptions": [
+      "ResearchProviderTimeoutError",
+      "ResearchProviderNetworkError",
+      "ResearchProviderRateLimitError"
+    ],
+    "non_retryable_http_statuses": [400, 401, 403, 404],
+    "non_retryable_exceptions": [
+      "ResearchProviderConfigurationError",
+      "ResearchProviderAuthenticationError",
+      "ResearchProviderSchemaError",
+      "GroundTruthLeakageError"
+    ]
+  },
+  "exit_codes": {
+    "COMPLETE": 0,
+    "PARTIAL": 2,
+    "FAILED": 1
+  },
+  "sanitization": {
+    "redact_authorization_headers": true,
+    "redact_api_keys": true,
+    "redact_raw_student_code": true,
+    "max_error_message_length": 500
+  }
+}

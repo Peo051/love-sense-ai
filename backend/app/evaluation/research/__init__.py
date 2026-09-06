@@ -19,16 +19,35 @@ from app.evaluation.research.provenance import (
 from app.evaluation.research.provider import (
     OpenAIResearchProvider,
     ResearchProvider,
+    ResearchProviderAuthenticationError,
     ResearchProviderConfigurationError,
+    ResearchProviderError,
+    ResearchProviderNetworkError,
+    ResearchProviderRateLimitError,
+    ResearchProviderResponseError,
+    ResearchProviderSchemaError,
+    ResearchProviderTimeoutError,
+    ResearchRetryPolicy,
+    sanitize_error_message,
     validate_research_provider,
 )
-from app.evaluation.research.runner import ResearchRunner
+from app.evaluation.research.runner import ResearchFailureRecord, ResearchRunner
 
 __all__ = [
     "ResearchRunner",
+    "ResearchFailureRecord",
     "ResearchProvider",
     "OpenAIResearchProvider",
+    "ResearchRetryPolicy",
+    "ResearchProviderError",
     "ResearchProviderConfigurationError",
+    "ResearchProviderTimeoutError",
+    "ResearchProviderNetworkError",
+    "ResearchProviderAuthenticationError",
+    "ResearchProviderRateLimitError",
+    "ResearchProviderResponseError",
+    "ResearchProviderSchemaError",
+    "sanitize_error_message",
     "validate_research_provider",
     "clean_json_string",
     "parse_provider_output",
