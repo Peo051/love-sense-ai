@@ -21,7 +21,6 @@ $$ language 'plpgsql';
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
-    firebase_uid VARCHAR(128) UNIQUE,
     hashed_password VARCHAR(255) NOT NULL,
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -29,7 +28,6 @@ CREATE TABLE users (
 );
 
 CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_firebase_uid ON users(firebase_uid);
 
 CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
@@ -83,13 +81,12 @@ CREATE TRIGGER update_partner_profiles_updated_at
 
 CREATE TABLE preferences (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    language VARCHAR(10) NOT NULL DEFAULT 'vi',
-    notification_enabled BOOLEAN NOT NULL DEFAULT TRUE,
-    theme VARCHAR(20) NOT NULL DEFAULT 'light',
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_preferences_user_id UNIQUE (user_id)
+    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    language VARCHAR(10) DEFAULT 'vi',
+    notification_enabled BOOLEAN DEFAULT TRUE,
+    theme VARCHAR(20) DEFAULT 'light',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX idx_preferences_user_id ON preferences(user_id);
@@ -137,9 +134,7 @@ CREATE TABLE analysis_sessions (
     consent_type VARCHAR(80) NOT NULL DEFAULT 'analysis_history',
     is_accepted BOOLEAN NOT NULL DEFAULT FALSE,
     accepted_at TIMESTAMP WITH TIME ZONE,
-    chat_text TEXT,
-    CONSTRAINT ck_analysis_sessions_chat_text_requires_consent
-        CHECK (chat_text IS NULL OR (save_input IS TRUE AND is_accepted IS TRUE))
+    chat_text TEXT
 );
 
 CREATE INDEX idx_analysis_sessions_user_id ON analysis_sessions(user_id);
@@ -147,11 +142,9 @@ CREATE INDEX idx_analysis_sessions_analyzed_at ON analysis_sessions(analyzed_at 
 CREATE INDEX idx_analysis_sessions_overall_emotion ON analysis_sessions(overall_emotion);
 CREATE INDEX idx_analysis_sessions_emotion_distribution ON analysis_sessions USING GIN (emotion_distribution);
 
-COMMENT ON TABLE users IS 'User accounts for simple bearer-token auth and Firebase Google Login mapping.';
-COMMENT ON COLUMN users.firebase_uid IS 'Firebase Authentication uid mapped to the internal user id.';
+COMMENT ON TABLE users IS 'User accounts for simple bearer-token auth.';
 COMMENT ON TABLE profiles IS 'Per-user profile information.';
 COMMENT ON TABLE partner_profiles IS 'Per-user partner profile information. Height, weight, and appearance are optional and must not be used to infer emotion.';
-COMMENT ON TABLE preferences IS 'Per-user preference settings.';
 COMMENT ON TABLE consents IS 'Per-user privacy and storage consent settings.';
 COMMENT ON TABLE analysis_sessions IS 'Per-user emotion analysis history.';
 COMMENT ON COLUMN analysis_sessions.chat_text IS 'Original chat text. Must stay NULL unless save_input consent is accepted.';

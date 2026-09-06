@@ -6,14 +6,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-from app.core.config import settings
 from app.database.connection import Base, get_db
 from app.main import app
-from app.services.rate_limiter import analyze_rate_limiter
 import app.models as app_models  # noqa: F401 - import models before metadata.create_all
 
 test_engine = create_async_engine(
-    "sqlite+aiosqlite:///file:testdb?mode=memory&cache=shared&uri=true",
+    "sqlite+aiosqlite:///:memory:",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,
 )
@@ -29,25 +27,6 @@ async def reset_database():
     async with test_engine.begin() as connection:
         await connection.run_sync(Base.metadata.drop_all)
         await connection.run_sync(Base.metadata.create_all)
-
-
-@pytest.fixture(autouse=True)
-def test_runtime_settings(monkeypatch):
-    monkeypatch.setattr(settings, "app_env", "test")
-    monkeypatch.setattr(settings, "database_auto_create", False)
-    monkeypatch.setattr(settings, "llm_mock_mode", True)
-    monkeypatch.setattr(settings, "llm_provider", "mock")
-    monkeypatch.setattr(settings, "llm_max_retries", 2)
-    monkeypatch.setattr(settings, "llm_retry_base_delay_seconds", 0)
-    monkeypatch.setattr(settings, "analyze_rate_limit_requests", 20)
-    monkeypatch.setattr(settings, "analyze_rate_limit_window_seconds", 60)
-
-
-@pytest.fixture(autouse=True)
-def reset_rate_limiter():
-    analyze_rate_limiter.reset()
-    yield
-    analyze_rate_limiter.reset()
 
 
 @pytest.fixture(autouse=True)

@@ -1,6 +1,6 @@
-# CodeSense AI Backend
+# Love Emotion Backend
 
-Backend FastAPI cho CodeSense AI (Adaptive Programming Tutor for Beginner C# OOP Students).
+Backend FastAPI cho Love Emotion Web.
 
 ## Công Nghệ
 
@@ -20,25 +20,12 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Mặc định `.env.example` dùng SQLite file để dev không cần chuẩn bị database trước:
-
-```text
-DATABASE_URL=sqlite+aiosqlite:///./love_emotion_dev.db
-DATABASE_AUTO_CREATE=true
-SECRET_KEY=change-this-for-local-dev
-```
-
-Khi dùng PostgreSQL hoặc Supabase, đổi `DATABASE_URL` và chạy schema/migrations trong `database/`:
+Chỉnh `DATABASE_URL` trong `.env`:
 
 ```text
 DATABASE_URL=postgresql://user:password@localhost:5432/loveemotion
-DATABASE_AUTO_CREATE=false
 SECRET_KEY=change-this-for-local-dev
 ```
-
-Backend tự chuyển `postgresql://` hoặc `postgres://` thành driver async `postgresql+asyncpg://`.
-
-Khi `APP_ENV=production`, backend không dùng SQLite fallback. Production phải cấu hình `FRONTEND_URL`, `DATABASE_URL` PostgreSQL/Supabase và `SECRET_KEY` thật trong secret store của hosting.
 
 ## Chạy Server
 
@@ -65,35 +52,6 @@ API chạy tại `http://localhost:8000`.
 
 Swagger UI: `http://localhost:8000/docs`
 
-## LLM / 9router
-
-Mặc định backend dùng mock để test ổn định. Để gọi 9router hoặc provider tương thích OpenAI Chat Completions, cấu hình trong `.env`:
-
-```text
-LLM_PROVIDER=9router
-LLM_BASE_URL=http://localhost:20128/v1
-LLM_API_KEY=
-LLM_MODEL=api_models_all
-LLM_MOCK_MODE=false
-LLM_TIMEOUT_SECONDS=30
-LLM_MAX_RETRIES=2
-LLM_RETRY_BASE_DELAY_SECONDS=0.25
-RATE_LIMIT_MAX_REQUESTS=20
-RATE_LIMIT_WINDOW_SECONDS=60
-```
-
-Không commit `.env` hoặc API key thật. Khi mock mode tắt, backend gọi provider với timeout, retry có kiểm soát cho lỗi tạm thời, rồi fallback mock response an toàn nếu provider vẫn lỗi. Lỗi cấu hình LLM không được log kèm API key.
-
-## Rate Limit
-
-`POST /api/analyze` có in-memory rate limit cho MVP:
-
-- Scope theo `user_id` nếu request có Bearer token hợp lệ.
-- Nếu chưa đăng nhập hoặc token không hợp lệ, scope theo IP client.
-- Mặc định: `RATE_LIMIT_MAX_REQUESTS=20` trong `RATE_LIMIT_WINDOW_SECONDS=60`.
-- Backend vẫn đọc alias cũ `ANALYZE_RATE_LIMIT_REQUESTS` và `ANALYZE_RATE_LIMIT_WINDOW_SECONDS` để không phá cấu hình dev cũ.
-- Vượt giới hạn trả `429` và header `Retry-After`.
-
 ## Auth Và Phân Quyền Dữ Liệu
 
 - User đăng ký bằng email/password tại `POST /api/register`.
@@ -113,5 +71,5 @@ Không commit `.env` hoặc API key thật. Khi mock mode tắt, backend gọi p
 ## Test
 
 ```powershell
-venv\Scripts\python.exe -m pytest tests
+python -m pytest tests
 ```

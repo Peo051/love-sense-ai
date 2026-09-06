@@ -1,19 +1,14 @@
 from datetime import datetime, timezone
-from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.analysis_session import AnalysisSession
 from app.models.consent import Consent
-from app.models.learning_session import LearningSession, StudentAttempt, TutorMessage
-from app.models.mastery_audit import StudentMasteryAudit
 from app.models.partner_profile import PartnerProfile as PartnerProfileModel
-from app.models.preference import Preference
 from app.models.profile import Profile as ProfileModel
-from app.models.student_profile import StudentProfile
-from app.models.student_skill_mastery import StudentSkillMastery
 from app.models.user import User
+from app.schemas.analyze_schema import AnalyzeResponse
 from app.schemas.consent_schema import ConsentSettings, ConsentUpdate
 from app.schemas.history_schema import HistoryItem, HistoryListResponse
 from app.schemas.profile_schema import PartnerProfile, ProfileResponse, ProfileUpsert, UserProfile
@@ -208,7 +203,7 @@ class HistoryRepository:
         user_id: str,
         *,
         chat_text: str,
-        result: Any,
+        result: AnalyzeResponse,
         save_input: bool,
         save_result: bool,
     ) -> AnalysisSession | None:
@@ -234,135 +229,6 @@ class HistoryRepository:
             chat_text=chat_text if save_input else None,
         )
         db.add(item)
-        await db.commit()
-        await db.refresh(item)
-        return item
-
-    @staticmethod
-    async def save_tutor_session(
-        db: AsyncSession,
-        user_id: str,
-        *,
-        problem_statement: str,
-        student_code: str,
-        compiler_error: str | None = None,
-        topic: str | None = None,
-        result: Any,
-        save_input: bool = False,
-        save_result: bool = True,
-    ) -> AnalysisSession | None:
-        if not (save_result or save_input):
-            return None
-
-        privacy_consent = await ConsentRepository.get_consent(db, user_id, "privacy_settings")
-        if not privacy_consent.history_enabled:
-            return None
-
-        accepted_at = utc_now()
-        issue_type = getattr(result.diagnosis, "issue_type", "diagnostic_feedback")
-        confidence = getattr(result.diagnosis, "confidence", 1.0)
-        summary = f"Chẩn đoán OOP: {issue_type} (Mức {result.hint_level})"
-
-        # Privacy Invariant:
-        # Khi save_input=False: context_note chỉ lưu chủ đề chung, tuyệt đối không rò rỉ problem_statement.
-        # Khi save_input=True: context_note được phép lưu trích đoạn đề bài.
-        if save_input:
-            context_note = f"Chủ đề: {topic or 'C# OOP'}. Đề bài: {problem_statement[:150]}"
-        else:
-            context_note = f"Chủ đề: {topic or 'C# OOP'}"
-
-        diagnosis_dict = (
-            result.diagnosis.model_dump()
-            if hasattr(result.diagnosis, "model_dump")
-            else dict(result.diagnosis)
-        )
-        highest_hint_level_used = getattr(result, "highest_hint_level_used", result.hint_level)
-        solution_revealed = getattr(result, "solution_revealed", False)
-        success_state = getattr(result, "success_state", "in_progress")
-
-        # save_result may store: diagnosis, skills, hint usage, success state, summary
-        distribution_data: dict[str, Any] = {
-            "knowledge_components": result.knowledge_components,
-            "hint_level": result.hint_level,
-            "highest_hint_level_used": highest_hint_level_used,
-            "solution_revealed": solution_revealed,
-            "teaching_strategy": result.teaching_strategy,
-            "prompt_version": getattr(result, "prompt_version", "v1"),
-            "diagnosis": diagnosis_dict,
-            "success_state": success_state,
-        }
-
-        # save_input explicitly permits storage of: problem statement, student code, compiler error
-        if save_input:
-            distribution_data["student_code"] = student_code
-            distribution_data["problem_statement"] = problem_statement
-            if compiler_error:
-                distribution_data["compiler_error"] = compiler_error
-
-        item = AnalysisSession(
-            user_id=user_id,
-            overall_emotion=issue_type,
-            confidence=confidence,
-            emotion_distribution=distribution_data,
-            summary=summary,
-            context_note=context_note,
-            suggested_reply=result.tutor_response,
-            warning=result.next_action,
-            save_input=save_input,
-            save_result=save_result,
-            consent_type="tutor_submission",
-            is_accepted=True,
-            accepted_at=accepted_at,
-            chat_text=student_code if save_input else None,
-        )
-        db.add(item)
-        await db.commit()
-        await db.refresh(item)
-        return item
-
-    @staticmethod
-    async def get_tutor_session(
-        db: AsyncSession,
-        user_id: str,
-        session_id: str,
-    ) -> AnalysisSession | None:
-        """Lấy phiên gia sư của người dùng từ cơ sở dữ liệu."""
-        result = await db.execute(
-            select(AnalysisSession).where(
-                AnalysisSession.id == session_id,
-                AnalysisSession.user_id == user_id,
-                AnalysisSession.consent_type == "tutor_submission",
-            )
-        )
-        return result.scalar_one_or_none()
-
-    @staticmethod
-    async def update_tutor_hint_progression(
-        db: AsyncSession,
-        user_id: str,
-        session_id: str,
-        next_level: int,
-        hint_payload: Any,
-    ) -> AnalysisSession | None:
-        """Cập nhật tiến trình gợi ý mới vào phiên học trong DB."""
-        item = await HistoryRepository.get_tutor_session(db, user_id, session_id)
-        if not item:
-            return None
-
-        current_dist = dict(item.emotion_distribution or {})
-        prev_highest = current_dist.get("highest_hint_level_used", current_dist.get("hint_level", 1))
-        new_highest = max(prev_highest, next_level)
-
-        current_dist["hint_level"] = next_level
-        current_dist["highest_hint_level_used"] = new_highest
-        current_dist["solution_revealed"] = hint_payload.solution_revealed
-        current_dist["teaching_strategy"] = hint_payload.teaching_strategy
-
-        item.emotion_distribution = current_dist
-        item.suggested_reply = hint_payload.tutor_response
-        item.warning = hint_payload.next_action
-        item.summary = f"Chẩn đoán OOP: {item.overall_emotion} (Mức {next_level})"
-
         await db.commit()
         await db.refresh(item)
         return item
@@ -404,55 +270,10 @@ class HistoryRepository:
 class UserDataRepository:
     @staticmethod
     async def delete_all_user_data(db: AsyncSession, user_id: str) -> None:
-        """
-        Xóa toàn bộ dữ liệu thuộc sở hữu của người dùng hiện tại:
-        - student profile
-        - sessions (learning_sessions, analysis_sessions)
-        - attempts (student_attempts)
-        - messages (tutor_messages)
-        - mastery (student_skill_mastery)
-        - audit records (student_mastery_audits)
-        - general consent settings
-        - stored inputs (mã nguồn và dữ liệu đầu vào đã lưu)
-        
-        Quy tắc bất biến: Bảo lưu Vision-specific consent (Preserve Vision-specific consent).
-        """
-        user_session_subquery = select(LearningSession.id).where(LearningSession.user_id == user_id)
-
-        # 1. Xóa các tin nhắn gia sư thuộc các phiên học của user
-        await db.execute(delete(TutorMessage).where(TutorMessage.session_id.in_(user_session_subquery)))
-
-        # 2. Xóa các bản ghi audit mastery của user
-        await db.execute(delete(StudentMasteryAudit).where(StudentMasteryAudit.user_id == user_id))
-
-        # 3. Xóa các lần thử làm bài (student attempts) thuộc các phiên học của user
-        await db.execute(delete(StudentAttempt).where(StudentAttempt.session_id.in_(user_session_subquery)))
-
-        # 4. Xóa các phiên học đa lượt của user
-        await db.execute(delete(LearningSession).where(LearningSession.user_id == user_id))
-
-        # 5. Xóa các phiên phân tích đơn lẻ (analysis sessions) của user
         await db.execute(delete(AnalysisSession).where(AnalysisSession.user_id == user_id))
-
-        # 6. Xóa độ thành thạo kỹ năng (student mastery) của user
-        await db.execute(delete(StudentSkillMastery).where(StudentSkillMastery.user_id == user_id))
-
-        # 7. Xóa hồ sơ học viên (student profile) của user
-        await db.execute(delete(StudentProfile).where(StudentProfile.user_id == user_id))
-
-        # 8. Xóa consent cấu hình chung, NHƯNG BẢO LƯU Vision-specific consent
-        await db.execute(
-            delete(Consent).where(
-                Consent.user_id == user_id,
-                ~Consent.consent_type.in_(["vision", "vision_ocr", "vision_consent"]),
-            )
-        )
-
-        # 9. Xóa các model hồ sơ phụ trợ/legacy nếu còn tồn tại
+        await db.execute(delete(Consent).where(Consent.user_id == user_id))
         await db.execute(delete(ProfileModel).where(ProfileModel.user_id == user_id))
         await db.execute(delete(PartnerProfileModel).where(PartnerProfileModel.user_id == user_id))
-        await db.execute(delete(Preference).where(Preference.user_id == user_id))
-
         await db.commit()
 
 
@@ -463,11 +284,6 @@ class UserRepository:
         return result.scalar_one_or_none()
 
     @staticmethod
-    async def get_by_firebase_uid(db: AsyncSession, firebase_uid: str) -> User | None:
-        result = await db.execute(select(User).where(User.firebase_uid == firebase_uid))
-        return result.scalar_one_or_none()
-
-    @staticmethod
     async def get_by_id(db: AsyncSession, user_id: str) -> User | None:
         result = await db.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
@@ -475,30 +291,6 @@ class UserRepository:
     @staticmethod
     async def create_user(db: AsyncSession, *, email: str, hashed_password: str) -> User:
         user = User(email=email.lower(), hashed_password=hashed_password)
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-        return user
-
-    @staticmethod
-    async def get_or_create_firebase_user(db: AsyncSession, *, firebase_uid: str, email: str) -> User:
-        existing_by_uid = await UserRepository.get_by_firebase_uid(db, firebase_uid)
-        if existing_by_uid:
-            return existing_by_uid
-
-        normalized_email = email.lower()
-        existing_by_email = await UserRepository.get_by_email(db, normalized_email)
-        if existing_by_email:
-            existing_by_email.firebase_uid = firebase_uid
-            await db.commit()
-            await db.refresh(existing_by_email)
-            return existing_by_email
-
-        user = User(
-            email=normalized_email,
-            firebase_uid=firebase_uid,
-            hashed_password="firebase-auth-managed-user",
-        )
         db.add(user)
         await db.commit()
         await db.refresh(user)
