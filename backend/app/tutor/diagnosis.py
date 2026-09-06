@@ -26,6 +26,7 @@ from app.schemas.tutor_schema import (
     TutorDiagnosis,
     TutorEvidence,
 )
+from app.tutor.skill_taxonomy import SkillTaxonomy
 from app.tutor.taxonomy import (
     TAXONOMY_ISSUE_TYPES,
     normalize_category,
@@ -65,7 +66,7 @@ class DiagnosisSubsystem:
                     code=raw_code if raw_code else "// Mã rỗng",
                     reason="Mã nguồn nộp vào quá ngắn hoặc chưa hoàn thiện cấu trúc lớp để có thể đưa ra kết luận.",
                 ),
-                knowledge_components=["csharp_syntax_basics", "class_definition"],
+                knowledge_components=["csharp.class_object"],
                 possible_misconception=None,
             )
 
@@ -84,10 +85,9 @@ class DiagnosisSubsystem:
                     reason=f"Trong getter của thuộc tính '{prop_name}', việc 'return {prop_name};' gọi lại chính thuộc tính này khiến hàm tự gọi đệ quy vô hạn dẫn tới ngoại lệ StackOverflowException khi thực thi.",
                 ),
                 knowledge_components=[
-                    "csharp_properties",
-                    "property_accessors",
-                    "backing_fields",
-                    "recursion",
+                    "csharp.property",
+                    "csharp.getter",
+                    "csharp.field",
                 ],
                 possible_misconception=PossibleMisconception(
                     type="property_vs_backing_field_confusion",
@@ -108,9 +108,9 @@ class DiagnosisSubsystem:
                 confidence=0.95,
                 evidence=TutorEvidence(code=snip, reason=reason),
                 knowledge_components=[
-                    "static_members",
-                    "instance_members",
-                    "oop_state_management",
+                    "csharp.static",
+                    "csharp.instance",
+                    "csharp.class_object",
                 ],
                 possible_misconception=PossibleMisconception(
                     type="static_vs_instance_scope_confusion",
@@ -134,9 +134,9 @@ class DiagnosisSubsystem:
                     reason=f"Phép gán '{var_name} = {var_name};' chỉ gán tham số cục bộ vào chính nó, không làm thay đổi giá trị của biến trường thuộc tính của đối tượng.",
                 ),
                 knowledge_components=[
-                    "csharp_constructor",
-                    "this_keyword",
-                    "variable_shadowing",
+                    "csharp.constructor",
+                    "csharp.this",
+                    "csharp.parameter",
                 ],
                 possible_misconception=PossibleMisconception(
                     type="parameter_shadowing_confusion",
@@ -157,9 +157,9 @@ class DiagnosisSubsystem:
                 confidence=0.9,
                 evidence=TutorEvidence(code=snip, reason=reason),
                 knowledge_components=[
-                    "property_validation",
-                    "setter_value_keyword",
-                    "encapsulation",
+                    "csharp.setter",
+                    "csharp.validation",
+                    "csharp.encapsulation",
                 ],
                 possible_misconception=PossibleMisconception(
                     type="setter_validation_logic_confusion",
@@ -181,9 +181,8 @@ class DiagnosisSubsystem:
                     reason="Mã nguồn hoàn chỉnh, cú pháp hợp lệ và tuân thủ các nguyên lý hướng đối tượng C#.",
                 ),
                 knowledge_components=[
-                    "csharp_oop_basics",
-                    "encapsulation",
-                    "class_design",
+                    "csharp.class_object",
+                    "csharp.encapsulation",
                 ],
                 possible_misconception=None,
             )
@@ -219,7 +218,7 @@ class DiagnosisSubsystem:
             location="unknown",
             confidence=0.5,
             evidence=None,
-            knowledge_components=["csharp_oop"],
+            knowledge_components=["csharp.class_object"],
             possible_misconception=None,
         )
 
@@ -232,6 +231,7 @@ class DiagnosisSubsystem:
         Chuẩn hóa chẩn đoán từ bất kỳ nguồn nào (LLM hoặc dict) về TutorDiagnosis chuẩn taxonomy.
         Đảm bảo nguyên tắc:
         - Category và IssueType khớp taxonomy chuẩn.
+        - Knowledge components luôn được ánh xạ sang các mã kỹ năng chuẩn C# OOP (không cho phép LLM tạo skill tùy ý).
         - Không gán misconception khi là NO_BUG hoặc INSUFFICIENT_CONTEXT.
         - Severity là 'info' khi NO_BUG.
         """
@@ -246,6 +246,14 @@ class DiagnosisSubsystem:
         norm_cat, norm_issue = normalize_diagnosis_labels(raw_cat, raw_issue)
         diag_dict["category"] = norm_cat
         diag_dict["issue_type"] = norm_issue
+
+        # Ánh xạ knowledge_components sang taxonomy chuẩn
+        raw_kc = diag_dict.get("knowledge_components") or []
+        diag_dict["knowledge_components"] = SkillTaxonomy.map_diagnosis_to_skills(
+            category=norm_cat,
+            issue_type=norm_issue,
+            raw_kc=raw_kc,
+        )
 
         # Đảm bảo confidence hợp lệ
         conf = diag_dict.get("confidence", 0.5)

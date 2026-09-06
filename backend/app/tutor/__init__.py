@@ -19,6 +19,11 @@ from app.tutor.provider import (
     TutorProviderError,
 )
 from app.tutor.service import TutorService, TutorServiceError
+from app.tutor.skill_taxonomy import (
+    CSHARP_OOP_SKILLS_V1,
+    Skill,
+    SkillTaxonomy,
+)
 from app.tutor.taxonomy import (
     TAXONOMY_ISSUE_TYPES,
     normalize_category,
@@ -34,6 +39,7 @@ from app.tutor.verification import (
 )
 
 __all__ = [
+    "CSHARP_OOP_SKILLS_V1",
     "DiagnosisCategory",
     "DiagnosisSubsystem",
     "DeterministicMockTutorProvider",
@@ -49,6 +55,8 @@ __all__ = [
     "LeakageCheckResult",
     "OpenAITutorProvider",
     "SandboxedCompilerBackend",
+    "Skill",
+    "SkillTaxonomy",
     "SolutionLeakageGuard",
     "StaticAndPatternExecutionBackend",
     "TAXONOMY_ISSUE_TYPES",

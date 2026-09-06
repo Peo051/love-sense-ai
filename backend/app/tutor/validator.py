@@ -8,6 +8,7 @@ from app.schemas.tutor_schema import DiagnosisCategory, TutorResponse
 from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.evidence_grounding import EvidenceGroundingValidator
 from app.tutor.leakage_guard import SolutionLeakageGuard
+from app.tutor.skill_taxonomy import SkillTaxonomy
 
 
 class TutorOutputValidationError(Exception):
@@ -78,6 +79,17 @@ class TutorOutputValidator:
         if "diagnosis" in parsed_data and isinstance(parsed_data["diagnosis"], dict):
             norm_diag = DiagnosisSubsystem.normalize_diagnosis(parsed_data["diagnosis"])
             parsed_data["diagnosis"] = norm_diag.model_dump()
+
+            # Đồng bộ và chuẩn hóa knowledge_components cấp cao nhất với taxonomy
+            top_kc = parsed_data.get("knowledge_components") or []
+            if top_kc:
+                parsed_data["knowledge_components"] = SkillTaxonomy.map_diagnosis_to_skills(
+                    category=norm_diag.category,
+                    issue_type=norm_diag.issue_type,
+                    raw_kc=top_kc,
+                )
+            else:
+                parsed_data["knowledge_components"] = list(norm_diag.knowledge_components)
 
             # Quy tắc sư phạm cốt lõi: No-bug cases tuyệt đối không gán misconception
             if norm_diag.category == DiagnosisCategory.NO_BUG:
