@@ -1,0 +1,477 @@
+{
+  "metadata": {
+    "task": "APT-043",
+    "title": "Trace End-to-End Evaluation Data Flow",
+    "version": "codesense-research-v1.0",
+    "branch": "audit/evaluation-integrity-v1",
+    "auditor_role": "Independent Research Auditor",
+    "dataset": "data/vietcsharptutor/vietcsharptutor_600.jsonl",
+    "systems": [
+      "Baseline A",
+      "Baseline B",
+      "Proposed C",
+      "Proposed D"
+    ]
+  },
+  "audit_questions": {
+    "q1_ground_truth_first_loaded": {
+      "question": "Where is ground truth first loaded?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner.load_dataset",
+      "lines": "106-124",
+      "finding": "Ground truth được nạp ngay từ bước đầu tiên khi đọc tệp jsonl. Toàn bộ 25 trường của từng mẫu (bao gồm cả 14 trường nhãn vàng chuẩn) được tải đồng thời vào bộ nhớ RAM dưới dạng list[dict]."
+    },
+    "q2_model_input_first_created": {
+      "question": "Where is ModelInput first created?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "204-209",
+      "finding": "Trong EvaluationRunner KHÔNG CÓ đối tượng hoặc lớp ModelInput riêng biệt. Biến 'sample: Dict[str, Any]' nguyên bản từ dataset loader được truyền thẳng vào hàm suy luận, không có bất kỳ bước đóng gói (encapsulation) hay loại bỏ nhãn vàng nào."
+    },
+    "q3_model_input_contains_full_sample": {
+      "question": "Does ModelInput contain the full dataset sample?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "146, 204",
+      "finding": "CÓ. Tham số truyền vào hàm _predict_single chính là đối tượng sample đầy đủ 25 trường, chứa cả problem_statement, student_code lẫn reference_solution, bug_location, evidence, error_category, bug_type, v.v."
+    },
+    "q4_gold_annotation_attached_at_model_call": {
+      "question": "At model-call time, does any gold annotation remain attached?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "206-209",
+      "finding": "CÓ. Toàn bộ 14 trường nhãn vàng vẫn đính kèm nguyên vẹn trên đối tượng sample tại thời điểm gọi hàm suy luận. Các biến sample_id, topic, gt_status được bóc tách trực tiếp từ sample ngay tại đầu hàm."
+    },
+    "q5_provider_adapter_access_ground_truth": {
+      "question": "Can the provider adapter access ground truth?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "214-345",
+      "finding": "CÓ. Trong mock mode (chế độ mặc định được dùng để sinh kết quả công bố), không có provider adapter độc lập bên ngoài. Mock logic nằm trực tiếp bên trong runner._predict_single, do đó có toàn quyền đọc và truy xuất mọi trường ground truth của sample."
+    },
+    "q6_mock_code_access_ground_truth": {
+      "question": "Can mock code access ground truth?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "233-243, 266-276, 299-309, 331-342",
+      "finding": "CÓ VÀ ĐÃ TRUY CẬP TRỰC TIẾP. Mã nguồn mock trong runner.py truy cập trực tiếp sample['reference_solution'] (hệ thống A), sample['error_category'], sample['bug_type'], sample['bug_location'], sample['evidence'], sample['knowledge_components'], sample['possible_misconception'], sample['hint_1/2/3'] (hệ thống B, C, D)."
+    },
+    "q7_output_parser_access_ground_truth": {
+      "question": "Can output parser access ground truth?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "224-246, 257-279, 290-312, 323-345",
+      "finding": "Không có parser độc lập trong mock runner. Kết quả dict được khởi tạo trực tiếp từ biến sample trong cùng scope hàm, nên parser (nếu coi việc dựng dict là parser) có quyền truy cập 100% vào ground truth."
+    },
+    "q8_validators_replace_wrong_predictions": {
+      "question": "Can validators replace wrong predictions with correct values?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner._predict_single",
+      "lines": "233-236, 266-269, 299-304, 331-337",
+      "finding": "Validator thực tế không được gọi; trường validator_actions là chuỗi cố định. Tuy nhiên, logic mock đóng vai trò thay thế: khi is_diag_correct được giả lập là True, mock runner gán trực tiếp giá trị đúng từ sample vào pred, thay thế mọi khả năng sai sót của mô hình."
+    },
+    "q9_prediction_serialization_pull_fields": {
+      "question": "Can prediction serialization pull fields from the original sample?",
+      "file": "backend/app/evaluation/runner.py",
+      "function": "EvaluationRunner.run",
+      "lines": "153-156",
+      "finding": "CÓ. Quá trình serialize vào predictions.jsonl ghi lại đối tượng pred do _predict_single trả về. Vì pred kéo thẳng dữ liệu từ sample, quá trình serialization trực tiếp lưu các trường nhãn vàng vào tệp kết quả dự đoán."
+    },
+    "q10_metrics_distinguish_model_from_synthetic": {
+      "question": "Can metrics distinguish model-generated predictions from synthetic predictions?",
+      "file": "backend/app/evaluation/metrics.py",
+      "function": "TutoringMetricsSuite.evaluate",
+      "lines": "163-176",
+      "finding": "HOÀN TOÀN KHÔNG THỂ. Bộ công cụ tính metrics chỉ đọc predictions.jsonl và vietcsharptutor_600.jsonl, đối chiếu qua khóa 'id'. Cấu trúc JSON dự đoán của mock giống hệt dự đoán thật từ LLM, khiến metrics suite hoàn toàn không thể phát hiện các giá trị này là do sao chép nhãn vàng mà ra."
+    }
+  },
+  "system_traces": {
+    "Baseline_A": [
+      {
+        "step": 1,
+        "name": "Dataset File to Loader",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.load_dataset",
+        "input_type": "File (data/vietcsharptutor/vietcsharptutor_600.jsonl)",
+        "output_type": "List[Dict[str, Any]] (in-memory samples)",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [
+          "JSON string line -> Python dict"
+        ],
+        "ground_truth_availability": "Full 14 gold fields loaded in memory",
+        "leakage_risk": "SAFE (nạp dữ liệu ban đầu)"
+      },
+      {
+        "step": 2,
+        "name": "Sample Filtering by Split",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.load_dataset",
+        "input_type": "List[Dict[str, Any]] (600 samples)",
+        "output_type": "List[Dict[str, Any]] (filtered split samples, e.g. 120 or 360)",
+        "fields_added": [
+          "dataset_hash",
+          "split_hash"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Full gold fields retained",
+        "leakage_risk": "SAFE"
+      },
+      {
+        "step": 3,
+        "name": "System Selection & Sample Dispatch",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single",
+        "input_type": "Dict[str, Any] (sample)",
+        "output_type": "Branch execution (system == 'A')",
+        "fields_added": [
+          "sample_id",
+          "topic",
+          "gt_status",
+          "simulated_latency"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Full gold fields available in local scope",
+        "leakage_risk": "HIGH (đọc topic và gt_status trước suy luận)"
+      },
+      {
+        "step": 4,
+        "name": "Prompt Builder (BYPASSED IN RUNNER)",
+        "file": "backend/app/evaluation/prompts.py",
+        "function": "build_prompt_a",
+        "input_type": "(problem_statement, student_code, compiler_error)",
+        "output_type": "str (Formatted user prompt)",
+        "fields_added": [],
+        "fields_removed": [
+          "All gold fields excluded from prompt text"
+        ],
+        "fields_transformed": [
+          "Text templating"
+        ],
+        "ground_truth_availability": "No gold fields in prompt template",
+        "leakage_risk": "CRITICAL FINDING: Bị bỏ qua hoàn toàn trong runner.py mock mode! Runner không hề gọi hàm này."
+      },
+      {
+        "step": 5,
+        "name": "Mock Execution & Leakage Injection",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single (A branch)",
+        "input_type": "Dict[str, Any] (sample)",
+        "output_type": "Dict[str, Any] (prediction)",
+        "fields_added": [
+          "model",
+          "provider",
+          "prompt_version",
+          "latency_ms",
+          "prompt_tokens",
+          "completion_tokens",
+          "json_valid",
+          "validator_actions"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "hint_1 <- BỊ TIẾP XÚC VÀ NHÚNG sample['reference_solution']",
+          "error_category <- sample['error_category'] nếu is_diag_correct else 'compile_error'",
+          "bug_location <- sample['bug_location'] nếu is_diag_correct và p < 0.60 else None"
+        ],
+        "ground_truth_availability": "Direct access and copy of reference_solution",
+        "leakage_risk": "CRITICAL (Solution Leakage cố ý được tạo ra bằng cách nhúng reference_solution)"
+      },
+      {
+        "step": 6,
+        "name": "Validation & Output Formatting",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single (A branch)",
+        "input_type": "Dict[str, Any] (prediction)",
+        "output_type": "Dict[str, Any] (finalized prediction)",
+        "fields_added": [
+          "validator_actions: ['direct_prompt_parsed']"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Full prediction dict formed",
+        "leakage_risk": "SAFE"
+      },
+      {
+        "step": 7,
+        "name": "Prediction Storage & Manifest",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.run",
+        "input_type": "List[Dict[str, Any]] (predictions)",
+        "output_type": "Files: predictions.jsonl & manifest.json",
+        "fields_added": [
+          "manifest metadata"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "dict -> JSON string"
+        ],
+        "ground_truth_availability": "Predictions written to disk contain leaked reference_solution",
+        "leakage_risk": "HIGH"
+      },
+      {
+        "step": 8,
+        "name": "Metric Evaluation",
+        "file": "backend/app/evaluation/metrics.py",
+        "function": "TutoringMetricsSuite.evaluate",
+        "input_type": "(predictions, ground_truth)",
+        "output_type": "Dict[str, Any] (metrics result)",
+        "fields_added": [
+          "overall metrics",
+          "per_topic metrics",
+          "resource stats"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "Calculates solution_leakage_rate == 1.0 due to leaked hint_1"
+        ],
+        "ground_truth_availability": "Joined via sample_id",
+        "leakage_risk": "SAFE (Metric hoạt động đúng logic đo rò rỉ)"
+      }
+    ],
+    "Baseline_B": [
+      {
+        "step": 1,
+        "name": "Dataset File to Loader",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.load_dataset",
+        "input_type": "File (jsonl)",
+        "output_type": "List[Dict[str, Any]]",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [
+          "JSON string -> dict"
+        ],
+        "ground_truth_availability": "Full 14 gold fields loaded",
+        "leakage_risk": "SAFE"
+      },
+      {
+        "step": 2,
+        "name": "Prompt Builder (BYPASSED)",
+        "file": "backend/app/evaluation/prompts.py",
+        "function": "build_prompt_b",
+        "input_type": "(problem_statement, student_code, compiler_error)",
+        "output_type": "str",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Not invoked in mock runner",
+        "leakage_risk": "CRITICAL FINDING: Bị bỏ qua"
+      },
+      {
+        "step": 3,
+        "name": "Mock Execution & Ground Truth Pulling",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single (B branch)",
+        "input_type": "Dict[str, Any] (sample)",
+        "output_type": "Dict[str, Any] (prediction)",
+        "fields_added": [
+          "validator_actions: ['generic_tutor_parsed']"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "error_category <- sample['error_category'] nếu is_diag_correct else 'logic_error'",
+          "bug_type <- sample['bug_type'] nếu is_diag_correct else 'general_oop_mistake'",
+          "bug_location <- sample.get('bug_location') nếu p < 0.72 else None",
+          "evidence <- sample.get('evidence') nếu p < 0.80 else None",
+          "hint_2 <- f'Gợi ý sửa code: {sample.get(\"evidence\", \"\")}'",
+          "hint_3 <- sample.get('hint_3', '')",
+          "reference_diagnosis <- sample.get('reference_diagnosis', '')",
+          "explanation_vi <- sample.get('explanation_vi', '')"
+        ],
+        "ground_truth_availability": "Direct copy of evidence, hints, diagnosis, explanation",
+        "leakage_risk": "CRITICAL (Sao chép nhiều trường nhãn vàng chuẩn)"
+      },
+      {
+        "step": 4,
+        "name": "Prediction Storage & Metric Evaluation",
+        "file": "backend/app/evaluation/runner.py; metrics.py",
+        "function": "EvaluationRunner.run; TutoringMetricsSuite.evaluate",
+        "input_type": "Predictions + Ground Truth",
+        "output_type": "Metrics JSON",
+        "fields_added": [
+          "11 pedagogical metrics"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Offline matching",
+        "leakage_risk": "HIGH"
+      }
+    ],
+    "Proposed_C": [
+      {
+        "step": 1,
+        "name": "Dataset File to Loader",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.load_dataset",
+        "input_type": "File (jsonl)",
+        "output_type": "List[Dict[str, Any]]",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Full 14 gold fields loaded",
+        "leakage_risk": "SAFE"
+      },
+      {
+        "step": 2,
+        "name": "Prompt Builder (BYPASSED)",
+        "file": "backend/app/evaluation/prompts.py",
+        "function": "build_prompt_c",
+        "input_type": "(problem_statement, student_code, compiler_error)",
+        "output_type": "str",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Not invoked in mock runner",
+        "leakage_risk": "CRITICAL FINDING: Bị bỏ qua"
+      },
+      {
+        "step": 3,
+        "name": "Mock Execution & Ground Truth Injection",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single (C branch)",
+        "input_type": "Dict[str, Any] (sample)",
+        "output_type": "Dict[str, Any] (prediction)",
+        "fields_added": [
+          "validator_actions: ['structured_schema_verified', 'evidence_grounded']"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "pred_status <- gt_status (khi is_diag_correct ~92%)",
+          "error_category <- sample['error_category']",
+          "bug_type <- sample['bug_type']",
+          "bug_location <- sample.get('bug_location')",
+          "evidence <- sample.get('evidence')",
+          "knowledge_components <- sample.get('knowledge_components', [])",
+          "possible_misconception <- sample.get('possible_misconception')",
+          "hint_1/2/3 <- sample.get('hint_1/2/3')",
+          "reference_diagnosis <- sample.get('reference_diagnosis')",
+          "explanation_vi <- sample.get('explanation_vi')"
+        ],
+        "ground_truth_availability": "Copy of 100% gold fields khi is_diag_correct == True",
+        "leakage_risk": "CRITICAL (Ground Truth Copying)"
+      },
+      {
+        "step": 4,
+        "name": "Prediction Storage & Metric Evaluation",
+        "file": "backend/app/evaluation/runner.py; metrics.py",
+        "function": "EvaluationRunner.run; TutoringMetricsSuite.evaluate",
+        "input_type": "Predictions + Ground Truth",
+        "output_type": "Metrics JSON",
+        "fields_added": [
+          "11 metrics, Diag Acc ~92%, Loc Acc ~92%"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Offline matching",
+        "leakage_risk": "HIGH"
+      }
+    ],
+    "Proposed_D": [
+      {
+        "step": 1,
+        "name": "Dataset File to Loader",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.load_dataset",
+        "input_type": "File (jsonl)",
+        "output_type": "List[Dict[str, Any]]",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Full 14 gold fields loaded",
+        "leakage_risk": "SAFE"
+      },
+      {
+        "step": 2,
+        "name": "Context Builder (BYPASSED)",
+        "file": "backend/app/tutor/context_builder.py",
+        "function": "StudentContextBuilder",
+        "input_type": "Student history, attempt count, mastery",
+        "output_type": "Dict[str, Any] (student_context)",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Context builder hoàn toàn không được gọi trong runner",
+        "leakage_risk": "CRITICAL FINDING: Không hề xây dựng context học viên thật"
+      },
+      {
+        "step": 3,
+        "name": "Prompt Builder (BYPASSED)",
+        "file": "backend/app/evaluation/prompts.py",
+        "function": "build_prompt_d",
+        "input_type": "(problem_statement, student_code, compiler_error, student_context)",
+        "output_type": "str",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Not invoked in mock runner",
+        "leakage_risk": "CRITICAL FINDING: Bị bỏ qua"
+      },
+      {
+        "step": 4,
+        "name": "Mock Execution & 100% Ground Truth Overwrite",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner._predict_single (D branch)",
+        "input_type": "Dict[str, Any] (sample)",
+        "output_type": "Dict[str, Any] (prediction)",
+        "fields_added": [
+          "validator_actions: ['student_model_context_injected', 'structured_schema_verified', 'evidence_grounded']"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "pred_status <- gt_status (LUÔN BẰNG gt_status bất kể random!)",
+          "error_category <- sample['error_category'] (100% match)",
+          "bug_type <- sample['bug_type'] (100% match)",
+          "bug_location <- sample.get('bug_location') (100% match)",
+          "evidence <- sample.get('evidence') (100% match)",
+          "knowledge_components <- sample.get('knowledge_components', []) (100% match)",
+          "possible_misconception <- sample.get('possible_misconception') (100% match)",
+          "hint_1/2/3 <- sample.get('hint_1/2/3') (100% match)",
+          "reference_diagnosis <- sample.get('reference_diagnosis')",
+          "explanation_vi <- sample.get('explanation_vi')"
+        ],
+        "ground_truth_availability": "100% CHÉP NGUYÊN VĂN TOÀN BỘ NHÃN VÀNG VÀO PREDICTION",
+        "leakage_risk": "CRITICAL (Tuyệt đối không có suy luận, 100% sao chép nhãn vàng)"
+      },
+      {
+        "step": 5,
+        "name": "Prediction Storage",
+        "file": "backend/app/evaluation/runner.py",
+        "function": "EvaluationRunner.run",
+        "input_type": "Predictions list",
+        "output_type": "predictions.jsonl (runs/run_D_test_...)",
+        "fields_added": [],
+        "fields_removed": [],
+        "fields_transformed": [],
+        "ground_truth_availability": "Chứa bản sao chính xác của nhãn vàng",
+        "leakage_risk": "CRITICAL"
+      },
+      {
+        "step": 6,
+        "name": "Metric Calculation",
+        "file": "backend/app/evaluation/metrics.py",
+        "function": "TutoringMetricsSuite.evaluate",
+        "input_type": "predictions.jsonl + vietcsharptutor_600.jsonl",
+        "output_type": "metrics.json",
+        "fields_added": [
+          "100% accuracy trên toàn bộ các chỉ số sư phạm"
+        ],
+        "fields_removed": [],
+        "fields_transformed": [
+          "diagnosis_accuracy: 1.0 (100%)",
+          "bug_localization_accuracy: 1.0 (100%)",
+          "error_category_accuracy: 1.0 (100%)",
+          "knowledge_component_f1: 1.0",
+          "misconception_accuracy: 1.0 (100%)",
+          "evidence_faithfulness: 1.0 (100%)",
+          "solution_leakage_rate: 0.0 (0%)",
+          "hint_policy_compliance: 1.0 (100%)"
+        ],
+        "ground_truth_availability": "Metrics không phân biệt được dự đoán thật và dữ liệu sao chép",
+        "leakage_risk": "CRITICAL (Kết quả hoàn toàn giả tạo)"
+      }
+    ]
+  }
+}
