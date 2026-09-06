@@ -30,6 +30,9 @@ export interface AnalyzeResponse {
 
 export interface VisionOcrResponse {
   text: string;
+  problem_statement?: string | null;
+  student_code?: string | null;
+  compiler_error?: string | null;
   confidence: number;
   warnings: string[];
   provider: string;

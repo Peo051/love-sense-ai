@@ -156,8 +156,34 @@ export default function TutorPage() {
     setIsAuthenticated(hasAuthToken());
   }, []);
 
-  const handleTextExtracted = (extractedText: string, _result: OcrExtractionResult, mode: 'replace' | 'append') => {
-    setStudentCode((current) => (mode === 'append' && current ? `${current}\n\n${extractedText}` : extractedText));
+  const handleTextExtracted = (
+    extractedText: string,
+    _result: OcrExtractionResult,
+    mode: 'replace' | 'append',
+    targetField?: 'student_code' | 'problem_statement' | 'compiler_error' | 'all',
+    candidateFields?: {
+      problem_statement?: string | null;
+      student_code?: string | null;
+      compiler_error?: string | null;
+    }
+  ) => {
+    if (targetField === 'problem_statement') {
+      setProblemStatement((current) => (mode === 'append' && current ? `${current}\n\n${extractedText}` : extractedText));
+    } else if (targetField === 'compiler_error') {
+      setCompilerError((current) => (mode === 'append' && current ? `${current}\n\n${extractedText}` : extractedText));
+    } else if (targetField === 'all') {
+      if (candidateFields?.problem_statement) {
+        setProblemStatement(candidateFields.problem_statement);
+      }
+      if (candidateFields?.student_code) {
+        setStudentCode(candidateFields.student_code);
+      }
+      if (candidateFields?.compiler_error) {
+        setCompilerError(candidateFields.compiler_error);
+      }
+    } else {
+      setStudentCode((current) => (mode === 'append' && current ? `${current}\n\n${extractedText}` : extractedText));
+    }
     setActiveTab('editor');
   };
 
@@ -622,10 +648,11 @@ export default function TutorPage() {
             ) : (
               <ImageOcrUploader
                 hasChatText={Boolean(studentCode.trim())}
+                hasCode={Boolean(studentCode.trim())}
                 onTextExtracted={handleTextExtracted}
-                title="Quét mã nguồn từ ảnh bài tập (OCR)"
-                description="Tải ảnh chụp bài tập C# hoặc ảnh lỗi màn hình để trích xuất văn bản vào trình soạn thảo."
-                uploadLabel="Tải ảnh chụp bài tập"
+                title="Quét mã nguồn từ ảnh bài tập (OCR / Vision)"
+                description="Tải ảnh chụp đề bài, mã nguồn C# hoặc ảnh lỗi màn hình để trích xuất văn bản vào trình soạn thảo."
+                uploadLabel="Tải ảnh chụp bài tập hoặc mã nguồn"
               />
             )}
 

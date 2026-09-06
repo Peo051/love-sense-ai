@@ -3,14 +3,24 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import TutorPage from './page';
-import { analyzeTutorCode, hasAuthToken, requestTutorNextHint, verifyTutorRetry } from '@/lib/api';
+import { analyzeTutorCode, extractChatTextWithVision, hasAuthToken, requestTutorNextHint, verifyTutorRetry } from '@/lib/api';
+import { extractTextFromImage } from '@/lib/ocr';
 
 vi.mock('@/lib/api', () => ({
   analyzeTutorCode: vi.fn(),
   requestTutorNextHint: vi.fn(),
   verifyTutorRetry: vi.fn(),
+  extractChatTextWithVision: vi.fn(),
   hasAuthToken: vi.fn(() => false),
 }));
+
+vi.mock('@/lib/ocr', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/ocr')>();
+  return {
+    ...actual,
+    extractTextFromImage: vi.fn(),
+  };
+});
 
 const mockAnalyzeResponse = {
   diagnosis: {
@@ -348,5 +358,54 @@ describe('TutorPage (Workspace & Multi-turn Session)', () => {
     await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
 
     expect(await screen.findByText(/backend đang quá tải\. vui lòng thử lại sau\./i)).toBeInTheDocument();
+  });
+
+  it('supports full flow: screenshot -> extracted draft -> user review -> populate editor without auto-submitting -> tutor analysis', async () => {
+    vi.mocked(extractTextFromImage).mockResolvedValueOnce({
+      text: 'public class Car { private string _model; }',
+      rawText: 'public class Car { private string _model; }',
+      confidence: 90,
+      language: 'vie+eng',
+      quality: { score: 0.9, warnings: [] },
+    });
+    vi.mocked(analyzeTutorCode).mockResolvedValueOnce(mockAnalyzeResponse as any);
+
+    const user = userEvent.setup();
+    render(<TutorPage />);
+
+    // 1. Switch to OCR tab
+    await user.click(screen.getByRole('button', { name: /quét từ ảnh bài tập/i }));
+
+    // 2. Upload image and extract
+    const fileInput = screen.getByLabelText(/tải ảnh chụp bài tập/i);
+    await user.upload(fileInput, new File(['fake code image'], 'code.png', { type: 'image/png' }));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    // 3. Review and edit draft
+    const draft = await screen.findByLabelText(/bản nháp nội dung trích xuất/i);
+    expect(draft).toHaveValue('public class Car { private string _model; }');
+
+    fireEvent.change(draft, { target: { value: 'public class Car { public string Model { get; set; } }' } });
+
+    // 4. Apply to editor without submitting
+    await user.click(screen.getByRole('button', { name: /^dùng nội dung này$/i }));
+
+    expect(analyzeTutorCode).not.toHaveBeenCalled();
+    const codeEditor = screen.getByLabelText(/mã nguồn c# của bạn/i);
+    expect(codeEditor).toHaveValue('public class Car { public string Model { get; set; } }');
+
+    // 5. Fill problem statement and submit analysis explicitly
+    fireEvent.change(screen.getByLabelText(/đề bài bài tập/i), { target: { value: 'Tạo class Car với property Model' } });
+    await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
+
+    await waitFor(() => {
+      expect(analyzeTutorCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          student_code: 'public class Car { public string Model { get; set; } }',
+          problem_statement: 'Tạo class Car với property Model',
+        })
+      );
+    });
+    expect(await screen.findByText('Quan sát khối lệnh set trong thuộc tính Balance: nếu người dùng nạp số tiền âm thì số dư sẽ ra sao?')).toBeInTheDocument();
   });
 });

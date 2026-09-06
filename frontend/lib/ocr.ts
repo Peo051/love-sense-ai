@@ -12,12 +12,19 @@ export type OcrProgress = {
   progress: number;
 };
 
+export type CandidateFields = {
+  problem_statement?: string | null;
+  student_code?: string | null;
+  compiler_error?: string | null;
+};
+
 export type OcrExtractionResult = {
   text: string;
   rawText: string;
   confidence: number;
   language: string;
   quality: OcrQuality;
+  candidateFields?: CandidateFields;
 };
 
 export type ImageValidationResult = {

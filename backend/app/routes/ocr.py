@@ -10,10 +10,14 @@ ALLOWED_VISION_IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 
 
 @router.post("/ocr/vision", response_model=VisionOcrResponse)
-async def extract_chat_text_with_vision(
+async def extract_programming_text_with_vision(
     image: UploadFile = File(...),
     is_accepted: bool = Form(False),
 ):
+    """
+    Trích xuất đề bài, mã nguồn C# và lỗi biên dịch từ ảnh chụp.
+    Ảnh chỉ được đọc vào bộ nhớ RAM trong suốt request, không ghi xuống đĩa hay cơ sở dữ liệu.
+    """
     if not is_accepted:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -34,7 +38,7 @@ async def extract_chat_text_with_vision(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ảnh tối đa 5MB.")
 
     try:
-        return await VisionOcrService().extract_chat_text_from_image(image_bytes, image.content_type)
+        return await VisionOcrService().extract_programming_text_from_image(image_bytes, image.content_type)
     except VisionOcrServiceError as exc:
         raise HTTPException(
             status_code=exc.status_code,

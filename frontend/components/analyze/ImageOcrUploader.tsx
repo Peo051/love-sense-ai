@@ -17,12 +17,21 @@ import { ErrorAlert, SuccessAlert } from '@/components/common/Alerts';
 import Button from '@/components/common/Button';
 import Card from '@/components/common/Card';
 import { extractChatTextWithVision } from '@/lib/api';
-import { extractTextFromImage, validateImageFile, type OcrExtractionResult, type OcrProgress } from '@/lib/ocr';
+import { extractTextFromImage, validateImageFile, type CandidateFields, type OcrExtractionResult, type OcrProgress } from '@/lib/ocr';
 import { estimateOcrQuality } from '@/lib/ocrPostprocess';
+
+export type OcrTargetField = 'student_code' | 'problem_statement' | 'compiler_error' | 'all';
 
 type ImageOcrUploaderProps = {
   hasChatText?: boolean;
-  onTextExtracted: (text: string, result: OcrExtractionResult, mode: 'replace' | 'append') => void;
+  hasCode?: boolean;
+  onTextExtracted: (
+    text: string,
+    result: OcrExtractionResult,
+    mode: 'replace' | 'append',
+    targetField?: OcrTargetField,
+    candidateFields?: CandidateFields
+  ) => void;
   title?: string;
   description?: string;
   uploadLabel?: string;
@@ -53,6 +62,7 @@ function getVisionFallbackPrefix(error: unknown) {
 
 export default function ImageOcrUploader({
   hasChatText = false,
+  hasCode = false,
   onTextExtracted,
   title = 'Nhập từ ảnh chụp đoạn chat',
   description = 'Tải ảnh do bạn tự chọn lên, trích xuất chữ trên trình duyệt rồi kiểm tra lại trước khi phân tích.',
@@ -65,6 +75,9 @@ export default function ImageOcrUploader({
   const [progress, setProgress] = useState<OcrProgress>({ status: 'preprocessing', progress: 0 });
   const [ocrResult, setOcrResult] = useState<OcrExtractionResult | null>(null);
   const [draftText, setDraftText] = useState('');
+  const [draftProblemStatement, setDraftProblemStatement] = useState('');
+  const [draftStudentCode, setDraftStudentCode] = useState('');
+  const [draftCompilerError, setDraftCompilerError] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [useVisionAi, setUseVisionAi] = useState(false);
   const [visionConsent, setVisionConsent] = useState(false);
@@ -111,6 +124,9 @@ export default function ImageOcrUploader({
     setPreviewUrl(null);
     setOcrResult(null);
     setDraftText('');
+    setDraftProblemStatement('');
+    setDraftStudentCode('');
+    setDraftCompilerError('');
     setProgress({ status: 'preprocessing', progress: 0 });
     setIsExtracting(false);
     setVisionConsent(false);
@@ -122,7 +138,12 @@ export default function ImageOcrUploader({
     }
   };
 
-  const createVisionExtractionResult = (text: string, confidence: number, warnings: string[]): OcrExtractionResult => {
+  const createVisionExtractionResult = (
+    text: string,
+    confidence: number,
+    warnings: string[],
+    candidateFields?: CandidateFields
+  ): OcrExtractionResult => {
     const localQuality = estimateOcrQuality(text, confidence);
 
     return {
@@ -134,6 +155,7 @@ export default function ImageOcrUploader({
         score: warnings.length ? Math.min(localQuality.score, 0.72) : localQuality.score,
         warnings: [...new Set([...warnings, ...localQuality.warnings])],
       },
+      candidateFields,
     };
   };
 
@@ -169,7 +191,20 @@ export default function ImageOcrUploader({
     }
 
     setProgress({ status: 'postprocessing', progress: 0.94 });
-    const extraction = createVisionExtractionResult(response.text, response.confidence, response.warnings ?? []);
+    const candidateFields: CandidateFields = {
+      problem_statement: response.problem_statement ?? null,
+      student_code: response.student_code ?? null,
+      compiler_error: response.compiler_error ?? null,
+    };
+    const extraction = createVisionExtractionResult(
+      response.text,
+      response.confidence,
+      response.warnings ?? [],
+      candidateFields
+    );
+    setDraftProblemStatement(response.problem_statement || '');
+    setDraftStudentCode(response.student_code || '');
+    setDraftCompilerError(response.compiler_error || '');
     applyExtractionResult(
       extraction,
       'AI Vision đã trích xuất nội dung. Vui lòng kiểm tra và chỉnh sửa lại trước khi phân tích.'
@@ -194,6 +229,9 @@ export default function ImageOcrUploader({
     setSuccessMessage('');
     setOcrResult(null);
     setDraftText('');
+    setDraftProblemStatement('');
+    setDraftStudentCode('');
+    setDraftCompilerError('');
     setProgress({ status: 'preprocessing', progress: 0 });
 
     let visionFallbackPrefix = '';
@@ -226,23 +264,67 @@ export default function ImageOcrUploader({
     }
   };
 
-  const handleUseExtractedText = (mode: 'replace' | 'append' = 'replace') => {
+  const handleUseExtractedText = (
+    mode: 'replace' | 'append' = 'replace',
+    targetField: OcrTargetField = 'student_code'
+  ) => {
     if (!ocrResult) {
       return;
     }
 
-    const normalizedDraft = draftText.trim();
-    if (!normalizedDraft) {
+    let textToUse = draftText.trim();
+    if (targetField === 'problem_statement' && draftProblemStatement.trim()) {
+      textToUse = draftProblemStatement.trim();
+    } else if (targetField === 'compiler_error' && draftCompilerError.trim()) {
+      textToUse = draftCompilerError.trim();
+    } else if (targetField === 'student_code' && draftStudentCode.trim()) {
+      textToUse = draftStudentCode.trim();
+    }
+
+    if (!textToUse && targetField !== 'all') {
       setErrorMessage('Bản nháp OCR đang trống. Hãy chạy OCR lại hoặc nhập thủ công.');
       return;
     }
 
-    onTextExtracted(normalizedDraft, { ...ocrResult, text: normalizedDraft }, mode);
+    const candidateFields: CandidateFields = {
+      problem_statement: draftProblemStatement.trim() || undefined,
+      student_code: draftStudentCode.trim() || undefined,
+      compiler_error: draftCompilerError.trim() || undefined,
+    };
+
+    const hasCandidates = Boolean(
+      candidateFields.problem_statement || candidateFields.student_code || candidateFields.compiler_error
+    );
+
+    if (targetField !== 'student_code' || hasCandidates) {
+      onTextExtracted(
+        textToUse || draftText.trim(),
+        { ...ocrResult, text: textToUse || draftText.trim(), candidateFields },
+        mode,
+        targetField,
+        candidateFields
+      );
+    } else {
+      onTextExtracted(
+        textToUse || draftText.trim(),
+        { ...ocrResult, text: textToUse || draftText.trim() },
+        mode
+      );
+    }
     setErrorMessage('');
+    const targetName =
+      targetField === 'problem_statement'
+        ? 'đề bài'
+        : targetField === 'compiler_error'
+          ? 'lỗi biên dịch'
+          : targetField === 'all'
+            ? 'các ô bài tập tương ứng'
+            : 'đoạn chat';
+
     setSuccessMessage(
       mode === 'append'
-        ? 'Đã nối bản nháp OCR vào cuối đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.'
-        : 'Đã dùng bản nháp OCR cho ô đoạn chat. Vui lòng kiểm tra lại trước khi phân tích.'
+        ? `Đã nối bản nháp OCR vào cuối ${targetName}. Vui lòng kiểm tra lại trước khi phân tích.`
+        : `Đã dùng bản nháp OCR cho ${targetName === 'đoạn chat' ? 'ô đoạn chat' : targetName}. Vui lòng kiểm tra lại trước khi phân tích.`
     );
   };
 
@@ -403,9 +485,58 @@ export default function ImageOcrUploader({
               <h3 className="text-sm font-semibold text-slate-950">Bản nháp nội dung trích xuất</h3>
               <p className="text-xs leading-5 text-slate-600">
                 Độ tin cậy OCR tham khảo: <span className="font-semibold text-slate-950">{ocrResult.confidence.toFixed(0)}%</span>.
-                Hãy rà lại dấu, emoji và thứ tự dòng trước khi dùng nội dung này.
+                Hãy rà lại mã nguồn, thụt lề dòng và các ký tự cú pháp C# trước khi dùng nội dung này.
               </p>
             </div>
+
+            {Boolean(draftProblemStatement || draftStudentCode || draftCompilerError) && (
+              <div className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 text-xs">
+                <p className="font-bold text-indigo-950">Phân loại trường ứng viên (Candidate Fields từ Vision AI):</p>
+                {Boolean(draftProblemStatement) && (
+                  <div className="space-y-1">
+                    <label htmlFor="ocr_draft_problem" className="font-semibold text-slate-700">
+                      Đề bài bài tập (Problem Statement):
+                    </label>
+                    <textarea
+                      id="ocr_draft_problem"
+                      value={draftProblemStatement}
+                      onChange={(e) => setDraftProblemStatement(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-900 focus:border-indigo-400"
+                    />
+                  </div>
+                )}
+                {Boolean(draftStudentCode) && (
+                  <div className="space-y-1">
+                    <label htmlFor="ocr_draft_code" className="font-semibold text-slate-700">
+                      Mã nguồn C# (Student Code):
+                    </label>
+                    <textarea
+                      id="ocr_draft_code"
+                      value={draftStudentCode}
+                      onChange={(e) => setDraftStudentCode(e.target.value)}
+                      rows={4}
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 font-mono text-xs text-slate-900 focus:border-indigo-400"
+                    />
+                  </div>
+                )}
+                {Boolean(draftCompilerError) && (
+                  <div className="space-y-1">
+                    <label htmlFor="ocr_draft_error" className="font-semibold text-slate-700">
+                      Thông báo lỗi biên dịch (Compiler Error):
+                    </label>
+                    <textarea
+                      id="ocr_draft_error"
+                      value={draftCompilerError}
+                      onChange={(e) => setDraftCompilerError(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-slate-200 bg-white p-2 font-mono text-xs text-slate-900 focus:border-indigo-400"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             <label htmlFor="ocr_draft" className="sr-only">
               Bản nháp nội dung trích xuất
             </label>
@@ -413,22 +544,46 @@ export default function ImageOcrUploader({
               id="ocr_draft"
               value={draftText}
               onChange={(event) => setDraftText(event.target.value)}
-              className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm leading-6 text-slate-950 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100"
+              className="min-h-36 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm leading-6 text-slate-950 shadow-inner outline-none transition placeholder:text-slate-400 focus:border-rose-500 focus:ring-4 focus:ring-rose-100"
               placeholder="Nội dung OCR sẽ hiển thị tại đây để bạn kiểm tra trước khi phân tích."
             />
             <div className="rounded-xl border-2 border-emerald-900 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-950">
               Đã trích xuất nội dung từ ảnh. Vui lòng kiểm tra và chỉnh sửa trước khi phân tích.
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              <Button type="button" size="sm" onClick={() => handleUseExtractedText('replace')}>
+              <Button type="button" size="sm" onClick={() => handleUseExtractedText('replace', 'student_code')}>
                 Dùng nội dung này
               </Button>
-              <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace')}>
+              <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace', 'student_code')}>
                 Thay thế đoạn chat hiện tại
               </Button>
-              <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('append')} disabled={!hasChatText}>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => handleUseExtractedText('append', 'student_code')}
+                disabled={!hasChatText && !hasCode}
+              >
                 Nối vào cuối đoạn chat hiện tại
               </Button>
+              {Boolean(draftProblemStatement.trim()) && (
+                <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace', 'problem_statement')}>
+                  Áp dụng vào Đề bài
+                </Button>
+              )}
+              {Boolean(draftCompilerError.trim()) && (
+                <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace', 'compiler_error')}>
+                  Áp dụng vào Lỗi biên dịch
+                </Button>
+              )}
+              {Boolean(
+                (draftProblemStatement.trim() && draftStudentCode.trim()) ||
+                (draftStudentCode.trim() && draftCompilerError.trim())
+              ) && (
+                <Button type="button" variant="secondary" size="sm" onClick={() => handleUseExtractedText('replace', 'all')}>
+                  Áp dụng tất cả vào các ô tương ứng
+                </Button>
+              )}
               <Button type="button" variant="secondary" size="sm" onClick={handleExtractText} disabled={isExtracting}>
                 <RefreshCcw className="h-4 w-4" aria-hidden="true" />
                 Chạy OCR lại

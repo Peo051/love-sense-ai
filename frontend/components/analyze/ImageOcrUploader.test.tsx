@@ -256,4 +256,60 @@ describe('ImageOcrUploader', () => {
       'replace'
     );
   });
+
+  it('handles structured candidate fields from AI Vision and allows target-specific apply', async () => {
+    const user = userEvent.setup();
+    const onTextExtracted = vi.fn();
+    vi.mocked(extractChatTextWithVision).mockResolvedValueOnce({
+      text: 'Đề bài:\nTạo lớp Student\n\nMã nguồn C#:\npublic class Student {}',
+      problem_statement: 'Tạo lớp Student có trường id và name',
+      student_code: 'public class Student {\n    private int id;\n}',
+      compiler_error: 'CS0169: The field is never used',
+      confidence: 96,
+      warnings: [],
+      provider: 'vision',
+    });
+
+    render(<ImageOcrUploader onTextExtracted={onTextExtracted} />);
+
+    const file = new File(['fake code image'], 'code.png', { type: 'image/png' });
+    await user.upload(screen.getByLabelText(/tải ảnh chụp/i), file);
+    await user.click(screen.getByLabelText(/dùng ai vision để trích xuất chính xác hơn/i));
+    await user.click(screen.getByLabelText(/tôi đồng ý gửi ảnh này đến ai provider/i));
+    await user.click(screen.getByRole('button', { name: /trích xuất chữ từ ảnh/i }));
+
+    // Verify candidate field textareas are displayed
+    expect(await screen.findByLabelText(/đề bài bài tập \(problem statement\)/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/mã nguồn c# \(student code\)/i)).toHaveValue(
+      'public class Student {\n    private int id;\n}'
+    );
+    expect(screen.getByLabelText(/thông báo lỗi biên dịch/i)).toHaveValue('CS0169: The field is never used');
+
+    // Test applying only problem statement
+    await user.click(screen.getByRole('button', { name: /áp dụng vào đề bài/i }));
+    expect(onTextExtracted).toHaveBeenCalledWith(
+      'Tạo lớp Student có trường id và name',
+      expect.anything(),
+      'replace',
+      'problem_statement',
+      expect.objectContaining({
+        problem_statement: 'Tạo lớp Student có trường id và name',
+        student_code: 'public class Student {\n    private int id;\n}',
+      })
+    );
+
+    // Test applying all fields
+    await user.click(screen.getByRole('button', { name: /áp dụng tất cả vào các ô tương ứng/i }));
+    expect(onTextExtracted).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.anything(),
+      'replace',
+      'all',
+      expect.objectContaining({
+        problem_statement: 'Tạo lớp Student có trường id và name',
+        student_code: 'public class Student {\n    private int id;\n}',
+        compiler_error: 'CS0169: The field is never used',
+      })
+    );
+  });
 });
