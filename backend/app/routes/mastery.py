@@ -10,6 +10,7 @@ from app.schemas.mastery_schema import (
     RecordPracticeAttemptRequest,
     SkillMasteryResponse,
     StudentMasterySummaryResponse,
+    StudentProgressDashboardResponse,
 )
 from app.services.attempt_mastery_coordinator import AttemptMasteryCoordinator
 from app.services.mastery_store import MasteryRepository
@@ -30,6 +31,30 @@ async def get_mastery_formula() -> Any:
     cho mô hình độ thuần thục tất định V1.
     """
     return DeterministicMasteryModel.get_formula_documentation()
+
+
+@router.get(
+    "/mastery/dashboard",
+    response_model=StudentProgressDashboardResponse,
+    summary="Bảng điều khiển theo dõi tiến độ và năng lực học tập của sinh viên (APT-023)",
+)
+@router.get(
+    "/progress/dashboard",
+    response_model=StudentProgressDashboardResponse,
+    summary="Bảng điều khiển theo dõi tiến độ và năng lực học tập của sinh viên (APT-023)",
+)
+async def get_student_progress_dashboard(
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    GET /api/mastery/dashboard hoặc GET /api/progress/dashboard
+    Trả về toàn bộ số liệu tổng hợp tiến độ học tập C# OOP của học viên:
+    kỹ năng đã thực hành, điểm ước lượng tất định, chủ đề vững vàng, chủ đề cần luyện tập,
+    lần thử gần nhất, cấp độ gợi ý trung bình và tỷ lệ giải độc lập.
+    Đảm bảo Strict User Ownership và không dùng số liệu giả định.
+    """
+    return await MasteryRepository.get_student_progress_dashboard(db, current_user.id)
 
 
 @router.get(

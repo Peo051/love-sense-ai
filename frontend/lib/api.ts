@@ -15,6 +15,7 @@ import type {
   ProfileResponse,
   SessionCreateRequest,
   StudentAttemptResponse,
+  StudentProgressDashboardResponse,
   TutorHintRequest,
   TutorHintResponse,
   TutorMessageResponse,
@@ -592,5 +593,14 @@ export async function addSessionMessage(
     'Không thể lưu tin nhắn vào phiên học.'
   );
 }
+
+export async function getProgressDashboard(): Promise<StudentProgressDashboardResponse> {
+  return requestJson<StudentProgressDashboardResponse>(
+    '/api/progress/dashboard',
+    undefined,
+    'Không thể tải dữ liệu tiến độ học tập lúc này.'
+  );
+}
+
 
 

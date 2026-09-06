@@ -295,4 +295,43 @@ export interface TimelineTurnItem {
   attemptIndex?: number;
 }
 
+export interface SkillMasteryResponse {
+  skill_id: string;
+  skill_name?: string | null;
+  mastery_score: number;
+  success_count: number;
+  failure_count: number;
+  hint_count: number;
+  last_practiced_at?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface RecentAttemptSummary {
+  attempt_id: string;
+  session_id?: string | null;
+  problem_title: string;
+  outcome: string;
+  skills: string[];
+  hints_used: number;
+  highest_hint_level: number;
+  created_at: string;
+}
+
+export interface StudentProgressDashboardResponse {
+  total_skills: number;
+  practiced_skills: number;
+  current_mastery_estimate: number;
+  is_empty: boolean;
+  strong_topics: SkillMasteryResponse[];
+  topics_needing_practice: SkillMasteryResponse[];
+  all_skills: SkillMasteryResponse[];
+  recent_attempts: RecentAttemptSummary[];
+  average_hint_level: number | null;
+  independent_solution_rate: number | null;
+  total_attempts_count: number;
+  independent_success_count: number;
+}
+
+
 
