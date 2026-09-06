@@ -1,0 +1,51 @@
+{
+  "System_A": {
+    "leaked_fields": [
+      "reference_solution"
+    ],
+    "count": 1
+  },
+  "System_B": {
+    "leaked_fields": [
+      "reference_diagnosis",
+      "evidence",
+      "hint_3",
+      "explanation_vi"
+    ],
+    "count": 4
+  },
+  "System_C": {
+    "leaked_fields": [
+      "bug_status",
+      "error_category",
+      "bug_type",
+      "bug_location",
+      "knowledge_components",
+      "possible_misconception",
+      "reference_diagnosis",
+      "evidence",
+      "hint_1",
+      "hint_2",
+      "hint_3",
+      "explanation_vi"
+    ],
+    "count": 12
+  },
+  "System_D": {
+    "leaked_fields": [
+      "bug_status",
+      "error_category",
+      "bug_type",
+      "bug_location",
+      "knowledge_components",
+      "possible_misconception",
+      "reference_diagnosis",
+      "evidence",
+      "hint_1",
+      "hint_2",
+      "hint_3",
+      "explanation_vi"
+    ],
+    "count": 12
+  }
+}

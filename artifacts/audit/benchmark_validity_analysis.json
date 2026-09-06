@@ -1,0 +1,466 @@
+{
+  "label_distribution": {
+    "dev": {
+      "topic": {
+        "distribution": {
+          "class_object": 36,
+          "field_property": 36,
+          "getter_setter": 36,
+          "constructor_this": 36,
+          "method_parameter": 36,
+          "encapsulation_validation": 36,
+          "static_instance": 36,
+          "inheritance_polymorphism": 36,
+          "correct_code": 36,
+          "insufficient_context": 36
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "class_object",
+          "count": 36,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 36,
+          "percentage": 10.0
+        }
+      },
+      "bug_status": {
+        "distribution": {
+          "has_bug": 288,
+          "no_bug": 36,
+          "insufficient_context": 36
+        },
+        "entropy": 0.9219,
+        "dominant": {
+          "label": "has_bug",
+          "count": 288,
+          "percentage": 80.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 36,
+          "percentage": 10.0
+        }
+      },
+      "error_category": {
+        "distribution": {
+          "compile_error": 144,
+          "runtime_error": 36,
+          "logic_error": 72,
+          "conceptual_misuse": 36,
+          "no_bug": 36,
+          "insufficient_context": 36
+        },
+        "entropy": 2.3219,
+        "dominant": {
+          "label": "compile_error",
+          "count": 144,
+          "percentage": 40.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 36,
+          "percentage": 10.0
+        }
+      },
+      "bug_type": {
+        "distribution": {
+          "uninstantiated_object_reference": 36,
+          "inaccessible_private_field": 36,
+          "recursive_property_accessor": 36,
+          "unassigned_field_shadowing": 36,
+          "return_type_mismatch": 36,
+          "missing_domain_validation": 36,
+          "static_context_instance_member_access": 36,
+          "missing_override_polymorphism": 36,
+          "no_bug": 36,
+          "insufficient_context": 36
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "uninstantiated_object_reference",
+          "count": 36,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 36,
+          "percentage": 10.0
+        }
+      },
+      "source_type": {
+        "distribution": {
+          "expert_authored": 360
+        },
+        "entropy": 0.0,
+        "dominant": {
+          "label": "expert_authored",
+          "count": 360,
+          "percentage": 100.0
+        },
+        "rarest": {
+          "label": "expert_authored",
+          "count": 360,
+          "percentage": 100.0
+        }
+      },
+      "difficulty": {
+        "distribution": {
+          "beginner": 216,
+          "medium": 144
+        },
+        "entropy": 0.971,
+        "dominant": {
+          "label": "beginner",
+          "count": 216,
+          "percentage": 60.0
+        },
+        "rarest": {
+          "label": "medium",
+          "count": 144,
+          "percentage": 40.0
+        }
+      },
+      "knowledge_components": {
+        "distinct_count": 26,
+        "entropy": 4.6151,
+        "top_5": {
+          "OOP.Properties": 108,
+          "OOP.Classes": 72,
+          "OOP.Constructors": 72,
+          "OOP.Instantiation": 36,
+          "OOP.NullReference": 36
+        }
+      }
+    },
+    "validation": {
+      "topic": {
+        "distribution": {
+          "class_object": 12,
+          "field_property": 12,
+          "getter_setter": 12,
+          "constructor_this": 12,
+          "method_parameter": 12,
+          "encapsulation_validation": 12,
+          "static_instance": 12,
+          "inheritance_polymorphism": 12,
+          "correct_code": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "class_object",
+          "count": 12,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "bug_status": {
+        "distribution": {
+          "has_bug": 96,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 0.9219,
+        "dominant": {
+          "label": "has_bug",
+          "count": 96,
+          "percentage": 80.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "error_category": {
+        "distribution": {
+          "compile_error": 48,
+          "runtime_error": 12,
+          "logic_error": 24,
+          "conceptual_misuse": 12,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 2.3219,
+        "dominant": {
+          "label": "compile_error",
+          "count": 48,
+          "percentage": 40.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "bug_type": {
+        "distribution": {
+          "uninstantiated_object_reference": 12,
+          "inaccessible_private_field": 12,
+          "recursive_property_accessor": 12,
+          "unassigned_field_shadowing": 12,
+          "return_type_mismatch": 12,
+          "missing_domain_validation": 12,
+          "static_context_instance_member_access": 12,
+          "missing_override_polymorphism": 12,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "uninstantiated_object_reference",
+          "count": 12,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "source_type": {
+        "distribution": {
+          "expert_authored": 120
+        },
+        "entropy": 0.0,
+        "dominant": {
+          "label": "expert_authored",
+          "count": 120,
+          "percentage": 100.0
+        },
+        "rarest": {
+          "label": "expert_authored",
+          "count": 120,
+          "percentage": 100.0
+        }
+      },
+      "difficulty": {
+        "distribution": {
+          "beginner": 72,
+          "medium": 48
+        },
+        "entropy": 0.971,
+        "dominant": {
+          "label": "beginner",
+          "count": 72,
+          "percentage": 60.0
+        },
+        "rarest": {
+          "label": "medium",
+          "count": 48,
+          "percentage": 40.0
+        }
+      },
+      "knowledge_components": {
+        "distinct_count": 26,
+        "entropy": 4.6151,
+        "top_5": {
+          "OOP.Properties": 36,
+          "OOP.Classes": 24,
+          "OOP.Constructors": 24,
+          "OOP.Instantiation": 12,
+          "OOP.NullReference": 12
+        }
+      }
+    },
+    "test": {
+      "topic": {
+        "distribution": {
+          "class_object": 12,
+          "field_property": 12,
+          "getter_setter": 12,
+          "constructor_this": 12,
+          "method_parameter": 12,
+          "encapsulation_validation": 12,
+          "static_instance": 12,
+          "inheritance_polymorphism": 12,
+          "correct_code": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "class_object",
+          "count": 12,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "bug_status": {
+        "distribution": {
+          "has_bug": 96,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 0.9219,
+        "dominant": {
+          "label": "has_bug",
+          "count": 96,
+          "percentage": 80.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "error_category": {
+        "distribution": {
+          "compile_error": 48,
+          "runtime_error": 12,
+          "logic_error": 24,
+          "conceptual_misuse": 12,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 2.3219,
+        "dominant": {
+          "label": "compile_error",
+          "count": 48,
+          "percentage": 40.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "bug_type": {
+        "distribution": {
+          "uninstantiated_object_reference": 12,
+          "inaccessible_private_field": 12,
+          "recursive_property_accessor": 12,
+          "unassigned_field_shadowing": 12,
+          "return_type_mismatch": 12,
+          "missing_domain_validation": 12,
+          "static_context_instance_member_access": 12,
+          "missing_override_polymorphism": 12,
+          "no_bug": 12,
+          "insufficient_context": 12
+        },
+        "entropy": 3.3219,
+        "dominant": {
+          "label": "uninstantiated_object_reference",
+          "count": 12,
+          "percentage": 10.0
+        },
+        "rarest": {
+          "label": "insufficient_context",
+          "count": 12,
+          "percentage": 10.0
+        }
+      },
+      "source_type": {
+        "distribution": {
+          "expert_authored": 120
+        },
+        "entropy": 0.0,
+        "dominant": {
+          "label": "expert_authored",
+          "count": 120,
+          "percentage": 100.0
+        },
+        "rarest": {
+          "label": "expert_authored",
+          "count": 120,
+          "percentage": 100.0
+        }
+      },
+      "difficulty": {
+        "distribution": {
+          "beginner": 72,
+          "medium": 48
+        },
+        "entropy": 0.971,
+        "dominant": {
+          "label": "beginner",
+          "count": 72,
+          "percentage": 60.0
+        },
+        "rarest": {
+          "label": "medium",
+          "count": 48,
+          "percentage": 40.0
+        }
+      },
+      "knowledge_components": {
+        "distinct_count": 26,
+        "entropy": 4.6151,
+        "top_5": {
+          "OOP.Properties": 36,
+          "OOP.Classes": 24,
+          "OOP.Constructors": 24,
+          "OOP.Instantiation": 12,
+          "OOP.NullReference": 12
+        }
+      }
+    }
+  },
+  "trivial_localization_accuracy": 0.125,
+  "counterfactual_robustness": {
+    "original": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    },
+    "rename_identifiers": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    },
+    "insert_harmless_comments": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    },
+    "add_harmless_method": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    },
+    "remove_topic_metadata": {
+      "topic_lookup_acc": 0.8,
+      "structural_syntax_valid": false
+    },
+    "misleading_variable_names": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    },
+    "paraphrase_problem_statement": {
+      "topic_lookup_acc": 1.0,
+      "structural_syntax_valid": false
+    }
+  },
+  "hardness_stratification": {
+    "counts": {
+      "single_explicit_bug": 360,
+      "single_subtle_bug": 60,
+      "multiple_plausible_diagnoses": 0,
+      "insufficient_evidence": 60,
+      "correct_unconventional_code": 60,
+      "compiler_assisted_bug": 360,
+      "no_compiler_error": 120,
+      "multi_step_reasoning": 0
+    },
+    "percentages": {
+      "single_explicit_bug": 60.0,
+      "single_subtle_bug": 10.0,
+      "multiple_plausible_diagnoses": 0.0,
+      "insufficient_evidence": 10.0,
+      "correct_unconventional_code": 10.0,
+      "compiler_assisted_bug": 60.0,
+      "no_compiler_error": 20.0,
+      "multi_step_reasoning": 0.0
+    },
+    "missing_dimensions": [
+      "multiple_plausible_diagnoses",
+      "multi_step_reasoning"
+    ]
+  }
+}

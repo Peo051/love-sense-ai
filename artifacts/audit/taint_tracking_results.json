@@ -1,0 +1,25 @@
+{
+  "Prompt A": {
+    "leaks": [],
+    "prompt_len": 211
+  },
+  "Prompt B": {
+    "leaks": [],
+    "prompt_len": 198
+  },
+  "Prompt C": {
+    "leaks": [],
+    "prompt_len": 668
+  },
+  "Prompt D (Clean Context)": {
+    "leaks": [],
+    "prompt_len": 800
+  },
+  "Prompt D (Tainted Context)": {
+    "leaks": [
+      "knowledge_components",
+      "possible_misconception"
+    ],
+    "prompt_len": 841
+  }
+}

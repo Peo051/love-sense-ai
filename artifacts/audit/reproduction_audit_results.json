@@ -1,0 +1,116 @@
+{
+  "offline_recomputed_metrics": {
+    "Baseline_A": {
+      "diagnosis_accuracy": 0.7167,
+      "bug_localization_accuracy": 0.3854,
+      "error_category_accuracy": 0.6917,
+      "knowledge_component_f1": 0.0,
+      "misconception_accuracy": 0.0,
+      "no_bug_false_positive_rate": 0.3333,
+      "insufficient_context_accuracy": 0.0,
+      "evidence_faithfulness": 1.0,
+      "solution_leakage_rate": 1.0,
+      "json_valid_rate": 1.0,
+      "hint_policy_compliance": 0.0
+    },
+    "Baseline_B": {
+      "diagnosis_accuracy": 0.7417,
+      "bug_localization_accuracy": 0.5833,
+      "error_category_accuracy": 0.675,
+      "knowledge_component_f1": 0.3231,
+      "misconception_accuracy": 0.0,
+      "no_bug_false_positive_rate": 0.5,
+      "insufficient_context_accuracy": 0.5833,
+      "evidence_faithfulness": 1.0,
+      "solution_leakage_rate": 0.0312,
+      "json_valid_rate": 1.0,
+      "hint_policy_compliance": 1.0
+    },
+    "Proposed_C": {
+      "diagnosis_accuracy": 0.8833,
+      "bug_localization_accuracy": 0.8646,
+      "error_category_accuracy": 0.9417,
+      "knowledge_component_f1": 0.895,
+      "misconception_accuracy": 0.8646,
+      "no_bug_false_positive_rate": 0.0833,
+      "insufficient_context_accuracy": 1.0,
+      "evidence_faithfulness": 1.0,
+      "solution_leakage_rate": 0.0,
+      "json_valid_rate": 1.0,
+      "hint_policy_compliance": 1.0
+    },
+    "Proposed_D": {
+      "diagnosis_accuracy": 1.0,
+      "bug_localization_accuracy": 1.0,
+      "error_category_accuracy": 1.0,
+      "knowledge_component_f1": 1.0,
+      "misconception_accuracy": 1.0,
+      "no_bug_false_positive_rate": 0.0,
+      "insufficient_context_accuracy": 1.0,
+      "evidence_faithfulness": 1.0,
+      "solution_leakage_rate": 0.0,
+      "json_valid_rate": 1.0,
+      "hint_policy_compliance": 1.0
+    }
+  },
+  "discrepancies_vs_published": {},
+  "live_validation_reproducibility": {
+    "subset_size": 30,
+    "repeat_count": 3,
+    "accuracy_mean": 0.9778,
+    "accuracy_variance": 0.000246,
+    "failure_rate": 0.0,
+    "output_validity_rate": 1.0,
+    "iterations": [
+      {
+        "diagnosis_accuracy": 0.9667,
+        "bug_localization_accuracy": 0.9583,
+        "error_category_accuracy": 1.0,
+        "knowledge_component_f1": 0.9667,
+        "misconception_accuracy": 0.9583,
+        "no_bug_false_positive_rate": 0.0,
+        "insufficient_context_accuracy": 1.0,
+        "evidence_faithfulness": 1.0,
+        "solution_leakage_rate": 0.0,
+        "json_valid_rate": 1.0,
+        "hint_policy_compliance": 1.0,
+        "iteration": 1,
+        "seed": 42
+      },
+      {
+        "diagnosis_accuracy": 0.9667,
+        "bug_localization_accuracy": 0.9583,
+        "error_category_accuracy": 1.0,
+        "knowledge_component_f1": 0.9667,
+        "misconception_accuracy": 0.9583,
+        "no_bug_false_positive_rate": 0.0,
+        "insufficient_context_accuracy": 1.0,
+        "evidence_faithfulness": 1.0,
+        "solution_leakage_rate": 0.0,
+        "json_valid_rate": 1.0,
+        "hint_policy_compliance": 1.0,
+        "iteration": 2,
+        "seed": 100
+      },
+      {
+        "diagnosis_accuracy": 1.0,
+        "bug_localization_accuracy": 1.0,
+        "error_category_accuracy": 1.0,
+        "knowledge_component_f1": 1.0,
+        "misconception_accuracy": 1.0,
+        "no_bug_false_positive_rate": 0.0,
+        "insufficient_context_accuracy": 1.0,
+        "evidence_faithfulness": 1.0,
+        "solution_leakage_rate": 0.0,
+        "json_valid_rate": 1.0,
+        "hint_policy_compliance": 1.0,
+        "iteration": 3,
+        "seed": 999
+      }
+    ]
+  },
+  "environment": {
+    "python_version": "3.13.9 (tags/v3.13.9:8183fa5, Oct 14 2025, 14:09:13) [MSC v.1944 64 bit (AMD64)]",
+    "platform": "win32"
+  }
+}

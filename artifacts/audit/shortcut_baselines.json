@@ -1,0 +1,49 @@
+{
+  "validation": {
+    "split": "validation",
+    "sample_count": 120,
+    "majority_baseline": {
+      "bug_status_accuracy": 0.8,
+      "error_category_accuracy": 0.4
+    },
+    "topic_lookup_baseline": {
+      "bug_status_accuracy": 1.0,
+      "error_category_accuracy": 1.0
+    },
+    "regex_compiler_baseline": {
+      "bug_status_accuracy": 0.8,
+      "error_category_accuracy": 0.8
+    },
+    "tfidf_naive_bayes_baseline": {
+      "bug_status_accuracy": 1.0,
+      "error_category_accuracy": 1.0
+    }
+  },
+  "test": {
+    "split": "test",
+    "sample_count": 120,
+    "majority_baseline": {
+      "bug_status_accuracy": 0.8,
+      "error_category_accuracy": 0.4
+    },
+    "topic_lookup_baseline": {
+      "bug_status_accuracy": 1.0,
+      "error_category_accuracy": 1.0
+    },
+    "regex_compiler_baseline": {
+      "bug_status_accuracy": 0.8,
+      "error_category_accuracy": 0.8
+    },
+    "tfidf_naive_bayes_baseline": {
+      "bug_status_accuracy": 1.0,
+      "error_category_accuracy": 1.0
+    }
+  },
+  "structural_similarity_summary": {
+    "total_pairs_compared": 8640,
+    "pairs_ge_0_95_critical": 7059,
+    "pairs_ge_0_90_high": 591,
+    "pairs_ge_0_80_report": 0,
+    "percentage_pairs_ge_0_80": 88.54
+  }
+}

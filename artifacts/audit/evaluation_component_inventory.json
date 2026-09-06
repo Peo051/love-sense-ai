@@ -1,0 +1,490 @@
+{
+  "task": "APT-036.2",
+  "title": "Inventory Evaluation Components",
+  "total_components": 34,
+  "categories_count": 14,
+  "components": [
+    {
+      "category": "DATASET",
+      "path": "data/vietcsharptutor/vietcsharptutor_600.jsonl",
+      "purpose": "Tập dữ liệu benchmark chính thức gồm 600 ca bài tập C# OOP kèm 25 trường nhãn vàng chuẩn.",
+      "important_symbols": [
+        "600 JSONL records",
+        "dev (360)",
+        "validation (120)",
+        "test (120)"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Chứa toàn bộ ground truth: reference_solution, bug_location, knowledge_components, evidence."
+    },
+    {
+      "category": "DATASET",
+      "path": "data/vietcsharptutor/examples.jsonl",
+      "purpose": "Tập ví dụ minh họa và mẫu kiểm thử định dạng schema cho VietCSharpTutor.",
+      "important_symbols": [
+        "Example records"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Chứa các mẫu ví dụ kèm nhãn vàng để kiểm tra định dạng."
+    },
+    {
+      "category": "DATASET",
+      "path": "data/vietcsharptutor/schema.json",
+      "purpose": "JSON Schema định nghĩa cấu trúc hợp lệ cho 25 trường dữ liệu của VietCSharpTutor.",
+      "important_symbols": [
+        "JSON Schema v7",
+        "required properties"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Chỉ chứa đặc tả schema, không chứa dữ liệu thực."
+    },
+    {
+      "category": "DATASET LOADER",
+      "path": "backend/app/evaluation/runner.py",
+      "purpose": "Tải dataset từ tệp JSONL, lọc theo split được chọn và tính toán SHA256 checksum bảo vệ tính toàn vẹn.",
+      "important_symbols": [
+        "EvaluationRunner.load_dataset"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Đọc trực tiếp tệp vietcsharptutor_600.jsonl, có toàn quyền truy cập tất cả các trường nhãn vàng."
+    },
+    {
+      "category": "DATASET LOADER",
+      "path": "scripts/validate_vietcsharptutor.py",
+      "purpose": "Nạp toàn bộ dataset JSONL vào bộ nhớ để kiểm tra cú pháp, schema và phân chia split.",
+      "important_symbols": [
+        "DatasetValidator.validate_file",
+        "DatasetValidator.validate_sample"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Đọc tất cả 25 trường của từng bản ghi để kiểm tra tính hợp lệ."
+    },
+    {
+      "category": "MODEL INPUT BUILDER",
+      "path": "backend/app/tutor/context_builder.py",
+      "purpose": "Xây dựng bối cảnh đầu vào cho gia sư AI (phân tách submitted code evidence và learner context, kiểm soát ngân sách token).",
+      "important_symbols": [
+        "StudentContextBuilder",
+        "CodeSubmissionContext",
+        "LearnerPersonalizationContext"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Được thiết kế nghiêm ngặt: không nhận nhãn vàng, chỉ nhận mã học sinh và lịch sử thử."
+    },
+    {
+      "category": "MODEL INPUT BUILDER",
+      "path": "backend/app/services/prompt_builder.py",
+      "purpose": "Xây dựng prompt chung cho các dịch vụ phân tích.",
+      "important_symbols": [
+        "PromptBuilder"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Không liên quan tới evaluation pipeline của VietCSharpTutor."
+    },
+    {
+      "category": "PROMPT BUILDER",
+      "path": "backend/app/evaluation/prompts.py",
+      "purpose": "Xây dựng chuỗi prompt đóng băng có gắn phiên bản cho 4 hệ thống đánh giá (A, B, C, D).",
+      "important_symbols": [
+        "PROMPT_VERSIONS",
+        "build_prompt_a",
+        "build_prompt_b",
+        "build_prompt_c",
+        "build_prompt_d"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Các hàm chỉ nhận problem_statement, student_code, compiler_error. Riêng build_prompt_d nhận student_context (có nguy cơ ô nhiễm nếu truyền gold KC)."
+    },
+    {
+      "category": "PROMPT BUILDER",
+      "path": "backend/app/tutor/prompts/diagnosis_v1.py",
+      "purpose": "Đặc tả cấu trúc prompt chẩn đoán lỗi OOP trong môi trường sản xuất.",
+      "important_symbols": [
+        "build_tutor_user_prompt"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Dùng trong backend API sản xuất."
+    },
+    {
+      "category": "PROMPT BUILDER",
+      "path": "backend/app/tutor/prompts/system_policy_v1.py",
+      "purpose": "Đặc tả system prompt chính sách sư phạm 3 tầng gợi ý trong sản xuất.",
+      "important_symbols": [
+        "build_tutor_system_prompt"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Dùng trong backend API sản xuất."
+    },
+    {
+      "category": "EVALUATION RUNNER",
+      "path": "backend/app/evaluation/runner.py",
+      "purpose": "Bộ điều phối thực nghiệm đánh giá trung tâm cho VietCSharpTutor: nạp dữ liệu, sinh dự đoán, ghi predictions.jsonl và manifest.json.",
+      "important_symbols": [
+        "EvaluationRunner",
+        "EvaluationRunner.run",
+        "EvaluationRunner._predict_single"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "CRITICAL FINDING: Trong mock mode, _predict_single truy cập trực tiếp sample ground-truth để gán nhãn cho Proposed D."
+    },
+    {
+      "category": "EVALUATION RUNNER",
+      "path": "scripts/run_evaluation.py",
+      "purpose": "Giao diện dòng lệnh (CLI) để khởi chạy EvaluationRunner cho một hệ thống (A, B, C, D) trên một split (dev, val, test).",
+      "important_symbols": [
+        "main",
+        "parse_args"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Khởi tạo EvaluationRunner và kích hoạt run()."
+    },
+    {
+      "category": "EVALUATION RUNNER",
+      "path": "scripts/execute_frozen_protocol.py",
+      "purpose": "Kịch bản tự động thực thi toàn bộ giao thức đóng băng: kiểm tra git commit, chạy validation trước, sau đó chạy test một lần duy nhất.",
+      "important_symbols": [
+        "run_frozen_protocol",
+        "check_commit"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Chạy lần lượt 4 hệ thống và 5 cấu hình ablation."
+    },
+    {
+      "category": "LLM PROVIDER CLIENT",
+      "path": "backend/app/tutor/provider.py",
+      "purpose": "Lớp tích hợp API gọi mô hình ngôn ngữ lớn (OpenAI Chat Completion) trong ứng dụng gia sư sản xuất.",
+      "important_symbols": [
+        "TutorLLMProvider",
+        "OpenAITutorProvider",
+        "OpenAITutorProvider.generate_diagnosis"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Chỉ dùng trong luồng sản xuất thực tế. Trong research runner V1, LLM provider client thật không được gọi."
+    },
+    {
+      "category": "MOCK / FALLBACK",
+      "path": "backend/app/evaluation/runner.py",
+      "purpose": "Harness giả lập phản hồi của mô hình phục vụ kiểm thử đường ống (Mock Mode).",
+      "important_symbols": [
+        "EvaluationRunner._predict_single"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "ĐÂY LÀ NGUỒN GỐC RÒ RỈ: Mock runner đọc trực tiếp các trường nhãn vàng của mẫu bài toán."
+    },
+    {
+      "category": "MOCK / FALLBACK",
+      "path": "backend/app/evaluation/ablation.py",
+      "purpose": "Harness giả lập phản hồi cho các cấu hình triệt tiêu ablation trong mock mode.",
+      "important_symbols": [
+        "AblationRunner._predict_sample"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Cũng sao chép trực tiếp nhãn vàng trong cấu hình FULL."
+    },
+    {
+      "category": "MOCK / FALLBACK",
+      "path": "backend/app/core/config.py",
+      "purpose": "Cấu hình biến môi trường ứng dụng, chứa cờ MOCK_LLM.",
+      "important_symbols": [
+        "Settings.MOCK_LLM"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Điều khiển chế độ mock của backend API."
+    },
+    {
+      "category": "OUTPUT PARSER",
+      "path": "backend/app/schemas/tutor_schema.py",
+      "purpose": "Định nghĩa Pydantic schema để parse và xác thực phản hồi có cấu trúc JSON từ LLM.",
+      "important_symbols": [
+        "TutorDiagnosis",
+        "TutorResponse",
+        "TutorRequest",
+        "BugLocation"
+      ],
+      "used_in_production": true,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Chỉ định nghĩa schema kiểu dữ liệu, không truy cập nhãn vàng."
+    },
+    {
+      "category": "OUTPUT VALIDATOR",
+      "path": "backend/app/tutor/validator.py",
+      "purpose": "Kiểm định đầu ra của gia sư: kiểm tra cú pháp JSON, kiểm tra evidence trích xuất nguyên văn, kiểm tra rò rỉ mã giải pháp.",
+      "important_symbols": [
+        "TutorOutputValidator",
+        "TutorOutputValidator.validate"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Chỉ đối chiếu evidence với mã nguồn sinh viên nộp lên."
+    },
+    {
+      "category": "OUTPUT VALIDATOR",
+      "path": "backend/app/tutor/leakage_guard.py",
+      "purpose": "Bộ lọc ngăn chặn rò rỉ mã giải pháp trong các gợi ý bậc 1 và 2.",
+      "important_symbols": [
+        "SolutionLeakageGuard",
+        "SolutionLeakageGuard.inspect_hint"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Phát hiện khối mã ```csharp trong gợi ý định hướng."
+    },
+    {
+      "category": "OUTPUT VALIDATOR",
+      "path": "backend/app/tutor/evidence_grounding.py",
+      "purpose": "Kiểm tra chuỗi bằng chứng (evidence) có nằm nguyên văn trong mã nguồn học viên hay không.",
+      "important_symbols": [
+        "EvidenceGroundingChecker",
+        "EvidenceGroundingChecker.verify_grounding"
+      ],
+      "used_in_production": true,
+      "used_in_research": false,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Chống ảo giác bằng chứng (hallucinated evidence)."
+    },
+    {
+      "category": "PREDICTION STORAGE",
+      "path": "runs/",
+      "purpose": "Thư mục lưu trữ các tệp kết quả dự đoán (predictions.jsonl) và manifest của tất cả các đợt chạy thực nghiệm.",
+      "important_symbols": [
+        "runs/run_*_test_*/predictions.jsonl",
+        "runs/ablation_*_test_*/predictions.jsonl"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Lưu trữ dự đoán đã xuất ra, được dùng làm đầu vào cho offline metric calculator."
+    },
+    {
+      "category": "METRIC CALCULATOR",
+      "path": "backend/app/evaluation/metrics.py",
+      "purpose": "Bộ công cụ tính toán 11 chỉ số sư phạm cốt lõi và tài nguyên hoàn toàn offline từ predictions và ground truth.",
+      "important_symbols": [
+        "TutoringMetricsSuite",
+        "TutoringMetricsSuite.evaluate",
+        "compute_sample_kc_f1",
+        "check_solution_leakage"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "CẦN TRUY CẬP GROUND TRUTH để đối chiếu nhãn dự đoán với nhãn vàng."
+    },
+    {
+      "category": "METRIC CALCULATOR",
+      "path": "scripts/evaluate_metrics.py",
+      "purpose": "CLI chạy tính toán metrics offline cho một run hoặc thư mục run.",
+      "important_symbols": [
+        "main",
+        "evaluate_run_dir"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Gọi TutoringMetricsSuite trên tập predictions và ground truth."
+    },
+    {
+      "category": "METRIC CALCULATOR",
+      "path": "scripts/analyze_results.py",
+      "purpose": "Phân tích kết quả thực nghiệm hoàn chỉnh: tính khoảng tin cậy bootstrap, kiểm định paired McNemar, so sánh ablation.",
+      "important_symbols": [
+        "paired_mcnemar_test",
+        "bootstrap_confidence_interval",
+        "generate_overall_report"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Đọc predictions và ground truth để tạo kết quả tổng hợp trong results/."
+    },
+    {
+      "category": "ABLATION CONFIGURATION",
+      "path": "backend/app/evaluation/ablation.py",
+      "purpose": "Định nghĩa 5 cấu hình triệt tiêu độc lập (FULL, NO_STUDENT_MODEL, NO_PROGRESSIVE_HINT, NO_STRUCTURED_DIAGNOSIS, DIRECT_BASELINE) và runner thực thi.",
+      "important_symbols": [
+        "ABLATION_CONFIGS",
+        "AblationRunner",
+        "AblationRunner.run"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Chỉ thay đổi duy nhất một thành phần theo thiết kế biến kiểm soát."
+    },
+    {
+      "category": "ABLATION CONFIGURATION",
+      "path": "scripts/run_ablation.py",
+      "purpose": "CLI khởi chạy các thí nghiệm ablation theo tên cấu hình và split.",
+      "important_symbols": [
+        "main"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": true,
+      "notes": "Thực thi AblationRunner."
+    },
+    {
+      "category": "MANIFEST / PROVENANCE",
+      "path": "manifests/",
+      "purpose": "Thư mục lưu trữ các bản sao run manifest bất biến (immutable manifests) ghi nhận hash dataset, git commit, seed, config.",
+      "important_symbols": [
+        "ablation_*_manifest.json"
+      ],
+      "used_in_production": false,
+      "used_in_research": true,
+      "test_only": false,
+      "can_access_ground_truth": false,
+      "notes": "Bảo đảm khả năng truy vết nguồn gốc thực nghiệm (provenance)."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/test_evaluation_runner.py",
+      "purpose": "Kiểm định đơn vị cho EvaluationRunner: kiểm tra nạp dữ liệu, tạo manifest, sinh dự đoán mock.",
+      "important_symbols": [
+        "test_runner_initialization",
+        "test_runner_load_dataset",
+        "test_runner_run_mock"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Chỉ chạy trong pytest suite."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/test_ablation.py",
+      "purpose": "Kiểm định đơn vị cho AblationRunner và 5 cấu hình triệt tiêu.",
+      "important_symbols": [
+        "test_ablation_configs_definition",
+        "test_ablation_runner_run"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Chỉ chạy trong pytest suite."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/test_tutoring_metrics.py",
+      "purpose": "Kiểm định đơn vị cho TutoringMetricsSuite với các ví dụ tính tay.",
+      "important_symbols": [
+        "test_kc_f1_computation",
+        "test_localization_checker",
+        "test_metrics_suite_full_run"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Chỉ chạy trong pytest suite."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/test_taint_isolation.py",
+      "purpose": "Kiểm định cô lập nhãn vàng: xác minh các chuỗi sentinel ground-truth không lọt vào prompt.",
+      "important_symbols": [
+        "test_reference_solution_never_reaches_prompt",
+        "test_proposed_d_student_context_contains_no_gold_annotations"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Tạo ra trong quá trình kiểm toán APT-037."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/test_dataset_validator.py",
+      "purpose": "Kiểm định các quy tắc validation của DatasetValidator.",
+      "important_symbols": [
+        "test_validator_valid_sample",
+        "test_validator_missing_required_field"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": true,
+      "notes": "Chỉ chạy trong pytest suite."
+    },
+    {
+      "category": "TEST-ONLY INFRASTRUCTURE",
+      "path": "backend/tests/conftest.py",
+      "purpose": "Cấu hình fixture chung cho toàn bộ pytest suite.",
+      "important_symbols": [
+        "app_client",
+        "mock_tutor_provider"
+      ],
+      "used_in_production": false,
+      "used_in_research": false,
+      "test_only": true,
+      "can_access_ground_truth": false,
+      "notes": "Fixture môi trường kiểm thử."
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+[
+  {
+    "split": "dev",
+    "sample_id": "vct-001",
+    "topic": "class_object",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-002",
+    "topic": "field_property",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-003",
+    "topic": "getter_setter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-004",
+    "topic": "constructor_this",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-005",
+    "topic": "method_parameter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-006",
+    "topic": "encapsulation_validation",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-007",
+    "topic": "static_instance",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": false,
+    "cat_match": true,
+    "loc_match": false,
+    "kc_match": false,
+    "evidence_match": false,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-008",
+    "topic": "inheritance_polymorphism",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-009",
+    "topic": "correct_code",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "dev",
+    "sample_id": "vct-010",
+    "topic": "insufficient_context",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-361",
+    "topic": "class_object",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-362",
+    "topic": "field_property",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-363",
+    "topic": "getter_setter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-364",
+    "topic": "constructor_this",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-365",
+    "topic": "method_parameter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-366",
+    "topic": "encapsulation_validation",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-367",
+    "topic": "static_instance",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-368",
+    "topic": "inheritance_polymorphism",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-369",
+    "topic": "correct_code",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "validation",
+    "sample_id": "vct-370",
+    "topic": "insufficient_context",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-481",
+    "topic": "class_object",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-482",
+    "topic": "field_property",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-483",
+    "topic": "getter_setter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-484",
+    "topic": "constructor_this",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-485",
+    "topic": "method_parameter",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-486",
+    "topic": "encapsulation_validation",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-487",
+    "topic": "static_instance",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-488",
+    "topic": "inheritance_polymorphism",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-489",
+    "topic": "correct_code",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  },
+  {
+    "split": "test",
+    "sample_id": "vct-490",
+    "topic": "insufficient_context",
+    "model": "mock-tutor-v1",
+    "provider": "mock",
+    "status_match": true,
+    "cat_match": true,
+    "loc_match": true,
+    "kc_match": true,
+    "evidence_match": true,
+    "validator_actions": [
+      "student_model_context_injected",
+      "structured_schema_verified",
+      "evidence_grounded"
+    ],
+    "json_valid": true,
+    "evidence_in_student_code": true
+  }
+]

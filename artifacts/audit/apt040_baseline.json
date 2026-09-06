@@ -1,0 +1,214 @@
+{
+  "task": "APT-040",
+  "title": "Freeze Evaluation Audit Baseline",
+  "timestamp_utc": "2026-09-06T15:56:53.601252+00:00",
+  "project": "CodeSense AI - Adaptive Programming Tutor",
+  "frozen_release": "codesense-research-v1.0",
+  "audit_branch": "audit/evaluation-integrity-v1",
+  "git_state": {
+    "current_branch": "audit/evaluation-integrity-v1",
+    "current_head_commit": "3035e069d26892a010276993bdc452c9a458f45c",
+    "frozen_release_commit": "3035e069d26892a010276993bdc452c9a458f45c",
+    "commit_match": true,
+    "release_tags": [
+      "codesense-research-v1.0",
+      "love-sense-ai-final"
+    ],
+    "working_tree_status": "clean with untracked audit assets",
+    "untracked_evaluation_files": [
+      "artifacts/",
+      "backend/tests/test_taint_isolation.py",
+      "docs/audit/"
+    ]
+  },
+  "dataset_hashes": {
+    "dataset_path": "data/vietcsharptutor/vietcsharptutor_600.jsonl",
+    "dataset_sha256": "5ca8890eb12542a78a2c2c4ac86856f1ec2ff52e2e790687e5677baa00d637ed",
+    "splits": {
+      "dev": {
+        "count": 360,
+        "sha256": "4883098109f85fa42e1e7e874c2f11ddc51f59987e931dcda388ce862a98a52b"
+      },
+      "validation": {
+        "count": 120,
+        "sha256": "d9b3ad1339228aa4c47c9444def07ab013cef8498bcc244afbe24a7218b3349a"
+      },
+      "test": {
+        "count": 120,
+        "sha256": "65aa09f289f3db70846730b3b73a75395b61b50a2b33412ddd2a7c6aa6a39544"
+      }
+    }
+  },
+  "research_asset_hashes": {
+    "dataset": {
+      "vietcsharptutor_600.jsonl": {
+        "path": "data/vietcsharptutor/vietcsharptutor_600.jsonl",
+        "sha256": "5ca8890eb12542a78a2c2c4ac86856f1ec2ff52e2e790687e5677baa00d637ed"
+      },
+      "schema.json": {
+        "path": "data/vietcsharptutor/schema.json",
+        "sha256": "7c3b25080d2ce64dee76e5d62fb475a4bb8f28abc65535c081d644365e90cd32"
+      },
+      "examples.jsonl": {
+        "path": "data/vietcsharptutor/examples.jsonl",
+        "sha256": "aa84eeeae24dec3b0827b248ba43568401cf7f0c12660ed236a634ad4dbd69f4"
+      }
+    },
+    "evaluation_configuration": {
+      "runner.py": {
+        "path": "backend/app/evaluation/runner.py",
+        "sha256": "a1ffa68f5fa3d38fa67d2b8b5c52afcd227288da54c0c63b4bcea60a1474e428"
+      },
+      "ablation.py": {
+        "path": "backend/app/evaluation/ablation.py",
+        "sha256": "fb824572145de69abcf03909914b7413f1399017a74e9a68d1a247f093e5e740"
+      }
+    },
+    "evaluation_prompts": {
+      "prompts.py": {
+        "path": "backend/app/evaluation/prompts.py",
+        "sha256": "bf658267576906fec5a423a0b7f62c774a8e12a34955cfedb0ad29d3b3dc741b"
+      }
+    },
+    "ablation_configurations": {
+      "ablation.py": {
+        "path": "backend/app/evaluation/ablation.py",
+        "sha256": "fb824572145de69abcf03909914b7413f1399017a74e9a68d1a247f093e5e740"
+      }
+    },
+    "metric_implementation": {
+      "metrics.py": {
+        "path": "backend/app/evaluation/metrics.py",
+        "sha256": "104b732ca17fab64ec4251156209bf1e01f1ed3dcd96d644f97a191caedbaeb1"
+      }
+    },
+    "research_runners": {
+      "run_evaluation.py": {
+        "path": "scripts/run_evaluation.py",
+        "sha256": "2446811c495ec943c856439ee9d6f74e103e002243f223ee96cbeffb374c060d"
+      },
+      "run_ablation.py": {
+        "path": "scripts/run_ablation.py",
+        "sha256": "6bc6214d1bf39f1d7e895f430d0a332b90fbd1c2f216663d336481bca06c1dad"
+      },
+      "evaluate_metrics.py": {
+        "path": "scripts/evaluate_metrics.py",
+        "sha256": "a32e8b2f4aac2de1093ad5e0a14a8d4424d0bcf1f647812780870f763c446291"
+      },
+      "analyze_results.py": {
+        "path": "scripts/analyze_results.py",
+        "sha256": "768256600aa18b71134a0191715e4130c879f4df61a1986ac7edae57c4b7b90f"
+      }
+    },
+    "frozen_protocol_script": {
+      "execute_frozen_protocol.py": {
+        "path": "scripts/execute_frozen_protocol.py",
+        "sha256": "77dcdbc1adf03555d05eaf92a727940a48d7998c897b7dcf04d959f6cb8f21cd"
+      }
+    },
+    "dependency_files": {
+      "backend_requirements.txt": {
+        "path": "backend/requirements.txt",
+        "sha256": "99721287c25c9f558851465a8f9f8009bc633c46d2efa669c52c7f82353f2716"
+      },
+      "frontend_package.json": {
+        "path": "frontend/package.json",
+        "sha256": "c8ac8691d4788849eaf55d155a92da526611ffea50b8e247f05762cca9f2284e"
+      },
+      "frontend_package_lock.json": {
+        "path": "frontend/package-lock.json",
+        "sha256": "8ab4b263f3e774da2b07242a6519c31241c701f7b87fc789a9d5492cddbd8107"
+      }
+    }
+  },
+  "environment": {
+    "operating_system": "Windows 11 (Build 10.0.26200)",
+    "python_version": "3.13.9",
+    "nodejs_version": "v24.14.0",
+    "npm_version": "11.9.0",
+    "dotnet_version": "10.0.400"
+  },
+  "research_configuration": {
+    "provider_name": "mock",
+    "requested_model": "mock-tutor-v1",
+    "mock_configuration": {
+      "mock_mode": true,
+      "harness": "Offline Deterministic Mock Harness",
+      "rationale": "Mô phỏng tĩnh để kiểm định đường ống phần mềm và đánh giá thực nghiệm offline"
+    },
+    "fallback_configuration": {
+      "enabled": true,
+      "strategy": "deterministic_category_fallback",
+      "network_retry_count": 0
+    },
+    "cache_configuration": {
+      "prediction_cache": "local_filesystem",
+      "output_directory": "runs/",
+      "manifest_directory": "manifests/"
+    },
+    "decoding_parameters": {
+      "baseline_systems": {
+        "temperature": 0.7,
+        "max_tokens": 1024,
+        "top_p": 0.95
+      },
+      "proposed_systems": {
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "top_p": 0.95
+      }
+    },
+    "retry_policy": {
+      "max_retries": 0,
+      "backoff_factor": 0,
+      "policy": "no_network_retry_on_mock"
+    },
+    "available_systems": [
+      {
+        "system_id": "A",
+        "name": "Baseline A: Direct LLM Debugging Prompt",
+        "prompt_version": "v1.0-direct-debug",
+        "temperature": 0.7,
+        "max_tokens": 1024,
+        "structured_diagnosis": false,
+        "progressive_hints": false,
+        "student_context": false
+      },
+      {
+        "system_id": "B",
+        "name": "Baseline B: Generic Tutor Prompt",
+        "prompt_version": "v1.0-generic-tutor",
+        "temperature": 0.7,
+        "max_tokens": 1024,
+        "structured_diagnosis": false,
+        "progressive_hints": false,
+        "student_context": false
+      },
+      {
+        "system_id": "C",
+        "name": "Proposed C: Structured Diagnosis + Progressive Hints",
+        "prompt_version": "v1.0-structured-progressive",
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "structured_diagnosis": true,
+        "progressive_hints": true,
+        "student_context": false
+      },
+      {
+        "system_id": "D",
+        "name": "Proposed D: Structured Diagnosis + Progressive Hints + Student Context",
+        "prompt_version": "v1.0-contextual-adaptive",
+        "temperature": 0.2,
+        "max_tokens": 1024,
+        "structured_diagnosis": true,
+        "progressive_hints": true,
+        "student_context": true
+      }
+    ]
+  },
+  "security_attestation": {
+    "api_keys_exposed": false,
+    "credentials_exposed": false,
+    "statement": "Kiểm toán viên nghiên cứu độc lập xác nhận không có bất kỳ secret, API key hay thông tin nhạy cảm nào bị lưu trữ hoặc lộ lọt."
+  }
+}
