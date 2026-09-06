@@ -1,54 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowRight, Code2 } from 'lucide-react';
 
-import AnalysisForm from '@/components/analyze/AnalysisForm';
-import AnalysisResultPanel from '@/components/analyze/AnalysisResultPanel';
-import Card from '@/components/common/Card';
-import { analyzeEmotion } from '@/lib/api';
-import type { AnalyzeRequest, AnalyzeResponse } from '@/lib/types';
+import PageShell from '@/components/common/PageShell';
 
 export default function AnalyzePage() {
-  const [result, setResult] = useState<AnalyzeResponse | null>(null);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const handleAnalyze = async (payload: AnalyzeRequest) => {
-    setIsLoading(true);
-    setErrorMessage('');
-
-    try {
-      const analysis = await analyzeEmotion(payload);
-      setResult(analysis);
-    } catch (error) {
-      setResult(null);
-      setErrorMessage(error instanceof Error ? error.message : 'Không thể phân tích đoạn chat lúc này.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  useEffect(() => {
+    router.replace('/tutor');
+  }, [router]);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="max-w-3xl space-y-3">
-        <p className="text-sm font-semibold uppercase text-rose-700">Love Emotion MVP</p>
-        <h1 className="text-3xl font-bold text-slate-950 sm:text-4xl">Phân tích sắc thái cảm xúc trong đoạn chat</h1>
-        <p className="text-base leading-7 text-slate-600">
-          Nhập đoạn hội thoại và bối cảnh cá nhân hóa để nhận nhận định tham khảo, gợi ý phản hồi nhẹ
-          nhàng và cảnh báo an toàn.
+    <PageShell className="flex min-h-[60vh] flex-col items-center justify-center text-center">
+      <div className="mx-auto max-w-md space-y-4 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+          <Code2 className="h-7 w-7" />
+        </div>
+        <h1 className="text-xl font-bold text-slate-900">Đang chuyển hướng sang Gia sư lập trình...</h1>
+        <p className="text-sm text-slate-600">
+          Tính năng phân tích hội thoại cũ đã được chuyển đổi thành không gian hướng dẫn lập trình C# OOP.
         </p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(380px,0.9fr)] lg:items-start">
-        <Card
-          title="Thông tin đầu vào"
-          description="Dữ liệu chỉ được gửi đến backend local để tạo mock response. MVP chưa lưu nội dung chat mặc định."
+        <Link
+          href="/tutor"
+          className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700"
         >
-          <AnalysisForm isLoading={isLoading} onAnalyze={handleAnalyze} />
-        </Card>
-
-        <AnalysisResultPanel result={result} errorMessage={errorMessage} />
+          Đi tới CodeSense Tutor
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
-    </div>
+    </PageShell>
   );
 }

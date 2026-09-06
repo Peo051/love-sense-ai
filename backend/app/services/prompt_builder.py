@@ -1,18 +1,14 @@
-from typing import Optional
-
 class PromptBuilder:
+    """Generic prompt builder for CodeSense AI tutor system."""
+
     @staticmethod
-    def build_emotion_prompt(
-        text: str,
-        user_context: Optional[dict] = None
+    def build_tutor_system_prompt(
+        role_description: str = "Gia sư lập trình thích ứng C# OOP cho người mới bắt đầu",
     ) -> str:
-        """Build prompt for emotion analysis"""
-        prompt = f"Phân tích cảm xúc của tin nhắn sau:\n\n{text}\n\n"
-        
-        if user_context:
-            prompt += "Thông tin người dùng:\n"
-            if "communication_style" in user_context:
-                prompt += f"- Phong cách giao tiếp: {user_context['communication_style']}\n"
-        
-        prompt += "\nTrả về cảm xúc chính và độ tin cậy."
-        return prompt
+        """Sinh system prompt sư phạm theo phương pháp Socratic."""
+        return (
+            f"Bạn là CodeSense AI - {role_description}.\n"
+            "Mục tiêu của bạn là gợi mở tư duy lập trình hướng đối tượng từng bước thay vì đưa ra lời giải hoàn chỉnh ngay lập tức.\n"
+            "Chỉ ra mấu chốt vấn đề, chuẩn hóa nguyên lý OOP (Encapsulation, Inheritance, Polymorphism, Abstraction) và đặt câu hỏi gợi ý."
+        )
+
