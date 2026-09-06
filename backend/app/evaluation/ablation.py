@@ -39,10 +39,43 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8")
 
 ROOT_DIR = Path(__file__).resolve().parents[3]
+
 try:
-    from app.evaluation.runner import EvaluationRunner, get_git_commit
+    from app.evaluation.runner import (
+        EvaluationRunner,
+        get_git_commit,
+        clean_json_string,
+        parse_provider_output,
+        validate_prediction_non_gold,
+    )
+    from app.evaluation.prompts import (
+        SYSTEM_PROMPT_A,
+        SYSTEM_PROMPT_B,
+        SYSTEM_PROMPT_C,
+        SYSTEM_PROMPT_D,
+        build_prompt_a,
+        build_prompt_b,
+        build_prompt_c,
+        build_prompt_d,
+    )
 except ImportError:
-    from backend.app.evaluation.runner import EvaluationRunner, get_git_commit
+    from backend.app.evaluation.runner import (
+        EvaluationRunner,
+        get_git_commit,
+        clean_json_string,
+        parse_provider_output,
+        validate_prediction_non_gold,
+    )
+    from backend.app.evaluation.prompts import (
+        SYSTEM_PROMPT_A,
+        SYSTEM_PROMPT_B,
+        SYSTEM_PROMPT_C,
+        SYSTEM_PROMPT_D,
+        build_prompt_a,
+        build_prompt_b,
+        build_prompt_c,
+        build_prompt_d,
+    )
 
 ABLATION_CONFIGS = {
     "FULL": {
@@ -95,7 +128,9 @@ class AblationRunner:
         dataset_path: Optional[Path] = None,
         output_dir: Optional[Path] = None,
         seed: int = 42,
-        mock: bool = True
+        mock: bool = False,
+        provider_client: Optional[Any] = None,
+        student_context: Optional[Dict[str, Any]] = None,
     ):
         name_upper = config_name.upper()
         if name_upper not in ABLATION_CONFIGS:
@@ -111,8 +146,18 @@ class AblationRunner:
         self.provider = provider
         self.seed = seed
         self.mock = mock
+        self.provider_client = provider_client
+        self.student_context = student_context
 
-        self.dataset_path = dataset_path or (ROOT_DIR / "data" / "vietcsharptutor" / "vietcsharptutor_600.jsonl")
+        if self.provider_client is None and not self.mock and self.provider in ("openai", "azure"):
+            try:
+                from app.tutor.provider import OpenAITutorProvider
+                self.provider_client = OpenAITutorProvider()
+            except Exception:
+                self.provider_client = None
+
+        root = ROOT_DIR
+        self.dataset_path = dataset_path or (root / "data" / "vietcsharptutor" / "vietcsharptutor_600.jsonl")
         timestamp_str = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         self.run_id = f"ablation_{self.config_name}_{self.split}_{timestamp_str}"
         self.output_dir = output_dir or (ROOT_DIR / "runs" / self.run_id)
@@ -182,149 +227,142 @@ class AblationRunner:
             "total_samples": len(samples)
         }
 
-    def _predict_sample(self, sample: Dict[str, Any]) -> Dict[str, Any]:
-        sample_id = sample["id"]
-        gt_status = sample["bug_status"]
-        lat = round(random.uniform(180.0, 390.0), 2)
-        p_tokens = random.randint(400, 600)
-        c_tokens = random.randint(200, 450)
+    def _call_provider(self, messages: List[Dict[str, Any]], temperature: float, max_tokens: int) -> str:
+        """Gửi prompt tới provider và nhận phản hồi văn bản thực tế."""
+        if self.provider_client is None:
+            raise RuntimeError(
+                f"Ablation configuration {self.config_name} cannot produce predictions without an LLM provider. "
+                "Direct ground-truth copying has been completely removed (APT-053)."
+            )
 
-        # FULL (Dương tính sư phạm cao nhất, không rò rỉ)
+        if hasattr(self.provider_client, "generate_response_sync"):
+            return self.provider_client.generate_response_sync(messages, temperature=temperature, max_tokens=max_tokens)
+
+        import asyncio
+        import inspect
+
+        gen = self.provider_client.generate_response(messages, temperature=temperature, max_tokens=max_tokens)
+        if inspect.isawaitable(gen):
+            try:
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
+
+            if loop and loop.is_running():
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    return executor.submit(
+                        asyncio.run,
+                        self.provider_client.generate_response(messages, temperature=temperature, max_tokens=max_tokens)
+                    ).result()
+            else:
+                return asyncio.run(gen)
+        return str(gen)
+
+    def _predict_sample(self, sample: Any) -> Dict[str, Any]:
+        """
+        Dự đoán cho từng mẫu độc lập trong nghiên cứu triệt tiêu (ablation study)
+        tuân thủ nghiêm ngặt quy trình Clean-Room không sao chép nhãn vàng.
+        """
+        from app.evaluation.schemas import GroundTruth, ModelInput, assert_not_ground_truth
+        from app.evaluation.firewall import GroundTruthFirewall
+
+        # 1. Bảo vệ tầng đầu vào: Từ chối dứt khoát GroundTruth và sentinels
+        if isinstance(sample, GroundTruth):
+            raise TypeError("AblationRunner cannot accept GroundTruth objects directly as model input. Pass ModelInput instead.")
+        assert_not_ground_truth(sample)
+
+        # 2. Chuẩn hóa sang ModelInput chỉ chứa 4 trường danh sách trắng (Whitelist)
+        if isinstance(sample, ModelInput):
+            model_input = sample
+        elif hasattr(sample, "model_input"):
+            model_input = sample.model_input
+        elif isinstance(sample, dict):
+            model_input = ModelInput.from_dataset_record(sample)
+        else:
+            raise TypeError(f"AblationRunner cannot process input of type {type(sample).__name__}")
+
+        # 3. Chốt chặn Provider: Bắt buộc phải có provider thực tế
+        if self.provider_client is None:
+            raise RuntimeError(
+                f"Ablation configuration {self.config_name} cannot produce predictions without an LLM provider. "
+                "Direct ground-truth copying has been completely removed (APT-053)."
+            )
+
+        # 4. Xây dựng prompt tương ứng cấu hình triệt tiêu
         if self.config_name == "FULL":
-            is_correct = random.random() < 0.97
-            return {
-                "id": sample_id,
-                "model": self.model,
-                "provider": self.provider,
-                "prompt_version": self.config_details["prompt_version"],
-                "latency_ms": lat,
-                "prompt_tokens": p_tokens,
-                "completion_tokens": c_tokens,
-                "bug_status": gt_status if is_correct else gt_status,
-                "error_category": sample["error_category"],
-                "bug_type": sample["bug_type"],
-                "bug_location": sample.get("bug_location"),
-                "evidence": sample.get("evidence"),
-                "knowledge_components": sample.get("knowledge_components", []),
-                "possible_misconception": sample.get("possible_misconception"),
-                "hint_1": sample.get("hint_1", "Quan sát điều kiện cấp phát."),
-                "hint_2": sample.get("hint_2", "Đặc tính bao gói dữ liệu."),
-                "hint_3": sample.get("hint_3", "Cập nhật lệnh gán phù hợp."),
-                "reference_diagnosis": sample.get("reference_diagnosis", ""),
-                "explanation_vi": sample.get("explanation_vi", ""),
-                "json_valid": True,
-                "validator_actions": ["full_pipeline_verified"]
-            }
-
-        # NO_STUDENT_MODEL (Không có bối cảnh học viên, độ chính xác misconception và thích ứng giảm nhẹ)
+            system_prompt = SYSTEM_PROMPT_D
+            ctx = None
+            if isinstance(self.student_context, dict):
+                ctx = self.student_context.get(model_input.sample_id, self.student_context)
+            if ctx is not None:
+                assert_not_ground_truth(ctx)
+            user_prompt = build_prompt_d(model_input, student_context=ctx)
         elif self.config_name == "NO_STUDENT_MODEL":
-            is_correct = random.random() < 0.91
-            return {
-                "id": sample_id,
-                "model": self.model,
-                "provider": self.provider,
-                "prompt_version": self.config_details["prompt_version"],
-                "latency_ms": lat,
-                "prompt_tokens": p_tokens - 80,
-                "completion_tokens": c_tokens,
-                "bug_status": gt_status if is_correct else ("has_bug" if gt_status != "has_bug" else "no_bug"),
-                "error_category": sample["error_category"] if is_correct else "compile_error",
-                "bug_type": sample["bug_type"] if is_correct else "generic_error",
-                "bug_location": sample.get("bug_location") if is_correct else None,
-                "evidence": sample.get("evidence") if is_correct else None,
-                "knowledge_components": sample.get("knowledge_components", []) if is_correct else ["OOP.Classes"],
-                "possible_misconception": sample.get("possible_misconception") if (is_correct and random.random() < 0.82) else None,
-                "hint_1": sample.get("hint_1", "Kiểm tra lại cấu trúc lớp."),
-                "hint_2": sample.get("hint_2", "Giải thích bản chất OOP."),
-                "hint_3": sample.get("hint_3", "Sửa đổi code."),
-                "reference_diagnosis": sample.get("reference_diagnosis", ""),
-                "explanation_vi": sample.get("explanation_vi", ""),
-                "json_valid": True,
-                "validator_actions": ["no_student_model_executed"]
-            }
-
-        # NO_PROGRESSIVE_HINT (Bỏ 3 bậc gợi ý -> Hint 1 trực diện tiết lộ code -> Rò rỉ giải pháp cao ~65%, Hint Policy = 0%)
+            system_prompt = SYSTEM_PROMPT_C
+            user_prompt = build_prompt_c(model_input)
         elif self.config_name == "NO_PROGRESSIVE_HINT":
-            is_correct = random.random() < 0.90
-            ref_sol = sample.get("reference_solution", "")
-            return {
-                "id": sample_id,
-                "model": self.model,
-                "provider": self.provider,
-                "prompt_version": self.config_details["prompt_version"],
-                "latency_ms": lat,
-                "prompt_tokens": p_tokens,
-                "completion_tokens": c_tokens + 50,
-                "bug_status": gt_status if is_correct else gt_status,
-                "error_category": sample["error_category"],
-                "bug_type": sample["bug_type"],
-                "bug_location": sample.get("bug_location"),
-                "evidence": sample.get("evidence"),
-                "knowledge_components": sample.get("knowledge_components", []),
-                "possible_misconception": sample.get("possible_misconception"),
-                "hint_1": f"Mã giải pháp hoàn chỉnh:\n```csharp\n{ref_sol}\n```", # LEAKAGE!
-                "hint_2": "",  # Vi phạm chính sách 3 bậc
-                "hint_3": "",
-                "reference_diagnosis": sample.get("reference_diagnosis", ""),
-                "explanation_vi": sample.get("explanation_vi", ""),
-                "json_valid": True,
-                "validator_actions": ["direct_hint_executed"]
-            }
-
-        # NO_STRUCTURED_DIAGNOSIS (Bỏ cấu trúc JSON -> JSON Valid Rate thấp ~60%, Localization kém ~50%, KC F1 thấp)
+            system_prompt = SYSTEM_PROMPT_C
+            user_prompt = build_prompt_c(model_input)
         elif self.config_name == "NO_STRUCTURED_DIAGNOSIS":
-            is_correct = random.random() < 0.72
-            is_json_valid = random.random() < 0.65
-            return {
-                "id": sample_id,
-                "model": self.model,
-                "provider": self.provider,
-                "prompt_version": self.config_details["prompt_version"],
-                "latency_ms": lat,
-                "prompt_tokens": p_tokens - 50,
-                "completion_tokens": c_tokens,
-                "bug_status": gt_status if is_correct else "has_bug",
-                "error_category": sample["error_category"] if is_correct else "logic_error",
-                "bug_type": sample["bug_type"] if is_correct else "unstructured_issue",
-                "bug_location": sample.get("bug_location") if (is_correct and random.random() < 0.55) else None,
-                "evidence": sample.get("evidence") if (is_correct and random.random() < 0.60) else None,
-                "knowledge_components": sample.get("knowledge_components", [])[:1] if is_correct else [],
-                "possible_misconception": "Người học gặp khó khăn khi code" if gt_status == "has_bug" else None,
-                "hint_1": "Bạn hãy chú ý phương thức và thuộc tính nhé.",
-                "hint_2": "Xem lại cú pháp C# chuẩn.",
-                "hint_3": "Chạy thử bài làm.",
-                "reference_diagnosis": "Chẩn đoán văn bản tự do không cấu trúc.",
-                "explanation_vi": "Giải thích văn xuôi.",
-                "json_valid": is_json_valid,
-                "validator_actions": ["freeform_text_parsed"]
-            }
-
-        # DIRECT_BASELINE (Baseline thuần túy)
+            system_prompt = SYSTEM_PROMPT_B
+            user_prompt = build_prompt_b(model_input)
         elif self.config_name == "DIRECT_BASELINE":
-            is_correct = random.random() < 0.62
-            ref_sol = sample.get("reference_solution", "")
-            return {
-                "id": sample_id,
-                "model": self.model,
-                "provider": self.provider,
-                "prompt_version": self.config_details["prompt_version"],
-                "latency_ms": lat,
-                "prompt_tokens": p_tokens - 100,
-                "completion_tokens": c_tokens,
-                "bug_status": gt_status if is_correct else "has_bug",
-                "error_category": sample["error_category"] if is_correct else "compile_error",
-                "bug_type": sample["bug_type"] if is_correct else "generic_bug",
-                "bug_location": None,
-                "evidence": None,
-                "knowledge_components": [],
-                "possible_misconception": None,
-                "hint_1": f"Đây là code đúng:\n```csharp\n{ref_sol}\n```", # LEAKAGE!
-                "hint_2": "Copy vào bài của bạn.",
-                "hint_3": "Nộp bài.",
-                "reference_diagnosis": "Có lỗi, đã sửa như trên.",
-                "explanation_vi": "Sửa code trực tiếp.",
-                "json_valid": True,
-                "validator_actions": ["direct_debug_baseline"]
-            }
+            system_prompt = SYSTEM_PROMPT_A
+            user_prompt = build_prompt_a(model_input)
+        else:
+            raise ValueError(f"Không nhận diện cấu hình: {self.config_name}")
 
-        raise ValueError(f"Không nhận diện cấu hình: {self.config_name}")
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
+
+        # 5. Fail-Closed Firewall quét toàn bộ messages trước khi gọi provider
+        GroundTruthFirewall.default().inspect(messages, base_path=f"ablation.{self.config_name}.messages")
+
+        # 6. Gọi Provider thực tế và đo đạc độ trễ
+        t0 = time.time()
+        temperature = 0.2 if self.config_details.get("has_structured_diagnosis", True) else 0.7
+        raw_response = self._call_provider(messages, temperature=temperature, max_tokens=1024)
+        latency_ms = round((time.time() - t0) * 1000, 2)
+
+        prompt_chars = sum(len(m.get("content", "")) for m in messages)
+        prompt_tokens = max(1, prompt_chars // 4)
+        completion_tokens = max(1, len(raw_response) // 4)
+
+        # 7. Parser: Bóc tách cấu trúc từ chuỗi phản hồi thô của provider
+        sys_type = "C" if self.config_details.get("has_structured_diagnosis", True) else "B"
+        parsed, json_valid, parse_actions = parse_provider_output(raw_response, sys_type)
+
+        # 8. Non-Gold Validator: Kiểm định tính hợp lệ mà KHÔNG truy cập Ground Truth
+        validated_data, validator_actions = validate_prediction_non_gold(
+            parsed_data=parsed,
+            model_input=model_input,
+            parse_actions=parse_actions,
+        )
+
+        # 9. Đóng gói Prediction từ dữ liệu đã qua kiểm định
+        return {
+            "id": model_input.sample_id,
+            "model": self.model,
+            "provider": self.provider,
+            "prompt_version": self.config_details["prompt_version"],
+            "latency_ms": latency_ms,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "bug_status": validated_data.get("bug_status"),
+            "error_category": validated_data.get("error_category"),
+            "bug_type": validated_data.get("bug_type"),
+            "bug_location": validated_data.get("bug_location"),
+            "evidence": validated_data.get("evidence"),
+            "knowledge_components": validated_data.get("knowledge_components") if isinstance(validated_data.get("knowledge_components"), list) else [],
+            "possible_misconception": validated_data.get("possible_misconception"),
+            "hint_1": validated_data.get("hint_1"),
+            "hint_2": validated_data.get("hint_2"),
+            "hint_3": validated_data.get("hint_3"),
+            "reference_diagnosis": validated_data.get("reference_diagnosis"),
+            "explanation_vi": validated_data.get("explanation_vi") or raw_response,
+            "json_valid": json_valid,
+            "validator_actions": validator_actions,
+        }
