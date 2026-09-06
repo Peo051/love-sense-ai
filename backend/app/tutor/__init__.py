@@ -26,12 +26,19 @@ from app.tutor.taxonomy import (
     normalize_issue_type,
 )
 from app.tutor.validator import TutorOutputValidationError, TutorOutputValidator
+from app.tutor.verification import (
+    ExecutionBackend,
+    SandboxedCompilerBackend,
+    StaticAndPatternExecutionBackend,
+    VerificationService,
+)
 
 __all__ = [
     "DiagnosisCategory",
     "DiagnosisSubsystem",
     "DeterministicMockTutorProvider",
     "EvidenceGroundingValidator",
+    "ExecutionBackend",
     "GroundingResult",
     "GuestContextError",
     "GuestContextSigner",
@@ -41,7 +48,9 @@ __all__ = [
     "HintSessionState",
     "LeakageCheckResult",
     "OpenAITutorProvider",
+    "SandboxedCompilerBackend",
     "SolutionLeakageGuard",
+    "StaticAndPatternExecutionBackend",
     "TAXONOMY_ISSUE_TYPES",
     "TutorLLMProvider",
     "TutorOutputValidationError",
@@ -49,6 +58,7 @@ __all__ = [
     "TutorProviderError",
     "TutorService",
     "TutorServiceError",
+    "VerificationService",
     "normalize_category",
     "normalize_diagnosis_labels",
     "normalize_issue_type",

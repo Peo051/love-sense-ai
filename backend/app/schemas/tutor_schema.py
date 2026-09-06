@@ -537,3 +537,117 @@ class TutorHintResponse(BaseModel):
         default=None,
         description="ID phiên học nếu có",
     )
+
+
+class VerificationStatus(str, Enum):
+    """
+    Nhãn trạng thái kiểm định lần thử lại của sinh viên:
+    - LIKELY_RESOLVED: Lỗi có khả năng cao đã được giải quyết dựa trên phân tích tĩnh / mẫu cấu trúc.
+    - STILL_PRESENT: Lỗi ban đầu vẫn còn tồn tại trong mã sửa đổi.
+    - NEW_ISSUE: Lỗi cũ có thể đã được sửa nhưng làm phát sinh một vấn đề mới.
+    - NEEDS_EXECUTION_TO_CONFIRM: Cấu trúc mã phức tạp hoặc mang tính logic động, cần môi trường thực thi hộp cát để khẳng định.
+    """
+    LIKELY_RESOLVED = "likely_resolved"
+    STILL_PRESENT = "still_present"
+    NEW_ISSUE = "new_issue"
+    NEEDS_EXECUTION_TO_CONFIRM = "needs_execution_to_confirm"
+
+
+class TutorVerifyRequest(BaseModel):
+    """
+    Mô hình yêu cầu xác minh lần thử lại của sinh viên (POST /api/tutor/verify).
+    """
+    problem_statement: str = Field(
+        ...,
+        min_length=5,
+        max_length=5000,
+        description="Đề bài hoặc yêu cầu bài toán ban đầu",
+    )
+    revised_student_code: str = Field(
+        ...,
+        min_length=1,
+        max_length=50000,
+        description="Mã nguồn mới của sinh viên sau khi sửa",
+    )
+    previous_code: Optional[str] = Field(
+        default=None,
+        max_length=50000,
+        description="Mã nguồn trước đó của sinh viên (để so khớp thay đổi)",
+    )
+    original_diagnosis: Optional[TutorDiagnosis] = Field(
+        default=None,
+        description="Chẩn đoán kỹ thuật ban đầu của bài toán",
+    )
+    compiler_error: Optional[str] = Field(
+        default=None,
+        max_length=10000,
+        description="Thông báo lỗi biên dịch mới nếu có",
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="ID phiên gia sư đã lưu trữ trong DB (nếu có)",
+    )
+    guest_context_token: Optional[str] = Field(
+        default=None,
+        description="Token ngữ cảnh có chữ ký của khách vãng lai (nếu có)",
+    )
+
+    @field_validator("problem_statement", "revised_student_code")
+    @classmethod
+    def clean_required_strings(cls, value: str) -> str:
+        trimmed = value.strip()
+        if not trimmed:
+            raise ValueError("Field must not be empty or contain only whitespace.")
+        return trimmed
+
+    @field_validator("previous_code", "compiler_error")
+    @classmethod
+    def clean_optional_strings(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed if trimmed else None
+
+
+class TutorVerifyResponse(BaseModel):
+    """
+    Mô hình phản hồi kết quả xác minh lần thử lại của sinh viên.
+    """
+    verification_status: VerificationStatus = Field(
+        ...,
+        description="Trạng thái kiểm định: likely_resolved, still_present, new_issue, needs_execution_to_confirm",
+    )
+    resolved: bool = Field(
+        ...,
+        description="Đánh giá sơ bộ xem lỗi ban đầu đã được khắc phục hay chưa",
+    )
+    remaining_issues: list[str] = Field(
+        default_factory=list,
+        description="Danh sách các vấn đề cũ còn sót lại trong mã nguồn",
+    )
+    new_issues: list[str] = Field(
+        default_factory=list,
+        description="Danh sách các vấn đề mới phát sinh sau khi sửa",
+    )
+    feedback: str = Field(
+        ...,
+        description="Nhận xét và đánh giá sư phạm về bài làm sửa đổi của sinh viên",
+    )
+    next_action: str = Field(
+        ...,
+        description="Hành động cụ thể gợi ý cho sinh viên thực hiện tiếp theo",
+    )
+    confidence: float = Field(
+        default=0.85,
+        ge=0.0,
+        le=1.0,
+        description="Độ tin cậy của kết luận kiểm định",
+    )
+    security_boundary_note: str = Field(
+        default="Đánh giá dựa trên phân tích tĩnh và quy chuẩn sư phạm C# OOP; chưa qua môi trường thực thi hộp cát cô lập (sandboxed execution).",
+        description="Cam kết ranh giới bảo mật: phân tích tĩnh không tương đương với việc thực thi mã nguồn.",
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="ID phiên học nếu có",
+    )

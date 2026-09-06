@@ -13,12 +13,16 @@ from app.schemas.tutor_schema import (
     TutorHintResponse,
     TutorRequest,
     TutorResponse,
+    TutorVerifyRequest,
+    TutorVerifyResponse,
+    VerificationStatus,
 )
 from app.services.db_store import ConsentRepository, HistoryRepository
 from app.services.rate_limiter import analyze_rate_limiter
 from app.tutor.guest_context import GuestContextError, GuestContextSigner, GuestContextTamperedError
 from app.tutor.hint_manager import HintManager
 from app.tutor.service import TutorService, TutorServiceError
+from app.tutor.verification import VerificationService
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +32,11 @@ router = APIRouter()
 def get_tutor_service() -> TutorService:
     """Dependency cung cấp instance của TutorService (hỗ trợ override trong unit tests)."""
     return TutorService()
+
+
+def get_verification_service() -> VerificationService:
+    """Dependency cung cấp instance của VerificationService (hỗ trợ override trong unit tests)."""
+    return VerificationService()
 
 
 def _build_rate_limit_key(request: Request, user_id: Optional[str]) -> str:
@@ -320,3 +329,67 @@ async def request_next_hint(
         teaching_strategy=hint_payload.teaching_strategy,
         guest_context_token=new_guest_token,
     )
+
+
+@router.post("/verify", response_model=TutorVerifyResponse)
+async def verify_retry(
+    http_request: Request,
+    request: TutorVerifyRequest,
+    current_user: Optional[CurrentUser] = Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+    verification_service: VerificationService = Depends(get_verification_service),
+) -> TutorVerifyResponse:
+    """
+    POST /api/tutor/verify
+
+    Xác minh lần thử lại (retry) của sinh viên sau khi nhận gợi ý sư phạm.
+    Nguyên tắc bảo mật:
+    - Tuyệt đối không thực thi mã C# tùy ý trực tiếp trên production backend.
+    - Phân tích tĩnh, so khớp mẫu chuẩn và chẩn đoán cấu trúc.
+    - Không mạo nhận kiểm tra tĩnh/LLM tương đương với việc biên dịch/chạy thử mã nguồn.
+    """
+    # 1. Rate Limit Check
+    rate_limit_key = _build_rate_limit_key(http_request, current_user.id if current_user else None)
+    rate_decision = analyze_rate_limiter.check(
+        rate_limit_key,
+        limit=settings.analyze_rate_limit_requests,
+        window_seconds=settings.analyze_rate_limit_window_seconds,
+    )
+    if not rate_decision.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Bạn đang gửi yêu cầu quá nhanh. Vui lòng chờ một chút trước khi thử lại.",
+            headers={"Retry-After": str(rate_decision.retry_after_seconds)},
+        )
+
+    # 2. Bổ sung ngữ cảnh từ DB session nếu là authenticated user và chưa truyền đủ
+    if current_user and request.session_id:
+        try:
+            session_item = await HistoryRepository.get_tutor_session(db, current_user.id, request.session_id)
+            if session_item:
+                if not request.previous_code and session_item.chat_text:
+                    request = request.model_copy(update={"previous_code": session_item.chat_text})
+                dist = dict(session_item.emotion_distribution or {})
+                if not request.original_diagnosis and "diagnosis" in dist:
+                    request = request.model_copy(
+                        update={"original_diagnosis": TutorDiagnosis.model_validate(dist["diagnosis"])}
+                    )
+        except Exception as exc:
+            logger.warning("Không thể lấy phiên học từ DB để bổ sung ngữ cảnh xác minh: %s", str(exc))
+
+    # 3. Bổ sung ngữ cảnh từ guest_context_token nếu là stateless guest mode
+    elif request.guest_context_token:
+        try:
+            payload = GuestContextSigner.verify_guest_context(request.guest_context_token)
+            if not request.previous_code and payload.get("student_code"):
+                request = request.model_copy(update={"previous_code": payload.get("student_code")})
+            if not request.original_diagnosis and payload.get("diagnosis"):
+                request = request.model_copy(
+                    update={"original_diagnosis": TutorDiagnosis.model_validate(payload["diagnosis"])}
+                )
+        except Exception as exc:
+            logger.warning("Không thể giải mã guest_context_token để bổ sung ngữ cảnh: %s", str(exc))
+
+    # 4. Thực hiện xác minh qua VerificationService
+    return await verification_service.verify_retry(request)
+
