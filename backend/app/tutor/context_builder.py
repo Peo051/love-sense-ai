@@ -61,6 +61,13 @@ class CodeSubmissionContext:
     current_diagnosis: Optional[dict[str, Any]] = None
     hint_history: list[dict[str, Any]] = field(default_factory=list)
 
+    def __post_init__(self):
+        from app.evaluation.schemas import assert_not_ground_truth
+        assert_not_ground_truth(self.problem_statement)
+        assert_not_ground_truth(self.student_code)
+        assert_not_ground_truth(self.compiler_error)
+        assert_not_ground_truth(self.student_question)
+
 
 @dataclass
 class LearnerPersonalizationContext:
@@ -72,6 +79,12 @@ class LearnerPersonalizationContext:
     student_profile: Optional[dict[str, Any]] = None
     relevant_skill_mastery: list[dict[str, Any]] = field(default_factory=list)
     recent_related_mistakes: list[dict[str, Any]] = field(default_factory=list)
+
+    def __post_init__(self):
+        from app.evaluation.schemas import assert_not_ground_truth
+        assert_not_ground_truth(self.student_profile)
+        assert_not_ground_truth(self.relevant_skill_mastery)
+        assert_not_ground_truth(self.recent_related_mistakes)
 
 
 def truncate_text(text: str, max_chars: int, label: str = "nội dung") -> str:

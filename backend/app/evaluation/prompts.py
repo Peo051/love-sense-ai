@@ -9,7 +9,8 @@
 Mọi prompt đều được gắn phiên bản (v1.0) và không được thay đổi trong quá trình thực nghiệm.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
+from app.evaluation.schemas import ModelInput, assert_not_ground_truth
 
 PROMPT_VERSIONS = {
     "A": "v1.0-direct-debug",
@@ -22,7 +23,21 @@ PROMPT_VERSIONS = {
 SYSTEM_PROMPT_A = """Bạn là một lập trình viên C# chuyên nghiệp. Hãy đọc đoạn mã nguồn học viên và tìm lỗi.
 Hãy chỉ ra lỗi và viết lại mã nguồn đã sửa."""
 
-def build_prompt_a(problem_statement: str, student_code: str, compiler_error: Optional[str] = None) -> str:
+def build_prompt_a(
+    problem_statement: Union[str, ModelInput],
+    student_code: Optional[str] = None,
+    compiler_error: Optional[str] = None
+) -> str:
+    assert_not_ground_truth(problem_statement)
+    if isinstance(problem_statement, ModelInput):
+        mi = problem_statement
+        problem_statement = mi.problem_statement
+        student_code = mi.student_code
+        compiler_error = mi.compiler_error
+    else:
+        assert_not_ground_truth(student_code)
+        assert_not_ground_truth(compiler_error)
+
     err_text = f"\nThông báo lỗi biên dịch: {compiler_error}" if compiler_error else ""
     return f"""Đề bài:
 {problem_statement}
@@ -39,7 +54,21 @@ Hãy tìm lỗi trong đoạn mã trên và cung cấp mã nguồn đã sửa ch
 SYSTEM_PROMPT_B = """Bạn là gia sư AI dạy lập trình C#. Nhiệm vụ của bạn là giải thích lỗi cho người học một cách thân thiện và dễ hiểu.
 Hãy giải thích lỗi sai và gợi ý cách khắc phục."""
 
-def build_prompt_b(problem_statement: str, student_code: str, compiler_error: Optional[str] = None) -> str:
+def build_prompt_b(
+    problem_statement: Union[str, ModelInput],
+    student_code: Optional[str] = None,
+    compiler_error: Optional[str] = None
+) -> str:
+    assert_not_ground_truth(problem_statement)
+    if isinstance(problem_statement, ModelInput):
+        mi = problem_statement
+        problem_statement = mi.problem_statement
+        student_code = mi.student_code
+        compiler_error = mi.compiler_error
+    else:
+        assert_not_ground_truth(student_code)
+        assert_not_ground_truth(compiler_error)
+
     err_text = f"\nThông báo lỗi biên dịch: {compiler_error}" if compiler_error else ""
     return f"""Đề bài:
 {problem_statement}
@@ -69,7 +98,21 @@ Quy tắc bắt buộc:
 7. possible_misconception: Quan niệm sai lầm cốt lõi của người học (null nếu no_bug).
 8. Đầu ra BẮT BUỘC là một JSON object duy nhất hợp lệ theo đúng cấu trúc chỉ định."""
 
-def build_prompt_c(problem_statement: str, student_code: str, compiler_error: Optional[str] = None) -> str:
+def build_prompt_c(
+    problem_statement: Union[str, ModelInput],
+    student_code: Optional[str] = None,
+    compiler_error: Optional[str] = None
+) -> str:
+    assert_not_ground_truth(problem_statement)
+    if isinstance(problem_statement, ModelInput):
+        mi = problem_statement
+        problem_statement = mi.problem_statement
+        student_code = mi.student_code
+        compiler_error = mi.compiler_error
+    else:
+        assert_not_ground_truth(student_code)
+        assert_not_ground_truth(compiler_error)
+
     err_text = f"\nThông báo lỗi biên dịch: {compiler_error}" if compiler_error else ""
     return f"""Đề bài:
 {problem_statement}
@@ -102,11 +145,24 @@ Bạn nhận thêm bối cảnh học tập của sinh viên (lịch sử nộp 
 Hãy điều chỉnh lời giải thích và các tầng gợi ý phù hợp với vùng phát triển gần nhất (ZPD) của học viên."""
 
 def build_prompt_d(
-    problem_statement: str,
-    student_code: str,
+    problem_statement: Union[str, ModelInput],
+    student_code: Optional[str] = None,
     compiler_error: Optional[str] = None,
     student_context: Optional[Dict[str, Any]] = None
 ) -> str:
+    assert_not_ground_truth(problem_statement)
+    if isinstance(problem_statement, ModelInput):
+        mi = problem_statement
+        problem_statement = mi.problem_statement
+        student_code = mi.student_code
+        compiler_error = mi.compiler_error
+    else:
+        assert_not_ground_truth(student_code)
+        assert_not_ground_truth(compiler_error)
+
+    if student_context is not None:
+        assert_not_ground_truth(student_context)
+
     err_text = f"\nThông báo lỗi biên dịch: {compiler_error}" if compiler_error else ""
     ctx_text = ""
     if student_context:

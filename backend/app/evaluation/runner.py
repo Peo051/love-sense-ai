@@ -201,8 +201,14 @@ class EvaluationRunner:
             "duration_sec": total_duration
         }
 
-    def _predict_single(self, sample: Dict[str, Any]) -> Dict[str, Any]:
+    def _predict_single(self, sample: Any) -> Dict[str, Any]:
         """Dự đoán cho từng mẫu độc lập, hỗ trợ cả mock engine chuẩn hóa."""
+        from app.evaluation.schemas import GroundTruth, assert_not_ground_truth
+
+        if isinstance(sample, GroundTruth):
+            raise TypeError("EvaluationRunner cannot accept GroundTruth objects directly as model input. Pass ModelInput instead.")
+        assert_not_ground_truth(sample)
+
         sample_id = sample["id"]
         topic = sample["topic"]
         gt_status = sample["bug_status"]

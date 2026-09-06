@@ -47,6 +47,13 @@ class OpenAITutorProvider(TutorLLMProvider):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
+        from app.evaluation.schemas import assert_not_ground_truth
+        assert_not_ground_truth(messages)
+        for msg in messages:
+            assert_not_ground_truth(msg)
+            if isinstance(msg, dict):
+                assert_not_ground_truth(msg.get("content"))
+
         try:
             return await self._client.chat_completion(
                 messages=messages,
@@ -135,6 +142,13 @@ class DeterministicMockTutorProvider(TutorLLMProvider):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
+        from app.evaluation.schemas import assert_not_ground_truth
+        assert_not_ground_truth(messages)
+        for msg in messages:
+            assert_not_ground_truth(msg)
+            if isinstance(msg, dict):
+                assert_not_ground_truth(msg.get("content"))
+
         self.recorded_messages.append(messages)
         if self._error_to_raise:
             raise self._error_to_raise
