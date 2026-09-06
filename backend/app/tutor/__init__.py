@@ -5,6 +5,11 @@ Package điều phối gia sư lập trình thích ứng (Adaptive Programming T
 from app.schemas.tutor_schema import DiagnosisCategory
 from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.evidence_grounding import EvidenceGroundingValidator, GroundingResult
+from app.tutor.guest_context import (
+    GuestContextError,
+    GuestContextSigner,
+    GuestContextTamperedError,
+)
 from app.tutor.hint_manager import HintManager, HintPayload, HintSessionState
 from app.tutor.leakage_guard import LeakageCheckResult, SolutionLeakageGuard
 from app.tutor.provider import (
@@ -28,6 +33,9 @@ __all__ = [
     "DeterministicMockTutorProvider",
     "EvidenceGroundingValidator",
     "GroundingResult",
+    "GuestContextError",
+    "GuestContextSigner",
+    "GuestContextTamperedError",
     "HintManager",
     "HintPayload",
     "HintSessionState",

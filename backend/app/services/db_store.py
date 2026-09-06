@@ -259,6 +259,14 @@ class HistoryRepository:
         summary = f"Chẩn đoán OOP: {issue_type} (Mức {result.hint_level})"
         context_note = f"Chủ đề: {topic or 'C# OOP'}. Đề bài: {problem_statement[:150]}"
 
+        diagnosis_dict = (
+            result.diagnosis.model_dump()
+            if hasattr(result.diagnosis, "model_dump")
+            else dict(result.diagnosis)
+        )
+        highest_hint_level_used = getattr(result, "highest_hint_level_used", result.hint_level)
+        solution_revealed = getattr(result, "solution_revealed", False)
+
         item = AnalysisSession(
             user_id=user_id,
             overall_emotion=issue_type,
@@ -266,8 +274,12 @@ class HistoryRepository:
             emotion_distribution={
                 "knowledge_components": result.knowledge_components,
                 "hint_level": result.hint_level,
+                "highest_hint_level_used": highest_hint_level_used,
+                "solution_revealed": solution_revealed,
                 "teaching_strategy": result.teaching_strategy,
                 "prompt_version": getattr(result, "prompt_version", "v1"),
+                "diagnosis": diagnosis_dict,
+                "student_code": student_code if save_input else None,
             },
             summary=summary,
             context_note=context_note,
@@ -281,6 +293,53 @@ class HistoryRepository:
             chat_text=student_code if save_input else None,
         )
         db.add(item)
+        await db.commit()
+        await db.refresh(item)
+        return item
+
+    @staticmethod
+    async def get_tutor_session(
+        db: AsyncSession,
+        user_id: str,
+        session_id: str,
+    ) -> AnalysisSession | None:
+        """Lấy phiên gia sư của người dùng từ cơ sở dữ liệu."""
+        result = await db.execute(
+            select(AnalysisSession).where(
+                AnalysisSession.id == session_id,
+                AnalysisSession.user_id == user_id,
+                AnalysisSession.consent_type == "tutor_submission",
+            )
+        )
+        return result.scalar_one_or_none()
+
+    @staticmethod
+    async def update_tutor_hint_progression(
+        db: AsyncSession,
+        user_id: str,
+        session_id: str,
+        next_level: int,
+        hint_payload: Any,
+    ) -> AnalysisSession | None:
+        """Cập nhật tiến trình gợi ý mới vào phiên học trong DB."""
+        item = await HistoryRepository.get_tutor_session(db, user_id, session_id)
+        if not item:
+            return None
+
+        current_dist = dict(item.emotion_distribution or {})
+        prev_highest = current_dist.get("highest_hint_level_used", current_dist.get("hint_level", 1))
+        new_highest = max(prev_highest, next_level)
+
+        current_dist["hint_level"] = next_level
+        current_dist["highest_hint_level_used"] = new_highest
+        current_dist["solution_revealed"] = hint_payload.solution_revealed
+        current_dist["teaching_strategy"] = hint_payload.teaching_strategy
+
+        item.emotion_distribution = current_dist
+        item.suggested_reply = hint_payload.tutor_response
+        item.warning = hint_payload.next_action
+        item.summary = f"Chẩn đoán OOP: {item.overall_emotion} (Mức {next_level})"
+
         await db.commit()
         await db.refresh(item)
         return item

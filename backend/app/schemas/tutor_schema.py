@@ -304,6 +304,10 @@ class TutorResponse(BaseModel):
         default_factory=list,
         description="Danh sách các hành động can thiệp kiểm định (ví dụ: evidence_grounding_penalty, downgraded_to_safe_hint)",
     )
+    guest_context_token: Optional[str] = Field(
+        default=None,
+        description="Token ngữ cảnh có chữ ký dành cho khách vãng lai (stateless guest)",
+    )
 
     @field_validator("knowledge_components")
     @classmethod
@@ -449,3 +453,87 @@ class TutorRequest(BaseModel):
 
 # Alias để tương thích tên gọi
 TutorFeedbackRequest = TutorRequest
+
+
+class TutorHintRequest(BaseModel):
+    """
+    Mô hình yêu cầu gợi ý cấp độ tiếp theo gửi đến POST /api/tutor/hint.
+    """
+    session_id: Optional[str] = Field(
+        default=None,
+        description="ID phiên gia sư đã lưu trữ trong DB (đối với người dùng đã đăng nhập)",
+    )
+    current_diagnosis: Optional[TutorDiagnosis] = Field(
+        default=None,
+        description="Chẩn đoán kỹ thuật hiện tại của bài làm",
+    )
+    current_hint_level: int = Field(
+        default=1,
+        ge=1,
+        le=4,
+        description="Cấp độ gợi ý hiện tại của sinh viên",
+    )
+    student_followup_message: Optional[str] = Field(
+        default=None,
+        max_length=2000,
+        description="Câu hỏi hoặc phản hồi tiếp theo của sinh viên",
+    )
+    guest_context_token: Optional[str] = Field(
+        default=None,
+        description="Token ngữ cảnh có chữ ký mật mã dành cho khách vãng lai",
+    )
+    student_code: Optional[str] = Field(
+        default=None,
+        max_length=50000,
+        description="Mã nguồn hiện tại của sinh viên",
+    )
+
+    @field_validator("student_followup_message")
+    @classmethod
+    def clean_message(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        trimmed = value.strip()
+        return trimmed if trimmed else None
+
+
+class TutorHintResponse(BaseModel):
+    """
+    Mô hình phản hồi gợi ý cấp độ tiếp theo từ POST /api/tutor/hint.
+    """
+    hint_level: int = Field(
+        ...,
+        ge=1,
+        le=4,
+        description="Cấp độ gợi ý tiếp theo được cấp phát bởi server",
+    )
+    highest_hint_level_used: int = Field(
+        ...,
+        ge=1,
+        le=4,
+        description="Cấp độ gợi ý cao nhất đã được áp dụng trong phiên",
+    )
+    tutor_response: str = Field(
+        ...,
+        description="Nội dung sư phạm của gợi ý tiếp theo",
+    )
+    solution_revealed: bool = Field(
+        default=False,
+        description="Đánh dấu giải pháp hoàn chỉnh có được tiết lộ hay không (chỉ True khi hint_level = 4)",
+    )
+    next_action: str = Field(
+        ...,
+        description="Hành động cụ thể gợi ý cho sinh viên thực hiện tiếp theo",
+    )
+    teaching_strategy: Optional[str] = Field(
+        default=None,
+        description="Chiến lược sư phạm được áp dụng",
+    )
+    guest_context_token: Optional[str] = Field(
+        default=None,
+        description="Token ngữ cảnh có chữ ký được cập nhật cho khách vãng lai",
+    )
+    session_id: Optional[str] = Field(
+        default=None,
+        description="ID phiên học nếu có",
+    )

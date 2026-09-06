@@ -7,9 +7,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.database.connection import get_db
 from app.deps.auth import CurrentUser, get_optional_user
-from app.schemas.tutor_schema import TutorRequest, TutorResponse
+from app.schemas.tutor_schema import (
+    TutorDiagnosis,
+    TutorHintRequest,
+    TutorHintResponse,
+    TutorRequest,
+    TutorResponse,
+)
 from app.services.db_store import ConsentRepository, HistoryRepository
 from app.services.rate_limiter import analyze_rate_limiter
+from app.tutor.guest_context import GuestContextError, GuestContextSigner, GuestContextTamperedError
+from app.tutor.hint_manager import HintManager
 from app.tutor.service import TutorService, TutorServiceError
 
 logger = logging.getLogger(__name__)
@@ -134,8 +142,181 @@ async def analyze_code(
             # Không làm gián đoạn phản hồi của sinh viên nếu lưu DB gặp sự cố
             logger.error("Lỗi khi lưu lịch sử gia sư: %s", str(exc), exc_info=True)
 
-    # 5. Gán session_id và trả về kết quả
+    # 5. Gán session_id (nếu authenticated) hoặc guest_context_token (nếu guest)
     if session_id:
         feedback_result = feedback_result.model_copy(update={"session_id": session_id})
+    elif current_user is None:
+        guest_token = GuestContextSigner.sign_guest_context({
+            "current_hint_level": feedback_result.hint_level,
+            "highest_hint_level_used": feedback_result.highest_hint_level_used,
+            "solution_revealed": feedback_result.solution_revealed,
+            "diagnosis": feedback_result.diagnosis.model_dump(),
+            "student_code": request.student_code,
+        })
+        feedback_result = feedback_result.model_copy(update={"guest_context_token": guest_token})
 
     return feedback_result
+
+
+@router.post("/hint", response_model=TutorHintResponse)
+async def request_next_hint(
+    http_request: Request,
+    request: TutorHintRequest,
+    current_user: Optional[CurrentUser] = Depends(get_optional_user),
+    db: AsyncSession = Depends(get_db),
+    tutor_service: TutorService = Depends(get_tutor_service),
+) -> TutorHintResponse:
+    """
+    POST /api/tutor/hint
+
+    Cung cấp gợi ý cấp độ tiếp theo (Next-Hint) trong chu trình học tập thích ứng.
+    Máy chủ toàn quyền kiểm soát chuyển đổi cấp độ tiếp theo (Server-Controlled Progression).
+    Chặn đứng mọi nỗ lực thao túng client nhằm reset trạng thái hoặc nhảy cóc cấp độ.
+    """
+    # 1. Rate Limit Check
+    rate_limit_key = _build_rate_limit_key(http_request, current_user.id if current_user else None)
+    rate_decision = analyze_rate_limiter.check(
+        rate_limit_key,
+        limit=settings.analyze_rate_limit_requests,
+        window_seconds=settings.analyze_rate_limit_window_seconds,
+    )
+    if not rate_decision.allowed:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Bạn đang gửi yêu cầu quá nhanh. Vui lòng chờ một chút trước khi thử lại.",
+            headers={"Retry-After": str(rate_decision.retry_after_seconds)},
+        )
+
+    # 2. Nhánh Authenticated User (Tải và đồng bộ trạng thái qua DB)
+    if current_user:
+        if not request.session_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Yêu cầu session_id cho phiên gia sư của người dùng đã đăng nhập.",
+            )
+
+        session_item = await HistoryRepository.get_tutor_session(db, current_user.id, request.session_id)
+        if not session_item:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Không tìm thấy phiên học tập tương ứng.",
+            )
+
+        dist = dict(session_item.emotion_distribution or {})
+        db_current_level = int(dist.get("hint_level", 1))
+        db_highest_level = int(dist.get("highest_hint_level_used", db_current_level))
+
+        # Kiểm tra tính hợp lệ của chuyển đổi (Server controls progression, rejects invalid transitions)
+        if request.current_hint_level != db_current_level:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chuyển đổi cấp độ không hợp lệ: Cấp độ phía client ({request.current_hint_level}) không khớp với trạng thái phiên học trên máy chủ ({db_current_level}).",
+            )
+
+        next_level = min(4, db_current_level + 1)
+        highest_level = max(db_highest_level, next_level)
+
+        diag_raw = dist.get("diagnosis")
+        if diag_raw:
+            diagnosis_obj = TutorDiagnosis.model_validate(diag_raw)
+        elif request.current_diagnosis:
+            diagnosis_obj = request.current_diagnosis
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Không tìm thấy dữ liệu chẩn đoán của phiên học để sinh gợi ý tiếp theo.",
+            )
+
+        student_code = session_item.chat_text or request.student_code
+        hint_payload = HintManager.generate_progressive_hint(
+            diagnosis=diagnosis_obj,
+            hint_level=next_level,
+            student_code=student_code,
+        )
+
+        await HistoryRepository.update_tutor_hint_progression(
+            db=db,
+            user_id=current_user.id,
+            session_id=request.session_id,
+            next_level=next_level,
+            hint_payload=hint_payload,
+        )
+
+        return TutorHintResponse(
+            hint_level=next_level,
+            highest_hint_level_used=highest_level,
+            tutor_response=hint_payload.tutor_response,
+            solution_revealed=hint_payload.solution_revealed,
+            next_action=hint_payload.next_action,
+            teaching_strategy=hint_payload.teaching_strategy,
+            session_id=request.session_id,
+        )
+
+    # 3. Nhánh Stateless Guest Mode (Sử dụng signed guest_context_token, zero persistence)
+    if request.guest_context_token:
+        try:
+            payload = GuestContextSigner.verify_guest_context(request.guest_context_token)
+        except (GuestContextTamperedError, GuestContextError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Token ngữ cảnh guest không hợp lệ hoặc đã bị can thiệp: {str(exc)}",
+            ) from exc
+
+        token_current_level = int(payload.get("current_hint_level", 1))
+        token_highest_level = int(payload.get("highest_hint_level_used", token_current_level))
+
+        # Chống gian lận: client không được gửi current_hint_level lệch với signed token
+        if request.current_hint_level != token_current_level:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Chuyển đổi cấp độ không hợp lệ: Cấp độ client ({request.current_hint_level}) không khớp với phiên làm việc ({token_current_level}).",
+            )
+
+        next_level = min(4, token_current_level + 1)
+        highest_level = max(token_highest_level, next_level)
+
+        diag_raw = payload.get("diagnosis") or (request.current_diagnosis.model_dump() if request.current_diagnosis else None)
+        if not diag_raw:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thiếu thông tin chẩn đoán kỹ thuật để sinh gợi ý tiếp theo.",
+            )
+
+        diagnosis_obj = TutorDiagnosis.model_validate(diag_raw)
+        student_code = payload.get("student_code") or request.student_code
+    else:
+        # Nếu không có token, chỉ cho phép nếu bắt đầu từ Level 1 và có chẩn đoán
+        if request.current_hint_level == 1 and request.current_diagnosis:
+            next_level = 2
+            highest_level = 2
+            diagnosis_obj = request.current_diagnosis
+            student_code = request.student_code
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Yêu cầu guest_context_token hợp lệ để tiếp tục gợi ý ở cấp độ tiếp theo.",
+            )
+
+    hint_payload = HintManager.generate_progressive_hint(
+        diagnosis=diagnosis_obj,
+        hint_level=next_level,
+        student_code=student_code,
+    )
+
+    new_guest_token = GuestContextSigner.sign_guest_context({
+        "current_hint_level": next_level,
+        "highest_hint_level_used": highest_level,
+        "solution_revealed": hint_payload.solution_revealed,
+        "diagnosis": diagnosis_obj.model_dump(),
+        "student_code": student_code,
+    })
+
+    return TutorHintResponse(
+        hint_level=next_level,
+        highest_hint_level_used=highest_level,
+        tutor_response=hint_payload.tutor_response,
+        solution_revealed=hint_payload.solution_revealed,
+        next_action=hint_payload.next_action,
+        teaching_strategy=hint_payload.teaching_strategy,
+        guest_context_token=new_guest_token,
+    )
