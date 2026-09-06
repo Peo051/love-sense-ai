@@ -27,3 +27,4 @@ class User(Base):
     preference = relationship("Preference", back_populates="user", cascade="all, delete-orphan", uselist=False)
     consents = relationship("Consent", back_populates="user", cascade="all, delete-orphan")
     analysis_sessions = relationship("AnalysisSession", back_populates="user", cascade="all, delete-orphan")
+    learning_sessions = relationship("LearningSession", back_populates="user", cascade="all, delete-orphan")
