@@ -210,3 +210,89 @@ export interface TutorVerifyResponse {
   diagnosis?: TutorDiagnosis | null;
 }
 
+export interface TutorMessageResponse {
+  id: string;
+  session_id: string;
+  attempt_id?: string | null;
+  role: 'student' | 'tutor' | 'system' | string;
+  sanitized_textual_message: string;
+  created_at: string;
+}
+
+export interface StudentAttemptResponse {
+  id: string;
+  session_id: string;
+  problem_reference: string;
+  diagnosis?: TutorDiagnosis | null;
+  hint_progression?: Record<string, any> | null;
+  success_state: string;
+  save_input: boolean;
+  student_code?: string | null;
+  created_at: string;
+}
+
+export interface LearningSessionSummary {
+  id: string;
+  title: string;
+  language: string;
+  topic?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LearningSessionDetail extends LearningSessionSummary {
+  user_id: string;
+  attempts: StudentAttemptResponse[];
+  messages: TutorMessageResponse[];
+}
+
+export interface SessionCreateRequest {
+  title: string;
+  language?: string;
+  topic?: string | null;
+  initial_problem?: string | null;
+  initial_code?: string | null;
+  save_input?: boolean;
+  save_result?: boolean;
+}
+
+export interface AttemptCreateRequest {
+  problem_reference: string;
+  student_code?: string | null;
+  save_input?: boolean;
+  diagnosis?: Record<string, any> | null;
+  hint_progression?: Record<string, any> | null;
+  success_state?: string;
+}
+
+export interface MessageCreateRequest {
+  role: 'student' | 'tutor' | 'system';
+  content: string;
+  attempt_id?: string | null;
+}
+
+export type TimelineTurnType =
+  | 'student_question'
+  | 'tutor_diagnosis'
+  | 'next_hint'
+  | 'student_retry'
+  | 'tutor_verification';
+
+export interface TimelineTurnItem {
+  id: string;
+  turnType: TimelineTurnType;
+  timestamp: string;
+  content: string;
+  hintLevel?: number;
+  codeSnippet?: string;
+  evidence?: TutorEvidence | null;
+  diagnosis?: TutorDiagnosis | null;
+  verificationStatus?: VerificationStatus;
+  remainingIssues?: string[];
+  newIssues?: string[];
+  nextAction?: string;
+  disclaimer?: string;
+  attemptIndex?: number;
+}
+
+

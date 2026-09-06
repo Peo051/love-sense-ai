@@ -3,12 +3,13 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import TutorPage from './page';
-import { analyzeTutorCode, requestTutorNextHint, verifyTutorRetry } from '@/lib/api';
+import { analyzeTutorCode, hasAuthToken, requestTutorNextHint, verifyTutorRetry } from '@/lib/api';
 
 vi.mock('@/lib/api', () => ({
   analyzeTutorCode: vi.fn(),
   requestTutorNextHint: vi.fn(),
   verifyTutorRetry: vi.fn(),
+  hasAuthToken: vi.fn(() => false),
 }));
 
 const mockAnalyzeResponse = {
@@ -70,9 +71,10 @@ const mockVerifyResponse = {
   disclaimer: 'Lưu ý: Kết quả xác minh được đánh giá qua phân tích tĩnh và AI, không thực thi mã trực tiếp trên hệ thống.',
 };
 
-describe('TutorPage (Workspace)', () => {
+describe('TutorPage (Workspace & Multi-turn Session)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(hasAuthToken).mockReturnValue(false);
   });
 
   it('renders all V1 input fields and initial guidance', () => {
@@ -83,11 +85,20 @@ describe('TutorPage (Workspace)', () => {
     expect(screen.getByLabelText(/mã nguồn c# của bạn/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/thông báo lỗi biên dịch/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/câu hỏi \/ băn khoăn của bạn/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/chủ đề kiến thức oop/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/chủ đề oop trọng tâm/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /phân tích mã nguồn/i })).toBeInTheDocument();
 
     // Ban đầu khi chưa có kết quả, hiển thị thẻ giải thích Socratic 4 cấp độ
     expect(screen.getByRole('heading', { name: /tiến trình gợi ý socratic 4 cấp độ/i })).toBeInTheDocument();
+  });
+
+  it('maintains 3 visibly distinct regions: problem, current code, tutor conversation', () => {
+    render(<TutorPage />);
+
+    // 3 distinct pedagogical regions
+    expect(screen.getByRole('region', { name: /khu vực đề bài/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /khu vực mã nguồn/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /khu vực đối thoại gia sư/i })).toBeInTheDocument();
   });
 
   it('allows typing, handles Tab indentation, and toggles OCR tab', async () => {
@@ -107,7 +118,7 @@ describe('TutorPage (Workspace)', () => {
     expect(codeInput).toHaveValue('class BankAccount {    ');
 
     // Test switch to OCR tab
-    const ocrTabBtn = screen.getByRole('button', { name: /quét từ ảnh chụp bài tập/i });
+    const ocrTabBtn = screen.getByRole('button', { name: /quét từ ảnh bài tập/i });
     await user.click(ocrTabBtn);
     expect(screen.getByRole('heading', { name: /quét mã nguồn từ ảnh bài tập/i })).toBeInTheDocument();
   });
@@ -217,6 +228,112 @@ describe('TutorPage (Workspace)', () => {
     expect(await screen.findByText(/mã nguồn đã kiểm tra chặt chẽ giá trị nạp vào/i)).toBeInTheDocument();
     expect(screen.getByText(/likely_resolved/i)).toBeInTheDocument();
     expect(screen.getByText(/không thực thi mã trực tiếp trên hệ thống/i)).toBeInTheDocument();
+  });
+
+  it('completes multi-turn cycle (analyze -> hint -> retry -> verify) in a single session without page reload', async () => {
+    vi.mocked(analyzeTutorCode).mockResolvedValueOnce(mockAnalyzeResponse as any);
+    vi.mocked(requestTutorNextHint).mockResolvedValueOnce(mockNextHintResponse as any);
+    vi.mocked(verifyTutorRetry).mockResolvedValueOnce(mockVerifyResponse as any);
+
+    const user = userEvent.setup();
+    render(<TutorPage />);
+
+    // 1. Analyze
+    fireEvent.change(screen.getByLabelText(/đề bài bài tập/i), { target: { value: 'Bài toán BankAccount' } });
+    fireEvent.change(screen.getByLabelText(/mã nguồn c# của bạn/i), { target: { value: 'public class BankAccount {}' } });
+    await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
+
+    expect(await screen.findByRole('heading', { name: /chẩn đoán sư phạm/i })).toBeInTheDocument();
+
+    // 2. Next Hint
+    const nextHintBtn = await screen.findByRole('button', { name: /yêu cầu gợi ý tiếp theo/i });
+    await user.click(nextHintBtn);
+    expect(await screen.findByText(/trong c#, từ khóa ngầm định value/i)).toBeInTheDocument();
+
+    // 3. Retry
+    const revisedInput = screen.getByLabelText(/mã nguồn sau khi sửa đổi/i);
+    fireEvent.change(revisedInput, { target: { value: 'public class BankAccount { set { if (value > 0) _balance = value; } }' } });
+
+    // 4. Verify
+    const verifyBtn = screen.getByRole('button', { name: /xác minh lần thử lại/i });
+    await user.click(verifyBtn);
+
+    expect(await screen.findByText(/mã nguồn đã kiểm tra chặt chẽ giá trị nạp vào/i)).toBeInTheDocument();
+    expect(screen.getByText(/sinh viên đã chỉnh sửa và gửi lại mã nguồn để xác minh/i)).toBeInTheDocument();
+    expect(screen.getByText(/kết quả xác minh lần thử/i)).toBeInTheDocument();
+  });
+
+  it('allows starting a new attempt without losing saved previous sessions or turns', async () => {
+    vi.mocked(analyzeTutorCode).mockResolvedValueOnce(mockAnalyzeResponse as any);
+    const user = userEvent.setup();
+    render(<TutorPage />);
+
+    fireEvent.change(screen.getByLabelText(/đề bài bài tập/i), { target: { value: 'Tạo class Person' } });
+    fireEvent.change(screen.getByLabelText(/mã nguồn c# của bạn/i), { target: { value: 'class Person {}' } });
+    await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
+
+    expect(await screen.findByRole('heading', { name: /chẩn đoán sư phạm/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/lần thử #1/i).length).toBeGreaterThan(0);
+
+    // Click "Bắt đầu lần thử mới (New Attempt)"
+    const newAttemptBtn = screen.getByRole('button', { name: /bắt đầu lần thử mới/i });
+    await user.click(newAttemptBtn);
+
+    // Lần thử được tăng lên #2
+    expect(screen.getAllByText(/lần thử #2/i).length).toBeGreaterThan(0);
+    // Lịch sử lần thử cũ được lưu lại
+    expect(screen.getByText(/lịch sử các lần thử trước/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/lần thử #1/i).length).toBeGreaterThan(0);
+    // Timeline vẫn giữ lượt của lần thử trước
+    expect(screen.getByText(/bắt đầu lần thử mới #2 cho bài toán hiện tại/i)).toBeInTheDocument();
+  });
+
+  it('handles guest mode clearly and avoids persisting guest sessions to database', async () => {
+    vi.mocked(hasAuthToken).mockReturnValue(false);
+    vi.mocked(analyzeTutorCode).mockResolvedValueOnce(mockAnalyzeResponse as any);
+
+    const user = userEvent.setup();
+    render(<TutorPage />);
+
+    // Hiển thị rõ ràng huy hiệu Chế độ Khách
+    expect(screen.getByText(/chế độ khách \(không lưu trữ db\)/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/đề bài bài tập/i), { target: { value: 'Tạo class Car' } });
+    fireEvent.change(screen.getByLabelText(/mã nguồn c# của bạn/i), { target: { value: 'class Car {}' } });
+    await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
+
+    await waitFor(() => {
+      expect(analyzeTutorCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          save_input: false,
+          save_result: false,
+        })
+      );
+    });
+  });
+
+  it('handles authenticated mode clearly and passes consent flags for persistence', async () => {
+    vi.mocked(hasAuthToken).mockReturnValue(true);
+    vi.mocked(analyzeTutorCode).mockResolvedValueOnce(mockAnalyzeResponse as any);
+
+    const user = userEvent.setup();
+    render(<TutorPage />);
+
+    // Hiển thị rõ ràng huy hiệu Đã đăng nhập
+    expect(screen.getByText(/đã đăng nhập \(đồng bộ đám mây\)/i)).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/đề bài bài tập/i), { target: { value: 'Tạo class Book' } });
+    fireEvent.change(screen.getByLabelText(/mã nguồn c# của bạn/i), { target: { value: 'class Book {}' } });
+    await user.click(screen.getByRole('button', { name: /phân tích mã nguồn/i }));
+
+    await waitFor(() => {
+      expect(analyzeTutorCode).toHaveBeenCalledWith(
+        expect.objectContaining({
+          save_input: true,
+          save_result: true,
+        })
+      );
+    });
   });
 
   it('displays clear error message when API fails', async () => {

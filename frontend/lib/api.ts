@@ -1,16 +1,23 @@
 import type {
   AnalyzeRequest,
   AnalyzeResponse,
+  AttemptCreateRequest,
   AuthToken,
   AuthUser,
   ConsentSettings,
   EvidenceItem,
   HistoryItem,
   HistoryListResponse,
+  LearningSessionDetail,
+  LearningSessionSummary,
+  MessageCreateRequest,
   ProfilePayload,
   ProfileResponse,
+  SessionCreateRequest,
+  StudentAttemptResponse,
   TutorHintRequest,
   TutorHintResponse,
+  TutorMessageResponse,
   TutorRequest,
   TutorResponse,
   TutorVerifyRequest,
@@ -522,4 +529,68 @@ export async function verifyTutorRetry(payload: TutorVerifyRequest): Promise<Tut
     'Không thể xác minh lần thử lại lúc này. Vui lòng thử lại sau.'
   );
 }
+
+export async function createLearningSession(payload: SessionCreateRequest): Promise<LearningSessionDetail> {
+  return requestJson<LearningSessionDetail>(
+    '/api/sessions',
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể tạo phiên học tập lúc này.'
+  );
+}
+
+export async function listLearningSessions(): Promise<LearningSessionSummary[]> {
+  return requestJson<LearningSessionSummary[]>(
+    '/api/sessions',
+    undefined,
+    'Không thể tải danh sách phiên học tập.'
+  );
+}
+
+export async function getLearningSession(sessionId: string): Promise<LearningSessionDetail> {
+  return requestJson<LearningSessionDetail>(
+    `/api/sessions/${sessionId}`,
+    undefined,
+    'Không thể tải chi tiết phiên học tập.'
+  );
+}
+
+export async function deleteLearningSession(sessionId: string): Promise<void> {
+  await requestJson<{ deleted: boolean }>(
+    `/api/sessions/${sessionId}`,
+    { method: 'DELETE' },
+    'Không thể xóa phiên học tập.'
+  );
+}
+
+export async function addSessionAttempt(
+  sessionId: string,
+  payload: AttemptCreateRequest
+): Promise<StudentAttemptResponse> {
+  return requestJson<StudentAttemptResponse>(
+    `/api/sessions/${sessionId}/attempts`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lưu lần thử vào phiên học.'
+  );
+}
+
+export async function addSessionMessage(
+  sessionId: string,
+  payload: MessageCreateRequest
+): Promise<TutorMessageResponse> {
+  return requestJson<TutorMessageResponse>(
+    `/api/sessions/${sessionId}/messages`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+    'Không thể lưu tin nhắn vào phiên học.'
+  );
+}
+
 
