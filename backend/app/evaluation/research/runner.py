@@ -43,7 +43,12 @@ from app.evaluation.prompts import (
 )
 from app.evaluation.research.parser import parse_provider_output, validate_prediction_non_gold
 from app.evaluation.research.provenance import compute_dataset_hashes, create_research_manifest, get_git_commit
-from app.evaluation.research.provider import OpenAIResearchProvider, ResearchProvider
+from app.evaluation.research.provider import (
+    OpenAIResearchProvider,
+    ResearchProvider,
+    ResearchProviderConfigurationError,
+    validate_research_provider,
+)
 from app.evaluation.schemas import GroundTruth, ModelInput, assert_not_ground_truth
 
 logger = logging.getLogger(__name__)
@@ -84,38 +89,13 @@ class ResearchRunner:
         self.student_context = student_context
         self.allow_test_doubles = allow_test_doubles
 
-        # Xác thực nhà cung cấp (Provider Verification)
-        explicit_test_env = (
-            self.allow_test_doubles
-            or os.environ.get("CODESENSE_EVAL_TEST_ENV") == "1"
+        # Preflight validation bắt buộc trước khi thực thi nghiên cứu (APT-055)
+        self.provider_client = validate_research_provider(
+            provider=self.provider,
+            model=self.model,
+            provider_client=provider_client,
+            allow_test_doubles=self.allow_test_doubles,
         )
-
-        if self.provider in ("mock", "fake") and not explicit_test_env:
-            raise ValueError(
-                f"Provider '{self.provider}' is strictly forbidden in research evaluation. "
-                "Research mode requires a real provider (e.g., 'openai', 'azure')."
-            )
-
-        self.provider_client = provider_client
-        if self.provider_client is not None:
-            # Kiểm tra xem provider có phải là Test Double / Fake hay không
-            is_fake = (
-                getattr(self.provider_client, "is_fake_test_provider", False)
-                or not getattr(self.provider_client, "is_real_provider", True)
-                or self.provider_client.__class__.__name__.startswith("Fake")
-                or self.provider_client.__class__.__name__.startswith("DeterministicMock")
-            )
-            if is_fake and not explicit_test_env:
-                raise TypeError(
-                    f"FakeTestProvider '{self.provider_client.__class__.__name__}' is strictly rejected "
-                    f"in research evaluation mode. Research evaluation requires a real LLM provider (ResearchProvider)."
-                )
-        elif self.provider in ("openai", "azure") and not explicit_test_env:
-            try:
-                self.provider_client = OpenAIResearchProvider()
-            except Exception as exc:
-                logger.warning("Không thể tự động khởi tạo OpenAIResearchProvider: %s", exc)
-                self.provider_client = None
 
         root = Path(__file__).resolve().parents[4]
         self.dataset_path = dataset_path or (root / "data" / "vietcsharptutor" / "vietcsharptutor_600.jsonl")
@@ -142,6 +122,14 @@ class ResearchRunner:
 
     def run(self) -> Dict[str, Any]:
         """Thực thi toàn bộ pipeline đánh giá cho split đã chọn."""
+        # Preflight verification bắt buộc trước khi tải dataset và xử lý mẫu (APT-055)
+        validate_research_provider(
+            provider=self.provider,
+            model=self.model,
+            provider_client=self.provider_client,
+            allow_test_doubles=self.allow_test_doubles,
+        )
+
         random.seed(self.seed)
         samples, dataset_hash, split_hash = self.load_dataset()
 
@@ -362,20 +350,23 @@ def main():
     dataset_path = Path(args.dataset) if args.dataset else None
     output_dir = Path(args.output_dir) if args.output_dir else None
 
-    runner = ResearchRunner(
-        system=args.system,
-        split=args.split,
-        model=args.model,
-        provider=args.provider,
-        dataset_path=dataset_path,
-        output_dir=output_dir,
-        seed=args.seed,
-    )
-
-    result = runner.run()
-    print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
-    print(f"File dự đoán: {result['predictions_path']}")
-    print(f"File manifest: {result['manifest_path']}")
+    try:
+        runner = ResearchRunner(
+            system=args.system,
+            split=args.split,
+            model=args.model,
+            provider=args.provider,
+            dataset_path=dataset_path,
+            output_dir=output_dir,
+            seed=args.seed,
+        )
+        result = runner.run()
+        print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
+        print(f"File dự đoán: {result['predictions_path']}")
+        print(f"File manifest: {result['manifest_path']}")
+    except ResearchProviderConfigurationError as exc:
+        sys.stderr.write(f"\n[RESEARCH CONFIGURATION ERROR] {str(exc)}\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -24,11 +24,12 @@ if hasattr(sys.stderr, "reconfigure"):
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT_DIR / "backend"))
 
+from app.evaluation.research.provider import ResearchProviderConfigurationError
 from app.evaluation.research.runner import ResearchRunner
 
 
 def main():
-    parser = argparse.ArgumentParser(description="VietCSharpTutor Research Evaluation Runner CLI (APT-054)")
+    parser = argparse.ArgumentParser(description="VietCSharpTutor Research Evaluation Runner CLI (APT-054 / APT-055)")
     parser.add_argument("--system", type=str, required=True, choices=["A", "B", "C", "D"], help="Hệ thống cần đánh giá: A, B, C, hoặc D")
     parser.add_argument("--split", type=str, default="dev", choices=["dev", "validation", "test"], help="Phân vùng dữ liệu: dev, validation, test")
     parser.add_argument("--model", type=str, default="gpt-4o-mini", help="Tên mô hình LLM thực tế")
@@ -43,21 +44,25 @@ def main():
     dataset_path = Path(args.dataset) if args.dataset else None
     output_dir = Path(args.output_dir) if args.output_dir else None
 
-    runner = ResearchRunner(
-        system=args.system,
-        split=args.split,
-        model=args.model,
-        provider=args.provider,
-        dataset_path=dataset_path,
-        output_dir=output_dir,
-        seed=args.seed,
-        allow_test_doubles=args.allow_test_doubles,
-    )
+    try:
+        runner = ResearchRunner(
+            system=args.system,
+            split=args.split,
+            model=args.model,
+            provider=args.provider,
+            dataset_path=dataset_path,
+            output_dir=output_dir,
+            seed=args.seed,
+            allow_test_doubles=args.allow_test_doubles,
+        )
 
-    result = runner.run()
-    print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
-    print(f"File dự đoán: {result['predictions_path']}")
-    print(f"File manifest: {result['manifest_path']}")
+        result = runner.run()
+        print(f"\n[HOÀN TẤT NGHIÊN CỨU] Run ID: {result['run_id']}")
+        print(f"File dự đoán: {result['predictions_path']}")
+        print(f"File manifest: {result['manifest_path']}")
+    except ResearchProviderConfigurationError as exc:
+        sys.stderr.write(f"\n[RESEARCH CONFIGURATION ERROR] {str(exc)}\n")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

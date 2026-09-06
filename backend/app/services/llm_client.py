@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import json
+import os
 from typing import Any
 
 import httpx
@@ -22,8 +23,21 @@ class LLMClientError(Exception):
 class OpenAICompatibleLLMClient:
     """Client tối giản cho các provider tương thích OpenAI Chat Completions như 9router."""
 
-    def __init__(self, transport: httpx.AsyncBaseTransport | None = None):
+    def __init__(
+        self,
+        transport: httpx.AsyncBaseTransport | None = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
+    ):
         self._transport = transport
+        self._api_key = api_key
+        self._base_url = base_url
+
+    def _get_api_key(self) -> str:
+        return self._api_key or os.environ.get("OPENAI_API_KEY") or settings.llm_api_key or ""
+
+    def _get_base_url(self) -> str:
+        return self._base_url or os.environ.get("OPENAI_BASE_URL") or settings.llm_base_url or ""
 
     async def chat_completion(
         self,
@@ -119,12 +133,14 @@ class OpenAICompatibleLLMClient:
         raise LLMClientError("Không thể kết nối LLM provider.", retryable=True)
 
     async def _post_once(self, payload: dict[str, Any]) -> dict[str, Any]:
+        base_url = self._get_base_url().rstrip("/")
+        api_key = self._get_api_key()
         try:
             async with httpx.AsyncClient(timeout=settings.llm_timeout_seconds, transport=self._transport) as client:
                 response = await client.post(
-                    f"{settings.llm_base_url.rstrip('/')}/chat/completions",
+                    f"{base_url}/chat/completions",
                     headers={
-                        "Authorization": f"Bearer {settings.llm_api_key}",
+                        "Authorization": f"Bearer {api_key}",
                         "Content-Type": "application/json",
                     },
                     json=payload,
@@ -163,8 +179,8 @@ class OpenAICompatibleLLMClient:
         missing_fields = [
             field
             for field, value in {
-                "LLM_BASE_URL": settings.llm_base_url,
-                "LLM_API_KEY": settings.llm_api_key,
+                "LLM_BASE_URL": self._get_base_url(),
+                "LLM_API_KEY": self._get_api_key(),
                 "LLM_MODEL": settings.llm_model,
             }.items()
             if not value

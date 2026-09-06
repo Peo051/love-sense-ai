@@ -1,8 +1,9 @@
 """
-Research Evaluation Package for Clean-Room Benchmarks (APT-054).
+Research Evaluation Package for Clean-Room Benchmarks (APT-054 / APT-055).
 
 Chỉ cho phép Real LLM Providers, không truy cập nhãn vàng, không có cờ mock,
 không có fallback ngầm và không sinh dự đoán tất định giả lập.
+Bắt buộc kiểm tra tiền thực thi (preflight validation) trước khi xử lý bất kỳ mẫu nào.
 """
 
 from app.evaluation.research.parser import (
@@ -18,6 +19,8 @@ from app.evaluation.research.provenance import (
 from app.evaluation.research.provider import (
     OpenAIResearchProvider,
     ResearchProvider,
+    ResearchProviderConfigurationError,
+    validate_research_provider,
 )
 from app.evaluation.research.runner import ResearchRunner
 
@@ -25,6 +28,8 @@ __all__ = [
     "ResearchRunner",
     "ResearchProvider",
     "OpenAIResearchProvider",
+    "ResearchProviderConfigurationError",
+    "validate_research_provider",
     "clean_json_string",
     "parse_provider_output",
     "validate_prediction_non_gold",
