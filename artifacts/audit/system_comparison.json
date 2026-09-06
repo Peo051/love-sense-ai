@@ -1,0 +1,206 @@
+{
+  "metadata": {
+    "task": "APT-044",
+    "title": "Controlled Comparison of Evaluation Systems",
+    "version": "codesense-research-v1.0",
+    "branch": "audit/evaluation-integrity-v1",
+    "auditor_role": "Independent Research Auditor"
+  },
+  "properties_comparison": [
+    {
+      "property": "provider",
+      "A": "mock",
+      "B": "mock",
+      "C": "mock",
+      "D": "mock",
+      "classification": "INTENDED",
+      "analysis": "Cả 4 hệ thống dùng mock provider trong benchmark evaluation để đảm bảo tính xác định (deterministic)."
+    },
+    {
+      "property": "model",
+      "A": "mock-tutor-v1",
+      "B": "mock-tutor-v1",
+      "C": "mock-tutor-v1",
+      "D": "mock-tutor-v1",
+      "classification": "INTENDED",
+      "analysis": "Cùng model identifier được cấu hình trên toàn bộ pipeline."
+    },
+    {
+      "property": "system_prompt",
+      "A": "Lập trình viên C# chuyên nghiệp (tìm lỗi và viết lại mã đã sửa)",
+      "B": "Gia sư AI dạy lập trình C# thân thiện (giải thích lỗi và gợi ý)",
+      "C": "CodeSense AI Tutor chuyên sâu (chẩn đoán cấu trúc + gợi ý 3 tầng JSON)",
+      "D": "CodeSense AI Tutor thích ứng (chẩn đoán + gợi ý 3 tầng + cá nhân hóa theo ZPD)",
+      "classification": "INTENDED",
+      "analysis": "Thay đổi persona sư phạm phù hợp với từng thiết kế can thiệp (intervention design)."
+    },
+    {
+      "property": "user_prompt",
+      "A": "build_prompt_a (Yêu cầu tìm lỗi và cung cấp mã sửa hoàn chỉnh)",
+      "B": "build_prompt_b (Yêu cầu hướng dẫn giải quyết vấn đề tự do bằng tiếng Việt)",
+      "C": "build_prompt_c (Yêu cầu xuất JSON schema 12 trường)",
+      "D": "build_prompt_d (Nhận thêm bối cảnh học viên + yêu cầu xuất JSON schema 12 trường)",
+      "classification": "INTENDED (Nhưng BỊ BỎ QUA trong runner)",
+      "analysis": "Thiết kế prompt khác biệt rõ rệt. Tuy nhiên, runner.py không hề gọi các hàm dựng prompt này trong mock mode."
+    },
+    {
+      "property": "few_shot_examples",
+      "A": "None (Zero-shot)",
+      "B": "None (Zero-shot)",
+      "C": "None (Zero-shot)",
+      "D": "None (Zero-shot)",
+      "classification": "INTENDED",
+      "analysis": "Tất cả 4 hệ thống đều chạy theo chế độ zero-shot."
+    },
+    {
+      "property": "model_visible_fields",
+      "A": "problem_statement, student_code, compiler_error",
+      "B": "problem_statement, student_code, compiler_error",
+      "C": "problem_statement, student_code, compiler_error",
+      "D": "problem_statement, student_code, compiler_error, student_context (lý thuyết)",
+      "classification": "CRITICAL (Thực tế mock nhìn thấy cả 25 trường)",
+      "analysis": "Theo thiết kế prompt, D chỉ nhận thêm student_context. Nhưng trong mã thực thi runner.py, cả 4 hệ thống đều nhận toàn bộ 25 trường của sample."
+    },
+    {
+      "property": "student_context",
+      "A": "None",
+      "B": "None",
+      "C": "None",
+      "D": "attempt_count, struggling_kcs, recent_misconceptions (lý thuyết)",
+      "classification": "CRITICAL (Vắng mặt hoàn toàn trong thực thi)",
+      "analysis": "StudentContextBuilder không hề được khởi tạo hay gọi trong runner.py. Proposed D không nhận bất kỳ bối cảnh người học thực tế nào."
+    },
+    {
+      "property": "temperature",
+      "A": "0.7",
+      "B": "0.7",
+      "C": "0.2",
+      "D": "0.2",
+      "classification": "CONFOUNDING",
+      "analysis": "Sự khác biệt nhiệt độ (0.7 ở A/B vs 0.2 ở C/D) là một yếu tố gây nhiễu khoa học nghiêm trọng. Nhiệt độ thấp hơn tự nhiên làm giảm tính ngẫu nhiên và tăng tính tuân thủ định dạng JSON."
+    },
+    {
+      "property": "max_tokens",
+      "A": "1024",
+      "B": "1024",
+      "C": "1024",
+      "D": "1024",
+      "classification": "INTENDED",
+      "analysis": "Được chuẩn hóa cố định 1024 tokens cho cả 4 hệ thống."
+    },
+    {
+      "property": "retry_count",
+      "A": "0",
+      "B": "0",
+      "C": "0",
+      "D": "0",
+      "classification": "INTENDED",
+      "analysis": "Không sử dụng cơ chế retry trong pipeline đánh giá."
+    },
+    {
+      "property": "output_schema",
+      "A": "Unstructured text (Chứa mã sửa lại)",
+      "B": "Unstructured text (Giải thích thân thiện)",
+      "C": "Structured JSON (12 trường bắt buộc)",
+      "D": "Structured JSON (12 trường bắt buộc)",
+      "classification": "INTENDED",
+      "analysis": "Phản ánh đúng mục tiêu nghiên cứu của RQ1 (Structured Diagnosis vs Direct Prompting)."
+    },
+    {
+      "property": "validator",
+      "A": "None (Hardcoded log: ['direct_prompt_parsed'])",
+      "B": "None (Hardcoded log: ['generic_tutor_parsed'])",
+      "C": "None (Hardcoded log: ['structured_schema_verified', 'evidence_grounded'])",
+      "D": "None (Hardcoded log: ['student_model_context_injected', 'structured_schema_verified', 'evidence_grounded'])",
+      "classification": "CONFOUNDING",
+      "analysis": "Không có validator class thực sự nào chạy; chỉ là các chuỗi log mô phỏng được gán sẵn vào JSON kết quả."
+    },
+    {
+      "property": "fallback",
+      "A": "None",
+      "B": "None",
+      "C": "None",
+      "D": "None",
+      "classification": "INTENDED",
+      "analysis": "Không triển khai fallback handler riêng biệt."
+    },
+    {
+      "property": "mock_implementation",
+      "A": "Cố ý tạo false positive 35%, max acc 65%, gán reference_solution vào hint_1",
+      "B": "Cố ý tạo false positive 20%, max acc 75%, gán evidence vào hint_2, copy hints/diag",
+      "C": "Giả lập p < 0.92, copy ground truth khi đúng, gán lỗi khi sai",
+      "D": "100% DIRECT COPY từ sample sang pred, không có nhánh sai, không có ngẫu nhiên",
+      "classification": "CRITICAL (Gian lận thực nghiệm trực tiếp)",
+      "analysis": "Sự vượt trội của D so với C (100% vs 92%) hoàn toàn là do cài đặt thuật toán mock: D sao chép 100% nhãn vàng không lỗi, trong khi C bị áp tỷ lệ lỗi 8%."
+    },
+    {
+      "property": "cache_behavior",
+      "A": "Deterministic seed = 42",
+      "B": "Deterministic seed = 42",
+      "C": "Deterministic seed = 42",
+      "D": "Deterministic seed = 42",
+      "classification": "INTENDED",
+      "analysis": "Seed được cố định để tái lập kết quả."
+    },
+    {
+      "property": "post_processing",
+      "A": "Tạo prediction dict trực tiếp",
+      "B": "Tạo prediction dict trực tiếp",
+      "C": "Tạo prediction dict trực tiếp",
+      "D": "Tạo prediction dict trực tiếp",
+      "classification": "INTENDED",
+      "analysis": "Các hệ thống đều đóng gói kết quả thành JSON object chuẩn trước khi lưu tệp."
+    }
+  ],
+  "pairwise_diffs": {
+    "A_vs_B": {
+      "title": "Baseline A (Direct Debugging) vs Baseline B (Generic Tutor)",
+      "intended_differences": [
+        "Persona: Kỹ sư sửa code (A) vs Gia sư sư phạm thân thiện (B).",
+        "Mục tiêu đầu ra: Cung cấp mã đã sửa (A) vs Hướng dẫn giải quyết vấn đề (B)."
+      ],
+      "confounders": [
+        "Cả hai cùng chạy ở temperature = 0.7.",
+        "Tỷ lệ False Positive cố ý được cài đặt khác nhau (35% ở A vs 20% ở B)."
+      ],
+      "critical_flaws": [
+        "Baseline A bị lập trình viên hardcode nhúng trực tiếp 'reference_solution' vào hint_1 để ép buộc Solution Leakage Rate luôn bằng 100%."
+      ]
+    },
+    "B_vs_C": {
+      "title": "Baseline B (Generic Tutor) vs Proposed C (Structured Diagnosis)",
+      "intended_differences": [
+        "Định dạng đầu ra: Văn bản tự do không cấu trúc (B) vs Đối tượng JSON cấu trúc 12 trường (C).",
+        "Chiến lược gợi ý: Gợi ý chung chung (B) vs Chính sách 3 bậc thang gợi ý sư phạm (C)."
+      ],
+      "confounders": [
+        "Temperature Confounder: Baseline B chạy ở temp = 0.7, Proposed C chạy ở temp = 0.2. Nhiệt độ thấp hơn ở C làm tăng độ ổn định cấu trúc và tuân thủ schema, làm sai lệch so sánh công bằng.",
+        "Prompt length chênh lệch lớn (B ngắn, C rất chi tiết với 8 quy tắc ràng buộc)."
+      ],
+      "critical_flaws": [
+        "Xác suất chính xác trong mock engine được ấn định cứng: B đạt tối đa 75%, trong khi C đạt 92%."
+      ]
+    },
+    "C_vs_D": {
+      "title": "Proposed C (Structured Progressive) vs Proposed D (Contextual Adaptive)",
+      "intended_differences": [
+        "Theo thiết kế lý thuyết: Proposed D = Proposed C + Student Context (Bối cảnh người học)."
+      ],
+      "confounders": [
+        "Token giả lập: D được gán prompt_tokens và completion_tokens cao hơn C (520-720 vs 450-600).",
+        "Validator log: D tự động thêm log 'student_model_context_injected' dù không có context builder nào chạy."
+      ],
+      "critical_flaws": [
+        "VẮNG MẶT STUDENT CONTEXT: Trong runner.py, biến student_context hoàn toàn không tồn tại, StudentContextBuilder không được gọi.",
+        "GROUND TRUTH COPYING DISCREPANCY: Trong C, có kiểm tra ngẫu nhiên 'is_diag_correct = random < 0.92' (có 8% mẫu sai). Nhưng trong D, 'pred_status = gt_status if is_diag_correct else gt_status' (luôn đúng 100%), và 100% các trường vàng khác được gán trực tiếp không qua kiểm tra ngẫu nhiên.",
+        "KẾT LUẬN C vs D: Khoảng chênh lệch hiệu năng giữa C (92%) và D (100%) KHÔNG PHẢI do bối cảnh người học mang lại, mà là do code mock của D sao chép 100% nhãn vàng không cài đặt tỷ lệ lỗi!"
+      ]
+    }
+  },
+  "c_vs_d_deep_dive": {
+    "intended_formula": "D = C + Student Context",
+    "actual_formula": "D = 100% Ground Truth Copying (without student context)",
+    "leakage_mechanism": "Direct sample assignment in runner.py:331-337",
+    "scientific_conclusion": "The reported 100% accuracy of Proposed D is an artifact of hardcoded ground truth copying in the mock runner, not a valid pedagogical discovery."
+  }
+}
