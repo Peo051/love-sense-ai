@@ -1,0 +1,24 @@
+{
+  "run_id": "ablation_FULL_validation_20260906_103702",
+  "ablation_config": "FULL",
+  "config_details": {
+    "description": "Full CodeSense: Structured Diagnosis + Progressive Hints + Student Context",
+    "has_structured_diagnosis": true,
+    "has_progressive_hints": true,
+    "has_student_context": true,
+    "prompt_version": "v1.0-ablation-full"
+  },
+  "model": "mock-tutor-v1",
+  "provider": "mock",
+  "prompt_version": "v1.0-ablation-full",
+  "dataset_version": "1.0.0",
+  "dataset_path": "E:\\App\\Love Emotion Web\\data\\vietcsharptutor\\vietcsharptutor_600.jsonl",
+  "dataset_hash": "007738be46a351520c6e45d65fea39a84f83727fa5891461f06844b60f32c660",
+  "split": "validation",
+  "split_hash": "209b0d331b30c10f0dca5fe2be591e71edb126b34a2aef2dbb45ff392c4cec75",
+  "total_samples": 120,
+  "random_seed": 42,
+  "git_commit": "3aafd07fe893e95d4550440c35c19adb2f30c3b7",
+  "timestamp_utc": "2026-09-06T10:37:02.684406+00:00",
+  "duration_sec": 0.0
+}

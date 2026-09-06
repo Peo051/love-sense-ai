@@ -1,0 +1,24 @@
+{
+  "run_id": "ablation_DIRECT_BASELINE_test_20260906_103703",
+  "ablation_config": "DIRECT_BASELINE",
+  "config_details": {
+    "description": "Baseline: Direct LLM Debugging khong chan doan, khong goi y, khong context",
+    "has_structured_diagnosis": false,
+    "has_progressive_hints": false,
+    "has_student_context": false,
+    "prompt_version": "v1.0-ablation-direct-baseline"
+  },
+  "model": "mock-tutor-v1",
+  "provider": "mock",
+  "prompt_version": "v1.0-ablation-direct-baseline",
+  "dataset_version": "1.0.0",
+  "dataset_path": "E:\\App\\Love Emotion Web\\data\\vietcsharptutor\\vietcsharptutor_600.jsonl",
+  "dataset_hash": "007738be46a351520c6e45d65fea39a84f83727fa5891461f06844b60f32c660",
+  "split": "test",
+  "split_hash": "719fd445444ff9f42e6989729236c8a64773cdd96344fd61307c532457516de4",
+  "total_samples": 120,
+  "random_seed": 42,
+  "git_commit": "3aafd07fe893e95d4550440c35c19adb2f30c3b7",
+  "timestamp_utc": "2026-09-06T10:37:03.998747+00:00",
+  "duration_sec": 0.0
+}

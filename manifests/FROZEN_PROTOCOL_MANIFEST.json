@@ -1,0 +1,143 @@
+{
+  "status": "FROZEN_EXECUTION_COMPLETED",
+  "git_commit": "3aafd07fe893e95d4550440c35c19adb2f30c3b7",
+  "dataset_version": "1.0.0",
+  "test_split_hash": "719fd445444ff9f42e6989729236c8a64773cdd96344fd61307c532457516de4",
+  "prompt_versions": {
+    "A": "v1.0-direct-debug",
+    "B": "v1.0-generic-tutor",
+    "C": "v1.0-structured-progressive",
+    "D": "v1.0-contextual-adaptive"
+  },
+  "model_list": [
+    "mock-tutor-v1",
+    "gemini-2.5-flash",
+    "gpt-4o-mini"
+  ],
+  "config": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "max_tokens": 1024,
+    "random_seed": 42
+  },
+  "total_runs_executed": 18,
+  "runs": [
+    {
+      "run_id": "run_A_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_A_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_A_validation_20260906_103702\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0004940032958984375
+    },
+    {
+      "run_id": "run_B_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_B_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_B_validation_20260906_103702\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0005490779876708984
+    },
+    {
+      "run_id": "run_C_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_C_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_C_validation_20260906_103702\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0006902217864990234
+    },
+    {
+      "run_id": "run_D_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_D_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_D_validation_20260906_103702\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0004830360412597656
+    },
+    {
+      "run_id": "ablation_FULL_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_FULL_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_FULL_validation_20260906_103702\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_STUDENT_MODEL_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STUDENT_MODEL_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STUDENT_MODEL_validation_20260906_103702\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_PROGRESSIVE_HINT_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_PROGRESSIVE_HINT_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_PROGRESSIVE_HINT_validation_20260906_103702\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_STRUCTURED_DIAGNOSIS_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STRUCTURED_DIAGNOSIS_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STRUCTURED_DIAGNOSIS_validation_20260906_103702\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_DIRECT_BASELINE_validation_20260906_103702",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_DIRECT_BASELINE_validation_20260906_103702\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_DIRECT_BASELINE_validation_20260906_103702\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "run_A_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_A_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_A_test_20260906_103703\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0004940032958984375
+    },
+    {
+      "run_id": "run_B_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_B_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_B_test_20260906_103703\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0004942417144775391
+    },
+    {
+      "run_id": "run_C_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_C_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_C_test_20260906_103703\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0005888938903808594
+    },
+    {
+      "run_id": "run_D_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\run_D_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\run_D_test_20260906_103703\\manifest.json",
+      "total_samples": 120,
+      "duration_sec": 0.0006341934204101562
+    },
+    {
+      "run_id": "ablation_FULL_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_FULL_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_FULL_test_20260906_103703\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_STUDENT_MODEL_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STUDENT_MODEL_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STUDENT_MODEL_test_20260906_103703\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_PROGRESSIVE_HINT_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_PROGRESSIVE_HINT_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_PROGRESSIVE_HINT_test_20260906_103703\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_NO_STRUCTURED_DIAGNOSIS_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STRUCTURED_DIAGNOSIS_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_NO_STRUCTURED_DIAGNOSIS_test_20260906_103703\\manifest.json",
+      "total_samples": 120
+    },
+    {
+      "run_id": "ablation_DIRECT_BASELINE_test_20260906_103703",
+      "predictions_path": "E:\\App\\Love Emotion Web\\runs\\ablation_DIRECT_BASELINE_test_20260906_103703\\predictions.jsonl",
+      "manifest_path": "E:\\App\\Love Emotion Web\\runs\\ablation_DIRECT_BASELINE_test_20260906_103703\\manifest.json",
+      "total_samples": 120
+    }
+  ],
+  "executed_at_utc": "2026-09-06T10:37:04.050994+00:00"
+}

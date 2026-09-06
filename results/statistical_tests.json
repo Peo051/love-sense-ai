@@ -1,0 +1,114 @@
+{
+  "Proposed_C_vs_Baseline_A": {
+    "contingency_table": {
+      "both_correct": 62,
+      "both_wrong": 5,
+      "sys1_only": 9,
+      "sys2_only": 44
+    },
+    "chi2_statistic": 21.8113,
+    "p_value": 0.0,
+    "is_significant_05": true,
+    "is_significant_01": true,
+    "accuracy_sys1": 0.5917,
+    "accuracy_sys2": 0.8833,
+    "absolute_improvement": 0.2917,
+    "odds_ratio": 4.889
+  },
+  "Proposed_C_vs_Baseline_B": {
+    "contingency_table": {
+      "both_correct": 75,
+      "both_wrong": 3,
+      "sys1_only": 11,
+      "sys2_only": 31
+    },
+    "chi2_statistic": 8.5952,
+    "p_value": 0.00337,
+    "is_significant_05": true,
+    "is_significant_01": true,
+    "accuracy_sys1": 0.7167,
+    "accuracy_sys2": 0.8833,
+    "absolute_improvement": 0.1667,
+    "odds_ratio": 2.818
+  },
+  "Proposed_D_vs_Proposed_C": {
+    "contingency_table": {
+      "both_correct": 106,
+      "both_wrong": 0,
+      "sys1_only": 0,
+      "sys2_only": 14
+    },
+    "chi2_statistic": 12.0714,
+    "p_value": 0.00051,
+    "is_significant_05": true,
+    "is_significant_01": true,
+    "accuracy_sys1": 0.8833,
+    "accuracy_sys2": 1.0,
+    "absolute_improvement": 0.1167,
+    "odds_ratio": Infinity
+  },
+  "FULL_vs_NO_STUDENT_MODEL": {
+    "contingency_table": {
+      "both_correct": 112,
+      "both_wrong": 0,
+      "sys1_only": 0,
+      "sys2_only": 8
+    },
+    "chi2_statistic": 6.125,
+    "p_value": 0.01333,
+    "is_significant_05": true,
+    "is_significant_01": false,
+    "accuracy_sys1": 0.9333,
+    "accuracy_sys2": 1.0,
+    "absolute_improvement": 0.0667,
+    "odds_ratio": Infinity
+  },
+  "FULL_vs_NO_PROGRESSIVE_HINT": {
+    "contingency_table": {
+      "both_correct": 120,
+      "both_wrong": 0,
+      "sys1_only": 0,
+      "sys2_only": 0
+    },
+    "chi2_statistic": 0.0,
+    "p_value": 1.0,
+    "is_significant_05": false,
+    "is_significant_01": false,
+    "accuracy_sys1": 1.0,
+    "accuracy_sys2": 1.0,
+    "absolute_improvement": 0.0,
+    "odds_ratio": 1.0
+  },
+  "FULL_vs_NO_STRUCTURED_DIAGNOSIS": {
+    "contingency_table": {
+      "both_correct": 85,
+      "both_wrong": 0,
+      "sys1_only": 0,
+      "sys2_only": 35
+    },
+    "chi2_statistic": 33.0286,
+    "p_value": 0.0,
+    "is_significant_05": true,
+    "is_significant_01": true,
+    "accuracy_sys1": 0.7083,
+    "accuracy_sys2": 1.0,
+    "absolute_improvement": 0.2917,
+    "odds_ratio": Infinity
+  },
+  "FULL_vs_DIRECT_BASELINE": {
+    "contingency_table": {
+      "both_correct": 83,
+      "both_wrong": 0,
+      "sys1_only": 0,
+      "sys2_only": 37
+    },
+    "chi2_statistic": 35.027,
+    "p_value": 0.0,
+    "is_significant_05": true,
+    "is_significant_01": true,
+    "accuracy_sys1": 0.6917,
+    "accuracy_sys2": 1.0,
+    "absolute_improvement": 0.3083,
+    "odds_ratio": Infinity
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "run_id": "run_C_dev_20260906_103331",
+  "system": "C",
+  "system_description": "Proposed C: Structured Diagnosis + Progressive Hints",
+  "model": "mock-tutor-v1",
+  "provider": "mock",
+  "prompt_version": "v1.0-structured-progressive",
+  "dataset_version": "1.0.0",
+  "dataset_path": "E:\\App\\Love Emotion Web\\data\\vietcsharptutor\\vietcsharptutor_600.jsonl",
+  "dataset_hash": "007738be46a351520c6e45d65fea39a84f83727fa5891461f06844b60f32c660",
+  "split": "dev",
+  "split_hash": "02c35c3567b35a55880397dacab0e94489112aab076f3cd12149238ca5a75a2f",
+  "total_samples": 360,
+  "random_seed": 42,
+  "git_commit": "91ca910d62d5ceed5fbe855d6dde4770c42652ac",
+  "timestamp_utc": "2026-09-06T10:33:31.607189+00:00",
+  "execution_duration_sec": 0.0,
+  "config": {
+    "temperature": 0.2,
+    "top_p": 0.95,
+    "max_output_tokens": 1024,
+    "mock_mode": true
+  }
+}

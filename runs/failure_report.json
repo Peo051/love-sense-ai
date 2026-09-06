@@ -1,0 +1,6 @@
+{
+  "total_failures": 0,
+  "failures": [],
+  "retry_policy": "Exponential backoff max 3 retries (no silent model substitution)",
+  "timestamp": "2026-09-06T10:37:04.001399+00:00"
+}

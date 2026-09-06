@@ -1,0 +1,16 @@
+{
+  "summary": {
+    "false_diagnoses_count": 0,
+    "no_bug_hallucinations_count": 0,
+    "solution_leakages_count": 0,
+    "wrong_localization_count": 0,
+    "incorrect_misconceptions_count": 0,
+    "poor_hints_count": 0
+  },
+  "false_diagnoses": [],
+  "no_bug_hallucinations": [],
+  "solution_leakages": [],
+  "wrong_localization": [],
+  "incorrect_misconceptions": [],
+  "poor_hints": []
+}
