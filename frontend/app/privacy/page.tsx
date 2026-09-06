@@ -29,7 +29,7 @@ const defaultConsent: ConsentSettings = {
 const deleteDialogCopy: Record<Exclude<PendingPrivacyDelete, null>, { title: string; description: string; label: string }> = {
   history: {
     title: 'Xóa lịch sử phân tích?',
-    description: 'Thao tác này xóa toàn bộ lịch sử phân tích đã lưu của tài khoản hiện tại. Hồ sơ cá nhân hóa vẫn được giữ lại.',
+    description: 'Thao tác này xóa toàn bộ lịch sử phân tích và bài tập đã lưu của tài khoản hiện tại. Hồ sơ học viên vẫn được giữ lại.',
     label: 'Xóa lịch sử phân tích',
   },
   profile: {
@@ -39,7 +39,7 @@ const deleteDialogCopy: Record<Exclude<PendingPrivacyDelete, null>, { title: str
   },
   all: {
     title: 'Xóa toàn bộ dữ liệu cá nhân?',
-    description: 'Thao tác này xóa hồ sơ, lịch sử và cài đặt riêng tư của tài khoản hiện tại. Dữ liệu đã xóa không thể khôi phục.',
+    description: 'Thao tác này xóa hồ sơ học viên, toàn bộ phiên học, lần thử, tin nhắn, mức độ thành thạo kỹ năng và cài đặt riêng tư (ngoại trừ consent AI Vision riêng). Dữ liệu đã xóa không thể khôi phục.',
     label: 'Xóa toàn bộ dữ liệu cá nhân',
   },
 };
@@ -124,7 +124,7 @@ export default function PrivacyPage() {
       <SectionHeader
         eyebrow="Quyền riêng tư"
         title="Kiểm soát dữ liệu được lưu và xóa"
-        description="Bạn luôn có quyền chọn dữ liệu nào được lưu. Nội dung chat không được lưu mặc định và tùy chọn consent luôn hiển thị rõ."
+        description="Bạn luôn có quyền chọn dữ liệu nào được lưu. Mã nguồn sinh viên không được lưu mặc định và tùy chọn consent luôn hiển thị rõ ràng."
         action={<Badge tone="teal">Không ép consent</Badge>}
       />
 
@@ -145,14 +145,14 @@ export default function PrivacyPage() {
           <div className="space-y-4">
             <PrivacyToggle
               label="Bật lưu lịch sử"
-              description="Khi tắt, backend sẽ không lưu lịch sử phân tích dù request có yêu cầu lưu."
+              description="Khi tắt, backend sẽ không lưu lịch sử thực hành dù request có yêu cầu lưu."
               checked={settings.history_enabled}
               disabled={isSaving}
               onChange={(checked) => persistSettings({ ...settings, history_enabled: checked })}
             />
             <PrivacyToggle
-              label="Bật lưu kết quả phân tích"
-              description="Cho phép lưu cảm xúc tổng quan, độ tin cậy, tóm tắt, gợi ý và cảnh báo."
+              label="Bật lưu kết quả phân tích (save_result)"
+              description="Cho phép lưu chẩn đoán lỗi OOP, kỹ năng (knowledge components), gợi ý và tóm tắt sư phạm."
               checked={settings.save_result}
               disabled={isSaving}
               onChange={(checked) =>
@@ -164,8 +164,8 @@ export default function PrivacyPage() {
               }
             />
             <PrivacyToggle
-              label="Bật lưu nội dung chat"
-              description="Chỉ nên bật khi bạn thật sự muốn xem lại đoạn chat gốc trong lịch sử."
+              label="Bật lưu mã nguồn và đề bài (save_input)"
+              description="Cho phép lưu trữ đề bài, mã nguồn C# và lỗi biên dịch. Mặc định luôn tắt để bảo vệ quyền riêng tư."
               checked={settings.save_input}
               disabled={isSaving}
               onChange={(checked) =>
@@ -185,15 +185,15 @@ export default function PrivacyPage() {
         <div className="space-y-6">
           <Card title="Dữ liệu được lưu khi có consent">
             <div className="grid gap-3 text-sm text-slate-700">
-              <PrivacyInfo icon={Database} text="Hồ sơ học viên và cài đặt consent theo user_id." />
-              <PrivacyInfo icon={ShieldCheck} text="Kết quả phân tích bài nộp chỉ lưu khi bật lưu lịch sử hoặc save_result." />
-              <PrivacyInfo icon={FileX2} text="Mã nguồn gốc không lưu mặc định, chỉ lưu khi save_input=true." />
+              <PrivacyInfo icon={Database} text="Hồ sơ học viên, kỹ năng và mức độ thành thạo (mastery) theo user_id." />
+              <PrivacyInfo icon={ShieldCheck} text="Kết quả gia sư chỉ lưu chẩn đoán, gợi ý, kỹ năng và trạng thái giải khi bật save_result." />
+              <PrivacyInfo icon={FileX2} text="Mã nguồn sinh viên, đề bài và lỗi biên dịch KHÔNG lưu mặc định, chỉ lưu khi save_input=true." />
             </div>
           </Card>
 
           <Card title="AI Vision consent" description="Ảnh chụp bài tập hoặc mã nguồn chỉ được gửi đến provider khi bạn bật tùy chọn AI Vision và tick consent riêng trong trang gia sư.">
             <div className="rounded-2xl border border-teal-200 bg-teal-50/80 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
-              Backend không lưu ảnh, không log ảnh/base64 và frontend vẫn yêu cầu bạn review nội dung OCR trước khi phân tích.
+              Backend không lưu ảnh, không log ảnh/base64 và frontend luôn yêu cầu bạn review bản nháp candidate fields trước khi phân tích.
             </div>
           </Card>
 

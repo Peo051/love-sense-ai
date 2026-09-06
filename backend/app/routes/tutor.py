@@ -155,6 +155,7 @@ async def analyze_code(
                 current_user.id,
                 problem_statement=request.problem_statement,
                 student_code=request.student_code,
+                compiler_error=request.compiler_error,
                 topic=request.topic,
                 result=feedback_result,
                 save_input=request.save_input,

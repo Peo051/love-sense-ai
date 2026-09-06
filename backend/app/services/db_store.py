@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.analysis_session import AnalysisSession
 from app.models.consent import Consent
-from app.models.learning_session import LearningSession
+from app.models.learning_session import LearningSession, StudentAttempt, TutorMessage
 from app.models.mastery_audit import StudentMasteryAudit
 from app.models.partner_profile import PartnerProfile as PartnerProfileModel
 from app.models.preference import Preference
@@ -245,6 +245,7 @@ class HistoryRepository:
         *,
         problem_statement: str,
         student_code: str,
+        compiler_error: str | None = None,
         topic: str | None = None,
         result: Any,
         save_input: bool = False,
@@ -261,7 +262,14 @@ class HistoryRepository:
         issue_type = getattr(result.diagnosis, "issue_type", "diagnostic_feedback")
         confidence = getattr(result.diagnosis, "confidence", 1.0)
         summary = f"Chẩn đoán OOP: {issue_type} (Mức {result.hint_level})"
-        context_note = f"Chủ đề: {topic or 'C# OOP'}. Đề bài: {problem_statement[:150]}"
+
+        # Privacy Invariant:
+        # Khi save_input=False: context_note chỉ lưu chủ đề chung, tuyệt đối không rò rỉ problem_statement.
+        # Khi save_input=True: context_note được phép lưu trích đoạn đề bài.
+        if save_input:
+            context_note = f"Chủ đề: {topic or 'C# OOP'}. Đề bài: {problem_statement[:150]}"
+        else:
+            context_note = f"Chủ đề: {topic or 'C# OOP'}"
 
         diagnosis_dict = (
             result.diagnosis.model_dump()
@@ -270,21 +278,32 @@ class HistoryRepository:
         )
         highest_hint_level_used = getattr(result, "highest_hint_level_used", result.hint_level)
         solution_revealed = getattr(result, "solution_revealed", False)
+        success_state = getattr(result, "success_state", "in_progress")
+
+        # save_result may store: diagnosis, skills, hint usage, success state, summary
+        distribution_data: dict[str, Any] = {
+            "knowledge_components": result.knowledge_components,
+            "hint_level": result.hint_level,
+            "highest_hint_level_used": highest_hint_level_used,
+            "solution_revealed": solution_revealed,
+            "teaching_strategy": result.teaching_strategy,
+            "prompt_version": getattr(result, "prompt_version", "v1"),
+            "diagnosis": diagnosis_dict,
+            "success_state": success_state,
+        }
+
+        # save_input explicitly permits storage of: problem statement, student code, compiler error
+        if save_input:
+            distribution_data["student_code"] = student_code
+            distribution_data["problem_statement"] = problem_statement
+            if compiler_error:
+                distribution_data["compiler_error"] = compiler_error
 
         item = AnalysisSession(
             user_id=user_id,
             overall_emotion=issue_type,
             confidence=confidence,
-            emotion_distribution={
-                "knowledge_components": result.knowledge_components,
-                "hint_level": result.hint_level,
-                "highest_hint_level_used": highest_hint_level_used,
-                "solution_revealed": solution_revealed,
-                "teaching_strategy": result.teaching_strategy,
-                "prompt_version": getattr(result, "prompt_version", "v1"),
-                "diagnosis": diagnosis_dict,
-                "student_code": student_code if save_input else None,
-            },
+            emotion_distribution=distribution_data,
             summary=summary,
             context_note=context_note,
             suggested_reply=result.tutor_response,
@@ -385,15 +404,55 @@ class HistoryRepository:
 class UserDataRepository:
     @staticmethod
     async def delete_all_user_data(db: AsyncSession, user_id: str) -> None:
-        await db.execute(delete(AnalysisSession).where(AnalysisSession.user_id == user_id))
-        await db.execute(delete(LearningSession).where(LearningSession.user_id == user_id))
-        await db.execute(delete(StudentProfile).where(StudentProfile.user_id == user_id))
-        await db.execute(delete(StudentSkillMastery).where(StudentSkillMastery.user_id == user_id))
+        """
+        Xóa toàn bộ dữ liệu thuộc sở hữu của người dùng hiện tại:
+        - student profile
+        - sessions (learning_sessions, analysis_sessions)
+        - attempts (student_attempts)
+        - messages (tutor_messages)
+        - mastery (student_skill_mastery)
+        - audit records (student_mastery_audits)
+        - general consent settings
+        - stored inputs (mã nguồn và dữ liệu đầu vào đã lưu)
+        
+        Quy tắc bất biến: Bảo lưu Vision-specific consent (Preserve Vision-specific consent).
+        """
+        user_session_subquery = select(LearningSession.id).where(LearningSession.user_id == user_id)
+
+        # 1. Xóa các tin nhắn gia sư thuộc các phiên học của user
+        await db.execute(delete(TutorMessage).where(TutorMessage.session_id.in_(user_session_subquery)))
+
+        # 2. Xóa các bản ghi audit mastery của user
         await db.execute(delete(StudentMasteryAudit).where(StudentMasteryAudit.user_id == user_id))
-        await db.execute(delete(Consent).where(Consent.user_id == user_id))
+
+        # 3. Xóa các lần thử làm bài (student attempts) thuộc các phiên học của user
+        await db.execute(delete(StudentAttempt).where(StudentAttempt.session_id.in_(user_session_subquery)))
+
+        # 4. Xóa các phiên học đa lượt của user
+        await db.execute(delete(LearningSession).where(LearningSession.user_id == user_id))
+
+        # 5. Xóa các phiên phân tích đơn lẻ (analysis sessions) của user
+        await db.execute(delete(AnalysisSession).where(AnalysisSession.user_id == user_id))
+
+        # 6. Xóa độ thành thạo kỹ năng (student mastery) của user
+        await db.execute(delete(StudentSkillMastery).where(StudentSkillMastery.user_id == user_id))
+
+        # 7. Xóa hồ sơ học viên (student profile) của user
+        await db.execute(delete(StudentProfile).where(StudentProfile.user_id == user_id))
+
+        # 8. Xóa consent cấu hình chung, NHƯNG BẢO LƯU Vision-specific consent
+        await db.execute(
+            delete(Consent).where(
+                Consent.user_id == user_id,
+                ~Consent.consent_type.in_(["vision", "vision_ocr", "vision_consent"]),
+            )
+        )
+
+        # 9. Xóa các model hồ sơ phụ trợ/legacy nếu còn tồn tại
         await db.execute(delete(ProfileModel).where(ProfileModel.user_id == user_id))
         await db.execute(delete(PartnerProfileModel).where(PartnerProfileModel.user_id == user_id))
         await db.execute(delete(Preference).where(Preference.user_id == user_id))
+
         await db.commit()
 
 
