@@ -272,6 +272,12 @@ class TutorResponse(BaseModel):
         le=4,
         description="Mức độ gợi ý của phản hồi (1: Socratic question, 2: Conceptual explanation, 3: Directed hint, 4: Explicit solution)",
     )
+    highest_hint_level_used: int = Field(
+        default=1,
+        ge=1,
+        le=4,
+        description="Mức gợi ý cao nhất đã từng được áp dụng trong phiên học này",
+    )
     solution_revealed: bool = Field(
         default=False,
         description="Đánh dấu phản hồi có đưa ra mã giải trọn vẹn hay không (chỉ được phép khi hint_level = 4)",
@@ -335,6 +341,9 @@ class TutorResponse(BaseModel):
             self.diagnosis.possible_misconception = self.possible_misconception
         elif self.diagnosis.possible_misconception and not self.possible_misconception:
             self.possible_misconception = self.diagnosis.possible_misconception
+
+        if self.hint_level > self.highest_hint_level_used:
+            self.highest_hint_level_used = self.hint_level
 
         return self
 

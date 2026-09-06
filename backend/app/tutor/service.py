@@ -4,6 +4,7 @@ from typing import Optional
 
 from app.schemas.tutor_schema import TutorDiagnosis, TutorRequest, TutorResponse
 from app.tutor.diagnosis import DiagnosisSubsystem
+from app.tutor.hint_manager import HintManager, HintPayload, HintSessionState
 from app.tutor.prompts import build_tutor_system_prompt, build_tutor_user_prompt
 from app.tutor.provider import OpenAITutorProvider, TutorLLMProvider, TutorProviderError
 from app.tutor.validator import TutorOutputValidationError, TutorOutputValidator
@@ -39,18 +40,47 @@ class TutorService:
     3. Yêu cầu chẩn đoán cấu trúc từ LLM (request structured diagnosis).
     4. Lựa chọn hành động / chiến lược sư phạm thích ứng (select tutoring action).
     5. Kiểm định tính hợp lệ và có căn cứ của đầu ra (validate output & evidence grounding).
-    6. Đóng gói TutorResponse hoàn chỉnh.
+    6. Đóng gói TutorResponse hoàn chỉnh kèm quản lý tiến trình gợi ý (progressive hint system).
     """
 
-    def __init__(self, llm_provider: Optional[TutorLLMProvider] = None):
+    def __init__(
+        self,
+        llm_provider: Optional[TutorLLMProvider] = None,
+        hint_manager: Optional[HintManager] = None,
+    ):
         self._llm_provider: TutorLLMProvider = llm_provider or OpenAITutorProvider()
+        self._hint_manager: HintManager = hint_manager or HintManager()
 
-    async def generate_feedback(self, request: TutorRequest) -> TutorResponse:
+    @property
+    def hint_manager(self) -> HintManager:
+        """Truy cập đối tượng HintManager."""
+        return self._hint_manager
+
+    async def generate_feedback(
+        self,
+        request: TutorRequest,
+        session_id: Optional[str] = None,
+        allow_jump_to_solution: bool = False,
+    ) -> TutorResponse:
         """
         Thực hiện chu trình điều phối hướng dẫn học tập cho một yêu cầu từ sinh viên.
+        Nếu truyền session_id, hệ thống áp dụng tiến trình gợi ý tất định (progressive hint progression).
         """
         # 1. Normalize problem/code/error input
         normalized_inputs = self._normalize_inputs(request)
+
+        # Quản lý mức độ gợi ý thông qua HintManager nếu có session_id
+        effective_hint_level = normalized_inputs["hint_level"]
+        highest_hint_level_used = normalized_inputs["hint_level"]
+
+        if session_id:
+            session_state = self._hint_manager.advance_hint(
+                session_id=session_id,
+                requested_level=normalized_inputs["hint_level"],
+                allow_jump_to_solution=allow_jump_to_solution,
+            )
+            effective_hint_level = session_state.current_hint_level
+            highest_hint_level_used = session_state.highest_hint_level_used
 
         # 2. Build tutor context
         messages = self._build_context(
@@ -59,7 +89,7 @@ class TutorService:
             compiler_error=normalized_inputs["compiler_error"],
             student_question=normalized_inputs["student_question"],
             topic=normalized_inputs["topic"],
-            hint_level=normalized_inputs["hint_level"],
+            hint_level=effective_hint_level,
         )
 
         # 3. Request structured diagnosis
@@ -68,7 +98,8 @@ class TutorService:
         # 4 & 5. Validate output & evidence grounding
         validated_response = self._validate_and_finalize_output(
             raw_output=raw_output,
-            requested_hint_level=normalized_inputs["hint_level"],
+            requested_hint_level=effective_hint_level,
+            highest_hint_level_used=highest_hint_level_used,
             has_compiler_error=bool(normalized_inputs["compiler_error"]),
             student_code=normalized_inputs["student_code"],
             compiler_error=normalized_inputs["compiler_error"],
@@ -77,6 +108,26 @@ class TutorService:
 
         # 6. Construct complete TutorResponse
         return validated_response
+
+    def request_next_hint(
+        self,
+        session_id: str,
+        diagnosis: TutorDiagnosis,
+        student_code: Optional[str] = None,
+        allow_jump_to_solution: bool = False,
+    ) -> HintPayload:
+        """
+        Yêu cầu gợi ý tiếp theo từ session một cách trực tiếp mà không cần gọi lại LLM.
+        """
+        session_state = self._hint_manager.advance_hint(
+            session_id=session_id,
+            allow_jump_to_solution=allow_jump_to_solution,
+        )
+        return self._hint_manager.generate_progressive_hint(
+            diagnosis=diagnosis,
+            hint_level=session_state.current_hint_level,
+            student_code=student_code,
+        )
 
     def diagnose_submission(
         self,
@@ -157,7 +208,8 @@ class TutorService:
         self,
         raw_output: str,
         requested_hint_level: int,
-        has_compiler_error: bool,
+        highest_hint_level_used: Optional[int] = None,
+        has_compiler_error: bool = False,
         student_code: Optional[str] = None,
         compiler_error: Optional[str] = None,
         problem_statement: Optional[str] = None,
@@ -200,6 +252,7 @@ class TutorService:
         response_dict = response.model_dump()
         response_dict["teaching_strategy"] = teaching_strategy
         response_dict["hint_level"] = requested_hint_level
+        response_dict["highest_hint_level_used"] = highest_hint_level_used or requested_hint_level
         response_dict["prompt_version"] = getattr(response, "prompt_version", "v1")
         response_dict["created_at"] = datetime.now(timezone.utc)
 
