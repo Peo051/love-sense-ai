@@ -1,5 +1,15 @@
 # Câu Hỏi Nghiên Cứu & Bằng Chứng Thực Nghiệm (Research Questions & Findings)
 
+> [!CAUTION]
+> **CẢNH BÁO TÍNH TOÀN VẸN NGHIÊN CỨU (RESEARCH INTEGRITY WARNING):**  
+> Các số liệu thực nghiệm, chỉ số hiệu năng và kết luận đánh giá trong tài liệu này thuộc bản phát hành lịch sử `codesense-research-v1.0` và **ĐÃ BỊ HỦY BỎ HIỆU LỰC HOÀN TOÀN (INVALIDATED)** theo kết luận kiểm toán độc lập [APT-047](../docs/audit/APT047_EVALUATION_INTEGRITY_VERDICT.md) (commit `4b07ec2`).  
+> - Bảng phân loại hiệu lực chi tiết xem tại: [V1_RESULT_STATUS.md](V1_RESULT_STATUS.md).  
+> - Bộ dữ liệu `VietCSharpTutor-600` chỉ được coi là: **INTERNAL REGRESSION BENCHMARK ONLY** (Không phải benchmark được ngoại kiểm).  
+> - Các hiện vật thực nghiệm lịch sử được lưu trữ nguyên trạng nhằm phục vụ mục đích kiểm toán đối soát minh bạch.
+
+---
+
+
 Tài liệu đặc tả 4 câu hỏi nghiên cứu (Research Questions - RQs) cốt lõi của dự án **CodeSense AI** kèm bằng chứng thực nghiệm thu được từ bộ benchmark `VietCSharpTutor-600`.
 
 ---

@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "task": "APT-048",
+    "title": "Historical V1 Evaluation Results Status Classification",
+    "auditor_role": "Research Integrity Maintainer",
+    "original_release": "codesense-research-v1.0",
+    "invalidating_audit": "APT-040 through APT-047",
+    "invalidating_commit": "4b07ec2",
+    "date": "2026-09-06",
+    "reason": "Independent evaluation pipeline audit confirmed 0% real LLM inference, direct copying of ground-truth fields in runner.py, and synthetically randomized latency/token/cost telemetry."
+  },
+  "benchmark_classification": {
+    "benchmark_name": "VietCSharpTutor-600",
+    "status": "INTERNAL_REGRESSION_BENCHMARK_ONLY",
+    "statement": "VietCSharpTutor-600 is classified strictly as an INTERNAL REGRESSION BENCHMARK ONLY. It is NOT an externally validated, standardized, or peer-reviewed benchmark for comparing generalized AI models.",
+    "allowed_usage": "Internal engineering sanity checks, regression testing of AST and parser components, format compliance verification.",
+    "prohibited_usage": "Claiming general state-of-the-art AI model superiority, publishing unverified academic performance claims."
+  },
+  "status_categories": {
+    "INVALIDATED": [
+      {
+        "claim_or_metric": "Proposed D 100.0% Diagnosis Accuracy",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct ground truth copying in backend/app/evaluation/runner.py; 0% real LLM inference."
+      },
+      {
+        "claim_or_metric": "Proposed D 100.0% Bug Localization Accuracy",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct assignment of sample['bug_location']; 0% real LLM inference."
+      },
+      {
+        "claim_or_metric": "Proposed D 100.0% Error Category Accuracy",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct assignment of sample['error_category']; 0% real LLM inference."
+      },
+      {
+        "claim_or_metric": "Proposed D Knowledge Component F1 = 1.000",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct assignment of sample['knowledge_components']; 0% real LLM inference."
+      },
+      {
+        "claim_or_metric": "Proposed D Misconception Detection F1 = 1.000",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct assignment of sample['possible_misconception']; 0% real LLM inference."
+      },
+      {
+        "claim_or_metric": "Proposed D Zero Solution Leakage (0.0%) & 100% Hint Policy Compliance",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Direct copying of expert hints from dataset ground truth."
+      },
+      {
+        "claim_or_metric": "Paired McNemar Test p-values and Odds Ratios",
+        "source": "results/ANALYSIS_SUMMARY.md",
+        "reason": "Calculated on synthetically generated mock prediction data; scientifically meaningless."
+      },
+      {
+        "claim_or_metric": "Ablation Study Deltas (FULL vs NO_STUDENT_MODEL, etc.)",
+        "source": "results/ablation_results.json",
+        "reason": "All ablation configurations ran on internal mock logic with predefined synthetic outputs."
+      },
+      {
+        "claim_or_metric": "Reported Inference Latency (Mean 285.4 ms)",
+        "source": "manifests/ and results/ANALYSIS_SUMMARY.md",
+        "reason": "Synthetically generated via random.uniform(150.0, 420.0)."
+      },
+      {
+        "claim_or_metric": "Reported Token Consumption & Estimated Cost Figures",
+        "source": "manifests/ and results/ANALYSIS_SUMMARY.md",
+        "reason": "Synthetically generated via random.randint(300, 850) and fixed formula."
+      },
+      {
+        "claim_or_metric": "RQ1, RQ2, RQ3, RQ4 Empirical Claims based on V1 Data",
+        "source": "docs/research/RESEARCH_QUESTIONS.md",
+        "reason": "All underlying empirical data points originated from synthetic mock runs."
+      }
+    ],
+    "DESCRIPTIVE_ONLY": [
+      {
+        "item": "VietCSharpTutor-600 Sample Count (600 instances)",
+        "source": "data/vietcsharptutor/",
+        "description": "600 curated C# beginner programming problem instances."
+      },
+      {
+        "item": "Dataset Topic & Difficulty Distribution",
+        "source": "docs/research/DATASET_PROTOCOL.md",
+        "description": "Classification into 10 OOP topics and 3 difficulty tiers."
+      },
+      {
+        "item": "Raw Compiler Error & Student Code Line Statistics",
+        "source": "data/vietcsharptutor/",
+        "description": "Static code lengths and Roslyn compiler error diagnostics in raw dataset."
+      }
+    ],
+    "UNAFFECTED_ENGINEERING": [
+      {
+        "item": "Backend Unit & Integration Tests (275 passed)",
+        "source": "tests/",
+        "description": "Passing software tests for FastAPI endpoints, database models, session management, and OCR."
+      },
+      {
+        "item": "Frontend Shell & Component Tests (37 passed)",
+        "source": "frontend/src/",
+        "description": "Passing UI component tests, state management, and mock user flows."
+      },
+      {
+        "item": "Security & Privacy Verifications (7 checks passed)",
+        "source": "docs/release/PRODUCTION_VALIDATION.md",
+        "description": "CORS, auth token validation, session isolation, privacy consent gates."
+      },
+      {
+        "item": "Deterministic Mock Provider in Unit Tests",
+        "source": "backend/app/tutor/provider.py",
+        "description": "Properly isolated test mock implementation used for unit testing without live network."
+      }
+    ],
+    "HISTORICAL_ONLY": [
+      {
+        "path": "runs/run_20260906_103014/",
+        "description": "Historical frozen raw prediction files preserved untouched for audit trail."
+      },
+      {
+        "path": "manifests/run_manifest_20260906_103014.json",
+        "description": "Historical run manifest preserved untouched for audit trail."
+      },
+      {
+        "path": "results/evaluation_results.json",
+        "description": "Historical evaluation metric summary preserved untouched for audit trail."
+      },
+      {
+        "path": "results/ablation_results.json",
+        "description": "Historical ablation metric summary preserved untouched for audit trail."
+      },
+      {
+        "path": "results/statistical_tests.json",
+        "description": "Historical statistical test results preserved untouched for audit trail."
+      },
+      {
+        "path": "results/overall_comparison.csv",
+        "description": "Historical overall comparison CSV preserved untouched for audit trail."
+      }
+    ]
+  },
+  "documentation_warnings_applied": [
+    "results/ANALYSIS_SUMMARY.md",
+    "docs/research/RESEARCH_QUESTIONS.md",
+    "docs/research/EVALUATION_PROTOCOL.md",
+    "docs/research/DATASET_PROTOCOL.md",
+    "docs/research/PROBLEM_STATEMENT.md"
+  ]
+}

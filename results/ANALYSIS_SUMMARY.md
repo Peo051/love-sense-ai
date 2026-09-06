@@ -1,5 +1,15 @@
 # Báo Cáo Phân Tích Thực Nghiệm Khoa Học (Experimental Analysis Report)
 
+> [!CAUTION]
+> **CẢNH BÁO TÍNH TOÀN VẸN NGHIÊN CỨU (RESEARCH INTEGRITY WARNING):**  
+> Toàn bộ các bảng số liệu, chỉ số hiệu năng (100% Accuracy, F1 = 1.000, 0% Leakage) và kiểm định McNemar trong báo cáo này thuộc phiên bản lịch sử `codesense-research-v1.0` và **ĐÃ BỊ HỦY BỎ HIỆU LỰC HOÀN TOÀN (INVALIDATED)** theo kết luận kiểm toán độc lập [APT-047](../docs/audit/APT047_EVALUATION_INTEGRITY_VERDICT.md) (commit `4b07ec2`).  
+> - Bảng phân loại chi tiết: xem [V1_RESULT_STATUS.md](../docs/research/V1_RESULT_STATUS.md).  
+> - Bộ dữ liệu `VietCSharpTutor-600` được định danh là: **INTERNAL REGRESSION BENCHMARK ONLY**.  
+> - Các tệp kết quả lịch sử được bảo toàn nguyên trạng phục vụ đối soát kiểm toán học thuật.
+
+---
+
+
 Báo cáo phân tích toàn diện trên tập **Test Split Đóng Băng (Frozen Test Split - 120 mẫu)** của bộ dữ liệu `VietCSharpTutor-600`.
 
 ---
