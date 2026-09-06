@@ -1,136 +1,58 @@
-# Demo Script: Love Sense AI
+# Kịch Bản Trình Chiếu CodeSense AI (3-Phút Demo Script)
 
-Tài liệu này dùng cho demo public khoảng 3 phút. Không sử dụng ảnh chat thật, tài khoản cá nhân thật hoặc dữ liệu nhạy cảm trong lúc demo.
+Tài liệu hướng dẫn trình diễn nhanh (3 phút) nền tảng **CodeSense AI - Adaptive Programming Tutor**.
+
+---
 
 ## Chuẩn Bị Trước Demo
+- Mở trang chủ ứng dụng: `http://localhost:3000` (hoặc domain production).
+- Backend API server đang chạy: `http://localhost:8000`.
+- Tài khoản sinh viên demo sẵn sàng hoặc sử dụng chế độ Khách (Guest Demo).
+- Chuẩn bị một đoạn mã C# có lỗi nhập môn điển hình (ví dụ: lỗi gán biến tham số che khuất trường `name = name;` trong hàm tạo).
 
-- Frontend: https://love-sense-ai.vercel.app
-- Backend API docs: https://love-sense-ai.onrender.com/docs
-- Chuẩn bị một tài khoản demo mới hoặc tạo tài khoản ngay trong demo.
-- Chuẩn bị một ảnh chat minh họa không chứa thông tin cá nhân. Nếu chưa có ảnh, dùng đoạn chat mẫu ở cuối tài liệu và nhập thủ công.
-- Không dùng API key, `.env`, token hoặc thông tin production secret trong màn hình trình chiếu.
+---
 
-## Kịch Bản 3 Phút
+## Kịch Bản 3 Phút (Timeline)
 
-### 0:00 - 0:25: Giới Thiệu Ngắn
+### 0:00 - 0:30: Đặt Vấn Đề & Giới Thiệu CodeSense AI
+- **Hành động:** Mở trang chủ (`/tutor`).
+- **Nội dung trình bày:**
+  - "Khi sinh viên năm nhất học lập trình hướng đối tượng C#, các bạn thường hỏi ChatGPT hoặc Copilot và nhận ngay đoạn code giải pháp hoàn chỉnh."
+  - "Điều này khiến sinh viên không hiểu bản chất và mất đi kỹ năng tư duy phản biện."
+  - "CodeSense AI giải quyết vấn đề này bằng phương pháp gia sư Socratic: chẩn đoán có cấu trúc, gợi ý tăng dần 3 bậc không làm lộ giải pháp, và đồng hành thích ứng theo năng lực học viên."
 
-Mở trang chủ:
+### 0:30 - 1:15: Trải Nghiệm Gia Sư Socratic & Chẩn Đoán Cấu Trúc
+- **Hành động:** 
+  - Dán đoạn mã C# có lỗi:
+    ```csharp
+    public class Student {
+        public string Name;
+        public Student(string name) {
+            Name = name; // Hoặc gán nhầm name = name;
+        }
+    }
+    ```
+  - Nhấn `Phân tích & Gợi ý`.
+- **Điểm cần nhấn mạnh:**
+  - Hệ thống bóc tách chính xác loại lỗi (`logic_error`), neo đúng vị trí dòng và trích xuất bằng chứng nguyên văn.
+  - Sinh viên nhận **Hint 1 (Định hướng)**: Câu hỏi gợi mở tư duy, không hề có dòng code giải pháp nào bị lộ.
 
-```text
-https://love-sense-ai.vercel.app
-```
+### 1:15 - 1:55: Mở Tầng Gợi Ý 2 & Thực Hiện Sửa Lỗi (Verify Fix)
+- **Hành động:**
+  - Nhấn `Gợi ý tiếp theo` -> Hệ thống mở **Hint 2 (Khái niệm)** giải thích nguyên lý từ khóa `this` và tầm vực biến.
+  - Sửa lại code thành `this.Name = name;` và nhấn `Kiểm tra mã sửa (Verify Fix)`.
+- **Điểm cần nhấn mạnh:**
+  - Hệ thống kiểm định tức thì, chúc mừng sinh viên đã tự khắc phục được lỗi và cập nhật điểm thuần thục (Mastery Score) cho KCs `OOP.Constructors` và `OOP.ThisKeyword`.
 
-Nói ngắn gọn:
+### 1:55 - 2:35: Bảng Theo Dõi Năng Lực (Mastery Progress Dashboard)
+- **Hành động:** Chuyển sang trang `/progress`.
+- **Điểm cần nhấn mạnh:**
+  - Bảng trực quan hóa mức độ thuần thục của 10+ Thành phần Kiến thức (KCs).
+  - Lịch sử giải bài chi tiết, giúp người học nhận ra điểm mạnh và chủ đề cần cải thiện.
 
-- Love Sense AI hỗ trợ phân tích sắc thái hội thoại và gợi ý phản hồi tham khảo.
-- Người dùng chủ động nhập nội dung hoặc tải ảnh để OCR.
-- Ứng dụng không tự truy cập tin nhắn và không lưu chat mặc định.
-- Kết quả chỉ hỗ trợ giao tiếp bình tĩnh hơn, không kết luận chắc chắn cảm xúc của người khác.
-
-### 0:25 - 0:55: Đăng Ký Hoặc Đăng Nhập
-
-1. Vào `/auth`.
-2. Chọn đăng ký hoặc đăng nhập bằng tài khoản demo.
-3. Sau khi đăng nhập, nhấn vào trang `/analyze`.
-
-Điểm cần nói:
-
-- Tài khoản giúp tách dữ liệu hồ sơ, lịch sử và consent theo từng user.
-- User này không thể xem dữ liệu của user khác.
-
-### 0:55 - 1:35: Upload Ảnh OCR Và Review Text
-
-1. Tại `/analyze`, mở section nhập từ ảnh chụp đoạn chat.
-2. Tải ảnh chat minh họa.
-3. Nhấn `Trích xuất chữ từ ảnh`.
-4. Chờ OCR local hoặc AI Vision nếu backend demo đã bật và user tick consent riêng.
-5. Review khu vực `Bản nháp nội dung trích xuất`.
-6. Chỉnh lại text nếu OCR nhận diện sai.
-7. Chọn `Thay thế đoạn chat hiện tại` hoặc `Dùng nội dung này`.
-
-Điểm cần nói:
-
-- OCR có thể sai, nên luôn có bước review trước khi phân tích.
-- Ảnh không được lưu mặc định.
-- AI Vision chỉ gửi ảnh lên provider khi user đồng ý riêng.
-- Người dùng có thể che hoặc xóa thông tin nhạy cảm trước khi phân tích.
-
-### 1:35 - 2:05: Phân Tích Hội Thoại
-
-1. Bổ sung bối cảnh cá nhân hóa, ví dụ:
-
-```text
-Người ấy thường dùng cách nói trêu đùa khi thân mật. Nếu mệt thì hay trả lời ngắn.
-```
-
-2. Tick `Lưu kết quả phân tích vào lịch sử`.
-3. Không tick `Lưu nội dung chat gốc` để minh họa privacy default.
-4. Nhấn `Phân tích sắc thái`.
-5. Chờ result panel hiển thị.
-
-Điểm cần chỉ ra:
-
-- Cảm xúc tổng quan.
-- Độ tin cậy.
-- Phân bố cảm xúc.
-- Câu làm căn cứ nếu có.
-- Gợi ý phản hồi.
-- Cảnh báo `Kết quả chỉ mang tính tham khảo`.
-
-### 2:05 - 2:35: Xem History
-
-1. Vào `/history`.
-2. Tìm item vừa phân tích.
-3. Mở chi tiết nếu UI có detail panel.
-4. Chỉ ra rằng kết quả tổng hợp được lưu, nhưng chat gốc không xuất hiện nếu chưa consent `save_input=true`.
-
-Điểm cần nói:
-
-- Lịch sử scoped theo user hiện tại.
-- Lưu kết quả và lưu chat gốc là hai consent riêng.
-- Người dùng có thể xóa từng item.
-
-### 2:35 - 3:00: Xóa Dữ Liệu
-
-1. Vào `/privacy`.
-2. Giải thích các nhóm dữ liệu:
-   - Hồ sơ cá nhân hóa.
-   - Lịch sử phân tích.
-   - Consent settings.
-3. Nhấn xóa lịch sử hoặc xóa toàn bộ dữ liệu demo.
-4. Xác nhận trong dialog.
-5. Quay lại `/history` để kiểm tra dữ liệu đã được xóa.
-
-Điểm cần nói:
-
-- Các hành động xóa có confirm để tránh bấm nhầm.
-- Xóa dữ liệu chỉ áp dụng cho user hiện tại.
-- Đây là điểm quan trọng cho demo privacy-first.
-
-## Đoạn Chat Mẫu Nếu Không Có Ảnh
-
-```text
-A: Em sao vậy?
-B: Không sao.
-A: Anh thấy em hơi lạ.
-B: Em mệt thôi.
-```
-
-Bối cảnh:
-
-```text
-Người ấy thường im lặng khi mệt, không thích bị hỏi dồn.
-```
-
-Kỳ vọng kết quả:
-
-- Sắc thái có thể nghiêng về mệt mỏi / né tránh nhẹ.
-- Confidence không nên quá cao vì đoạn chat ngắn.
-- Suggested reply nên nhẹ nhàng, không ép đối phương giải thích ngay.
-
-## Checklist Sau Demo
-
-- Đăng xuất khỏi tài khoản demo nếu dùng máy chung.
-- Xóa dữ liệu demo trong `/privacy`.
-- Không để token, `.env`, API key hoặc dashboard production xuất hiện trên màn hình.
-- Không dùng ảnh chat thật của người dùng trong tài liệu, slide hoặc recording.
+### 2:35 - 3:00: Quyền Riêng Tư & Tổng Kết
+- **Hành động:** Mở mục Cài đặt quyền riêng tư (`Privacy Settings`).
+- **Điểm cần nhấn mạnh:**
+  - Tính năng phân tách: Cho phép lưu kết quả phân tích mà không cần lưu trữ mã nguồn thô của học sinh.
+  - Quyền được xóa sạch dữ liệu (Full Purge) chỉ với 1 click theo chuẩn GDPR.
+  - Kết luận: CodeSense AI biến AI từ công cụ gian lận/làm hộ thành người thầy đồng hành thông thái.
