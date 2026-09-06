@@ -68,6 +68,11 @@ class StudentAttempt(Base):
     # Relationships
     session = relationship("LearningSession", back_populates="attempts")
     messages = relationship("TutorMessage", back_populates="attempt")
+    mastery_audits = relationship(
+        "StudentMasteryAudit",
+        back_populates="attempt",
+        cascade="all, delete-orphan",
+    )
 
 
 class TutorMessage(Base):

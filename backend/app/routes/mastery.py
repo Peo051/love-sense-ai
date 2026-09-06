@@ -4,12 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import get_db
 from app.deps.auth import CurrentUser, get_current_user
+from app.schemas.mastery_audit_schema import MasteryAuditResponse
 from app.schemas.mastery_schema import (
     FormulaDocumentationResponse,
     RecordPracticeAttemptRequest,
     SkillMasteryResponse,
     StudentMasterySummaryResponse,
 )
+from app.services.attempt_mastery_coordinator import AttemptMasteryCoordinator
 from app.services.mastery_store import MasteryRepository
 from app.tutor.mastery import DeterministicMasteryModel
 from app.tutor.skill_taxonomy import SkillTaxonomy
@@ -44,6 +46,51 @@ async def get_my_masteries(
     Kỹ năng chưa làm bài có điểm khởi tạo trung tính 0.5.
     """
     return await MasteryRepository.get_user_mastery_summary(db, current_user.id)
+
+
+@router.get(
+    "/mastery/audit",
+    response_model=list[MasteryAuditResponse],
+    summary="Xem lịch sử biến động điểm thuần thục kỹ năng kèm audit metadata",
+)
+async def list_my_mastery_audits(
+    limit: int = 50,
+    offset: int = 0,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    GET /api/mastery/audit
+    Lấy danh sách các bản ghi kiểm toán biến động điểm (previous_score, new_score, event_type, attempt_id, reason).
+    """
+    audits = await AttemptMasteryCoordinator.get_attempt_audits(
+        db,
+        user_id=current_user.id,
+        limit=limit,
+        offset=offset,
+    )
+    return [MasteryAuditResponse.model_validate(a) for a in audits]
+
+
+@router.get(
+    "/mastery/audit/{attempt_id}",
+    response_model=list[MasteryAuditResponse],
+    summary="Xem lịch sử kiểm toán của một lần thử bài cụ thể",
+)
+async def get_attempt_mastery_audits(
+    attempt_id: str,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    """
+    GET /api/mastery/audit/{attempt_id}
+    """
+    audits = await AttemptMasteryCoordinator.get_attempt_audits(
+        db,
+        user_id=current_user.id,
+        attempt_id=attempt_id,
+    )
+    return [MasteryAuditResponse.model_validate(a) for a in audits]
 
 
 @router.get(

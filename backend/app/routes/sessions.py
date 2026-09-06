@@ -6,6 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.connection import get_db
 from app.deps.auth import CurrentUser, get_current_user
+from app.schemas.mastery_audit_schema import (
+    AttemptOutcomeResolutionRequest,
+    AttemptOutcomeResolutionResponse,
+    MasteryAuditResponse,
+)
 from app.schemas.session_schema import (
     AttemptCreateRequest,
     MessageCreateRequest,
@@ -16,6 +21,7 @@ from app.schemas.session_schema import (
     StudentAttemptResponse,
     TutorMessageResponse,
 )
+from app.services.attempt_mastery_coordinator import AttemptMasteryCoordinator
 from app.services.session_store import SessionRepository
 
 logger = logging.getLogger(__name__)
@@ -129,3 +135,47 @@ async def add_session_message(
             detail="Không tìm thấy phiên học tập để gửi tin nhắn.",
         )
     return message
+
+
+@router.post(
+    "/sessions/{session_id}/attempts/{attempt_id}/resolve",
+    response_model=AttemptOutcomeResolutionResponse,
+    summary="Xác nhận kết quả lần thử và kích hoạt cập nhật độ thuần thục kỹ năng giao dịch",
+)
+async def resolve_session_attempt(
+    session_id: str,
+    attempt_id: str,
+    payload: AttemptOutcomeResolutionRequest,
+    current_user: CurrentUser = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AttemptOutcomeResolutionResponse:
+    """
+    POST /api/sessions/{session_id}/attempts/{attempt_id}/resolve
+    Kết luận kết quả một lần thử bài (resolved, failed, solution_revealed, etc.)
+    và cập nhật transactional điểm mastery cho các kỹ năng liên quan kèm audit log.
+    Bảo đảm duplicate-event replay protection (idempotent).
+    """
+    attempt, audits = await AttemptMasteryCoordinator.resolve_attempt_and_update_mastery(
+        db,
+        user_id=current_user.id,
+        attempt_id=attempt_id,
+        outcome=payload.outcome,
+        highest_hint_level=payload.highest_hint_level,
+        solution_revealed=payload.solution_revealed,
+        hints_used=payload.hints_used,
+        custom_reason=payload.custom_reason,
+    )
+    if not attempt:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy bài làm yêu cầu hoặc bạn không có quyền sở hữu.",
+        )
+
+    return AttemptOutcomeResolutionResponse(
+        attempt_id=attempt.id,
+        success_state=attempt.success_state,
+        audit_records=[
+            MasteryAuditResponse.model_validate(a) for a in audits
+        ],
+    )
+

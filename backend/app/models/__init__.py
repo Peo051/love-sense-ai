@@ -2,6 +2,7 @@
 from app.models.analysis_session import AnalysisSession
 from app.models.consent import Consent
 from app.models.learning_session import LearningSession, StudentAttempt, TutorMessage
+from app.models.mastery_audit import StudentMasteryAudit
 from app.models.partner_profile import PartnerProfile
 from app.models.preference import Preference
 from app.models.skill import SkillModel
@@ -18,6 +19,7 @@ __all__ = [
     "Profile",
     "SkillModel",
     "StudentAttempt",
+    "StudentMasteryAudit",
     "StudentProfile",
     "StudentSkillMastery",
     "TutorMessage",
