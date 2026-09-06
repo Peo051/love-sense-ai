@@ -1,22 +1,28 @@
 import json
-from typing import Any, Protocol, runtime_checkable
+import logging
+import re
+from abc import ABC, abstractmethod
+from typing import Any, Optional
 
 from app.services.llm_client import LLMClientError, OpenAICompatibleLLMClient
 
+logger = logging.getLogger(__name__)
+
 
 class TutorProviderError(Exception):
-    """Lỗi phát sinh từ nhà cung cấp LLM (timeout, kết nối mạng, lỗi HTTP 5xx, v.v.)."""
+    """Lỗi ngoại lệ khi giao tiếp với LLM Provider."""
 
-    def __init__(self, message: str, *, retryable: bool = False, status_code: int | None = None):
+    def __init__(self, message: str, retryable: bool = False, status_code: int = 502):
         super().__init__(message)
+        self.message = message
         self.retryable = retryable
         self.status_code = status_code
 
 
-@runtime_checkable
-class TutorLLMProvider(Protocol):
-    """Giao diện trừu tượng tối giản cho LLM Provider phục vụ TutorService."""
+class TutorLLMProvider(ABC):
+    """Interface trừu tượng cho nhà cung cấp LLM phục vụ AI Tutor."""
 
+    @abstractmethod
     async def generate_response(
         self,
         messages: list[dict[str, Any]],
@@ -24,14 +30,14 @@ class TutorLLMProvider(Protocol):
         temperature: float = 0.2,
         max_tokens: int = 1500,
     ) -> str:
-        """Thực hiện gọi mô hình ngôn ngữ và trả về chuỗi nội dung phản hồi thô."""
-        ...
+        """Gửi danh sách tin nhắn tới LLM và nhận về chuỗi phản hồi thô."""
+        pass
 
 
-class OpenAITutorProvider:
-    """Hiện thực TutorLLMProvider tái sử dụng OpenAICompatibleLLMClient có sẵn."""
+class OpenAITutorProvider(TutorLLMProvider):
+    """Triển khai LLM Provider tái sử dụng OpenAICompatibleLLMClient hiện có."""
 
-    def __init__(self, client: OpenAICompatibleLLMClient | None = None):
+    def __init__(self, client: Optional[OpenAICompatibleLLMClient] = None):
         self._client = client or OpenAICompatibleLLMClient()
 
     async def generate_response(
@@ -48,19 +54,22 @@ class OpenAITutorProvider:
                 max_tokens=max_tokens,
             )
         except LLMClientError as exc:
+            logger.error("Lỗi từ OpenAICompatibleLLMClient trong TutorProvider: %s", str(exc))
             raise TutorProviderError(
                 str(exc),
                 retryable=exc.retryable,
-                status_code=exc.status_code,
+                status_code=exc.status_code or 502,
             ) from exc
         except Exception as exc:
+            logger.error("Lỗi không lường trước từ LLM client: %s", str(exc))
             raise TutorProviderError(
-                f"Lỗi không xác định từ LLM provider: {str(exc)}",
+                f"Lỗi không xác định từ mô hình: {str(exc)}",
                 retryable=False,
+                status_code=500,
             ) from exc
 
 
-class DeterministicMockTutorProvider:
+class DeterministicMockTutorProvider(TutorLLMProvider):
     """Test double xác định (deterministic) phục vụ kiểm thử đơn vị độc lập với mạng."""
 
     def __init__(
@@ -82,6 +91,7 @@ class DeterministicMockTutorProvider:
     def default_canned_payload() -> dict[str, Any]:
         return {
             "diagnosis": {
+                "category": "logic_error",
                 "issue_type": "semantic_error",
                 "severity": "warning",
                 "location": "Student.cs: constructor",
@@ -128,4 +138,23 @@ class DeterministicMockTutorProvider:
         self.recorded_messages.append(messages)
         if self._error_to_raise:
             raise self._error_to_raise
-        return self._canned_response
+
+        response_text = self._canned_response
+        user_msg = next((m.get("content", "") for m in messages if m.get("role") == "user"), "")
+
+        # Nếu canned response chứa placeholder 'name = name;' nhưng đề bài/code của test gửi lên
+        # là một đoạn mã khác (như Rectangle), thích ứng evidence code để grounded vào request
+        if "name = name;" in response_text and "name = name;" not in user_msg:
+            code_match = re.search(r"<untrusted_student_code>\s*([\s\S]*?)\s*</untrusted_student_code>", user_msg)
+            err_match = re.search(r"<untrusted_compiler_error>\s*([\s\S]*?)\s*</untrusted_compiler_error>", user_msg)
+            replacement_code = None
+            if err_match and err_match.group(1).strip() and err_match.group(1).strip() != "None":
+                replacement_code = err_match.group(1).strip().splitlines()[0]
+            elif code_match and code_match.group(1).strip():
+                lines = [l.strip() for l in code_match.group(1).strip().splitlines() if l.strip() and not l.strip().startswith("class ")]
+                replacement_code = lines[0] if lines else code_match.group(1).strip()
+
+            if replacement_code:
+                response_text = response_text.replace("name = name;", replacement_code)
+
+        return response_text

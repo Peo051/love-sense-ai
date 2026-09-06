@@ -2,7 +2,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Optional
 
-from app.schemas.tutor_schema import TutorRequest, TutorResponse
+from app.schemas.tutor_schema import TutorDiagnosis, TutorRequest, TutorResponse
+from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.prompts import build_tutor_system_prompt, build_tutor_user_prompt
 from app.tutor.provider import OpenAITutorProvider, TutorLLMProvider, TutorProviderError
 from app.tutor.validator import TutorOutputValidationError, TutorOutputValidator
@@ -37,7 +38,7 @@ class TutorService:
     2. Xây dựng ngữ cảnh sư phạm (build tutor context: system prompt, user prompt).
     3. Yêu cầu chẩn đoán cấu trúc từ LLM (request structured diagnosis).
     4. Lựa chọn hành động / chiến lược sư phạm thích ứng (select tutoring action).
-    5. Kiểm định tính hợp lệ của đầu ra (validate output & pedagogical safety).
+    5. Kiểm định tính hợp lệ và có căn cứ của đầu ra (validate output & evidence grounding).
     6. Đóng gói TutorResponse hoàn chỉnh.
     """
 
@@ -64,15 +65,31 @@ class TutorService:
         # 3. Request structured diagnosis
         raw_output = await self._call_provider(messages)
 
-        # 4 & 5. Validate output & ensure valid response
+        # 4 & 5. Validate output & evidence grounding
         validated_response = self._validate_and_finalize_output(
             raw_output=raw_output,
             requested_hint_level=normalized_inputs["hint_level"],
             has_compiler_error=bool(normalized_inputs["compiler_error"]),
+            student_code=normalized_inputs["student_code"],
+            compiler_error=normalized_inputs["compiler_error"],
+            problem_statement=normalized_inputs["problem_statement"],
         )
 
         # 6. Construct complete TutorResponse
         return validated_response
+
+    def diagnose_submission(
+        self,
+        student_code: str,
+        compiler_error: Optional[str] = None,
+        problem_statement: Optional[str] = None,
+    ) -> TutorDiagnosis:
+        """Thực hiện chẩn đoán tĩnh nhanh dựa trên taxonomy và heuristics."""
+        return DiagnosisSubsystem.diagnose(
+            student_code=student_code,
+            compiler_error=compiler_error,
+            problem_statement=problem_statement,
+        )
 
     def _normalize_inputs(self, request: TutorRequest) -> dict[str, any]:
         """Chuẩn hóa dữ liệu đầu vào, loại bỏ khoảng trắng dư thừa."""
@@ -141,12 +158,20 @@ class TutorService:
         raw_output: str,
         requested_hint_level: int,
         has_compiler_error: bool,
+        student_code: Optional[str] = None,
+        compiler_error: Optional[str] = None,
+        problem_statement: Optional[str] = None,
+        reference_solution: Optional[str] = None,
     ) -> TutorResponse:
         """Parse, validate và bổ sung chiến lược sư phạm nếu cần thiết."""
         try:
             response = TutorOutputValidator.parse_and_validate(
                 raw_output,
                 requested_hint_level=requested_hint_level,
+                student_code=student_code,
+                compiler_error=compiler_error,
+                problem_statement=problem_statement,
+                reference_solution=reference_solution,
             )
         except TutorOutputValidationError as exc:
             logger.error("Đầu ra từ LLM không vượt qua validation: %s", str(exc))

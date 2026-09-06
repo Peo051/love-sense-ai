@@ -4,6 +4,7 @@ Package điều phối gia sư lập trình thích ứng (Adaptive Programming T
 
 from app.schemas.tutor_schema import DiagnosisCategory
 from app.tutor.diagnosis import DiagnosisSubsystem
+from app.tutor.evidence_grounding import EvidenceGroundingValidator, GroundingResult
 from app.tutor.provider import (
     DeterministicMockTutorProvider,
     OpenAITutorProvider,
@@ -23,6 +24,8 @@ __all__ = [
     "DiagnosisCategory",
     "DiagnosisSubsystem",
     "DeterministicMockTutorProvider",
+    "EvidenceGroundingValidator",
+    "GroundingResult",
     "OpenAITutorProvider",
     "TAXONOMY_ISSUE_TYPES",
     "TutorLLMProvider",

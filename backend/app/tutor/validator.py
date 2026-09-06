@@ -1,11 +1,12 @@
 import json
 import re
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import ValidationError
 
 from app.schemas.tutor_schema import DiagnosisCategory, TutorResponse
 from app.tutor.diagnosis import DiagnosisSubsystem
+from app.tutor.evidence_grounding import EvidenceGroundingValidator
 
 
 class TutorOutputValidationError(Exception):
@@ -17,7 +18,7 @@ class TutorOutputValidationError(Exception):
 
 
 class TutorOutputValidator:
-    """Validator kiểm tra tính toàn vẹn và hợp lệ của phản hồi gia sư từ LLM."""
+    """Validator kiểm tra tính toàn vẹn, tính hợp lệ và tính xác thực (evidence-grounding) của phản hồi gia sư từ LLM."""
 
     @classmethod
     def clean_json_string(cls, raw_text: str) -> str:
@@ -43,10 +44,15 @@ class TutorOutputValidator:
         raw_output: str,
         *,
         requested_hint_level: int = 1,
+        student_code: Optional[str] = None,
+        compiler_error: Optional[str] = None,
+        problem_statement: Optional[str] = None,
+        reference_solution: Optional[str] = None,
     ) -> TutorResponse:
         """
         Parse chuỗi văn bản từ LLM thành JSON và validate qua Pydantic schema TutorResponse.
-        Đồng thời chuẩn hóa category và issue_type theo C# Beginner Taxonomy.
+        Đồng thời chuẩn hóa category và issue_type theo C# Beginner Taxonomy,
+        và xác thực tính có căn cứ (evidence-grounding) của các đoạn mã trích dẫn.
         """
         if not raw_output or not raw_output.strip():
             raise TutorOutputValidationError("LLM trả về phản hồi rỗng.", raw_output=raw_output)
@@ -101,5 +107,15 @@ class TutorOutputValidator:
                 f"Cấu trúc phản hồi từ LLM không khớp schema TutorResponse: {str(exc)}",
                 raw_output=raw_output,
             ) from exc
+
+        # Kiểm định tính xác thực của bằng chứng (Evidence Grounding)
+        if student_code is not None:
+            response_model = EvidenceGroundingValidator.validate_and_ground_response(
+                response_model,
+                student_code=student_code,
+                compiler_error=compiler_error,
+                problem_statement=problem_statement,
+                reference_solution=reference_solution,
+            )
 
         return response_model
