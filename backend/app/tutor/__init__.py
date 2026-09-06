@@ -6,6 +6,7 @@ from app.schemas.tutor_schema import DiagnosisCategory
 from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.evidence_grounding import EvidenceGroundingValidator, GroundingResult
 from app.tutor.hint_manager import HintManager, HintPayload, HintSessionState
+from app.tutor.leakage_guard import LeakageCheckResult, SolutionLeakageGuard
 from app.tutor.provider import (
     DeterministicMockTutorProvider,
     OpenAITutorProvider,
@@ -30,7 +31,9 @@ __all__ = [
     "HintManager",
     "HintPayload",
     "HintSessionState",
+    "LeakageCheckResult",
     "OpenAITutorProvider",
+    "SolutionLeakageGuard",
     "TAXONOMY_ISSUE_TYPES",
     "TutorLLMProvider",
     "TutorOutputValidationError",

@@ -61,6 +61,7 @@ class TutorService:
         request: TutorRequest,
         session_id: Optional[str] = None,
         allow_jump_to_solution: bool = False,
+        reference_solution: Optional[str] = None,
     ) -> TutorResponse:
         """
         Thực hiện chu trình điều phối hướng dẫn học tập cho một yêu cầu từ sinh viên.
@@ -95,7 +96,7 @@ class TutorService:
         # 3. Request structured diagnosis
         raw_output = await self._call_provider(messages)
 
-        # 4 & 5. Validate output & evidence grounding
+        # 4 & 5. Validate output & evidence grounding & solution leakage guard
         validated_response = self._validate_and_finalize_output(
             raw_output=raw_output,
             requested_hint_level=effective_hint_level,
@@ -104,6 +105,7 @@ class TutorService:
             student_code=normalized_inputs["student_code"],
             compiler_error=normalized_inputs["compiler_error"],
             problem_statement=normalized_inputs["problem_statement"],
+            reference_solution=reference_solution,
         )
 
         # 6. Construct complete TutorResponse
@@ -253,6 +255,7 @@ class TutorService:
         response_dict["teaching_strategy"] = teaching_strategy
         response_dict["hint_level"] = requested_hint_level
         response_dict["highest_hint_level_used"] = highest_hint_level_used or requested_hint_level
+        response_dict["validator_actions"] = list(getattr(response, "validator_actions", []))
         response_dict["prompt_version"] = getattr(response, "prompt_version", "v1")
         response_dict["created_at"] = datetime.now(timezone.utc)
 

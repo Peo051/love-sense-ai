@@ -300,6 +300,10 @@ class TutorResponse(BaseModel):
         default=None,
         description="Thời điểm tạo phản hồi",
     )
+    validator_actions: list[str] = Field(
+        default_factory=list,
+        description="Danh sách các hành động can thiệp kiểm định (ví dụ: evidence_grounding_penalty, downgraded_to_safe_hint)",
+    )
 
     @field_validator("knowledge_components")
     @classmethod

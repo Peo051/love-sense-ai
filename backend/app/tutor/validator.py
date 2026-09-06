@@ -7,6 +7,7 @@ from pydantic import ValidationError
 from app.schemas.tutor_schema import DiagnosisCategory, TutorResponse
 from app.tutor.diagnosis import DiagnosisSubsystem
 from app.tutor.evidence_grounding import EvidenceGroundingValidator
+from app.tutor.leakage_guard import SolutionLeakageGuard
 
 
 class TutorOutputValidationError(Exception):
@@ -117,5 +118,12 @@ class TutorOutputValidator:
                 problem_statement=problem_statement,
                 reference_solution=reference_solution,
             )
+
+        # Kiểm định và ngăn chặn rò rỉ giải pháp sớm (Solution Leakage Guard - APT-012)
+        response_model = SolutionLeakageGuard.sanitize_if_leaked(
+            response_model,
+            student_code=student_code,
+            reference_solution=reference_solution,
+        )
 
         return response_model
