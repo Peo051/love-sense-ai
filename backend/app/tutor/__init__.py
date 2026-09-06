@@ -18,6 +18,7 @@ from app.tutor.provider import (
     TutorLLMProvider,
     TutorProviderError,
 )
+from app.tutor.mastery import DeterministicMasteryModel, MasteryEvent
 from app.tutor.service import TutorService, TutorServiceError
 from app.tutor.skill_taxonomy import (
     CSHARP_OOP_SKILLS_V1,
@@ -40,9 +41,10 @@ from app.tutor.verification import (
 
 __all__ = [
     "CSHARP_OOP_SKILLS_V1",
+    "DeterministicMasteryModel",
+    "DeterministicMockTutorProvider",
     "DiagnosisCategory",
     "DiagnosisSubsystem",
-    "DeterministicMockTutorProvider",
     "EvidenceGroundingValidator",
     "ExecutionBackend",
     "GroundingResult",
@@ -53,6 +55,7 @@ __all__ = [
     "HintPayload",
     "HintSessionState",
     "LeakageCheckResult",
+    "MasteryEvent",
     "OpenAITutorProvider",
     "SandboxedCompilerBackend",
     "Skill",

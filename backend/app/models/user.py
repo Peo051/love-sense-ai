@@ -29,3 +29,4 @@ class User(Base):
     analysis_sessions = relationship("AnalysisSession", back_populates="user", cascade="all, delete-orphan")
     learning_sessions = relationship("LearningSession", back_populates="user", cascade="all, delete-orphan")
     student_profile = relationship("StudentProfile", back_populates="user", cascade="all, delete-orphan", uselist=False)
+    skill_masteries = relationship("StudentSkillMastery", back_populates="user", cascade="all, delete-orphan")
