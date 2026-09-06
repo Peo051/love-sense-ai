@@ -1,0 +1,280 @@
+{
+  "audit_metadata": {
+    "task": "APT-047",
+    "title": "Independent Evaluation Pipeline Final Verdict",
+    "auditor_role": "Independent Research Auditor",
+    "project": "CodeSense AI - Adaptive Programming Tutor",
+    "frozen_release": "codesense-research-v1.0",
+    "benchmark": "VietCSharpTutor-600",
+    "audit_branch": "audit/evaluation-integrity-v1",
+    "audit_scope": "APT-040 to APT-046",
+    "verdict_date": "2026-09-06"
+  },
+  "verdict": "FAIL",
+  "verdict_summary": "Toàn bộ pipeline đánh giá nghiên cứu của CodeSense AI trên benchmark VietCSharpTutor-600 không có giá trị khoa học (scientifically invalid). Không có bất kỳ suy luận LLM thực tế nào diễn ra; 100% dự đoán được sinh ra từ mock nội bộ sao chép nhãn vàng (ground truth); các chỉ số hiệu năng đạt tuyệt đối 100% và chỉ số tài nguyên (latency, token, chi phí) hoàn toàn là sản phẩm nhân tạo ngẫu nhiên.",
+  "core_questions": {
+    "did_baseline_a_use_real_llm": {
+      "answer": "NO",
+      "details": "Baseline A sử dụng heuristic suy diễn cục bộ dựa trên chuỗi thông báo lỗi compiler và chủ đề, hoàn toàn không gọi LLM."
+    },
+    "did_baseline_b_use_real_llm": {
+      "answer": "NO",
+      "details": "Baseline B sử dụng logic sinh dự đoán giả lập nội bộ trong EvaluationRunner, không có lệnh gọi LLM nào."
+    },
+    "did_proposed_c_use_real_llm": {
+      "answer": "NO",
+      "details": "Proposed C chạy qua EvaluationRunner._predict_single, nơi không chứa client mạng hay API call; trực tiếp sao chép nhãn vàng từ sample dict."
+    },
+    "did_proposed_d_use_real_llm": {
+      "answer": "NO",
+      "details": "Proposed D chạy qua cùng nhánh mã mock nội bộ với Proposed C, sao chép 100% nhãn vàng ground truth trong RAM."
+    },
+    "did_any_system_directly_copy_ground_truth": {
+      "answer": "YES",
+      "details": "Cả Proposed C và Proposed D đều sao chép trực tiếp 100% các trường nhãn vàng (bug_status, error_category, bug_type, bug_location, knowledge_components, possible_misconception, hints, explanation_vi)."
+    },
+    "can_ground_truth_reach_prediction_construction": {
+      "answer": "YES",
+      "details": "Toàn bộ từ điển sample chứa 26 trường của dataset được truyền trực tiếp vào hàm _predict_single mà không qua tầng cách ly ModelInput."
+    },
+    "can_student_context_contain_current_sample_gold_annotations": {
+      "answer": "YES",
+      "details": "Các trường nhãn vàng của mẫu hiện tại (possible_misconception, knowledge_components) được tái nhúng trực tiếp vào context của học viên."
+    },
+    "are_proposed_c_and_d_scientifically_comparable": {
+      "answer": "NO",
+      "details": "Hai hệ thống bị nhiễu hoàn toàn (confounded). Sự khác biệt kết quả không bắt nguồn từ hiệu quả của Student Context mà do logic mã mock nội bộ tự định nghĩa."
+    },
+    "can_research_mode_silently_fall_back_to_mock": {
+      "answer": "YES",
+      "details": "Nghiêm trọng hơn cả fallback ngầm: Runner nghiên cứu LUÔN LUÔN chạy mock 100% trong mọi trường hợp, bất kể tham số --mock False hay cấu hình provider."
+    },
+    "can_metrics_distinguish_synthetic_and_real_predictions": {
+      "answer": "NO",
+      "details": "Tệp evaluate_metrics.py hoàn toàn mù về nguồn gốc (provenance-blind); chỉ so khớp hai từ điển JSON mà không kiểm tra chữ ký hay token logprob."
+    },
+    "which_v1_metrics_remain_interpretable": {
+      "answer": "DATASET_DESCRIPTIVE_STATISTICS_ONLY",
+      "details": "Chỉ các đặc trưng thống kê mô tả thô của tập dữ liệu VietCSharpTutor (số lượng mẫu, phân bố lỗi compiler, số dòng code) là còn ý nghĩa tham khảo dữ liệu."
+    },
+    "which_v1_metrics_must_be_invalidated": {
+      "answer": "ALL_REPORTED_EVALUATION_METRICS",
+      "details": "Tất cả các chỉ số hiệu năng chẩn đoán (Diagnosis Accuracy 100%, Localization 100%, Error Category 100%, KC F1 1.0, Misconception F1 1.0, Hint Relevance/Actionability 1.0) và chỉ số tài nguyên (latency, tokens, cost) phải bị hủy bỏ hiệu lực hoàn toàn."
+    },
+    "is_pipeline_suitable_for_future_research": {
+      "answer": "NO",
+      "details": "Pipeline hiện tại không đạt tiêu chuẩn nghiên cứu khoa học. Cần xây dựng lại hoàn toàn từ đầu theo tiêu chuẩn Clean-Room trước khi chạy bất kỳ thử nghiệm nào."
+    }
+  },
+  "critical_findings": [
+    {
+      "finding_id": "F-01",
+      "title": "Total Absence of Real LLM Client in Research Evaluation Runner",
+      "severity": "CRITICAL",
+      "affected_system": "All Evaluation Systems (Baseline A, Baseline B, Proposed C, Proposed D)",
+      "evidence": "backend/app/evaluation/runner.py dòng 204-346 không hề import google.generativeai, openai, httpx, hay requests. _predict_single thực thi mã Python giả lập 100%.",
+      "observed_behavior": "Lệnh chạy python scripts/run_evaluation.py --provider gemini --model gemini-2.5-flash không tạo ra bất kỳ gói tin mạng nào.",
+      "expected_behavior": "Hệ thống phải gọi API suy luận LLM qua mạng tới endpoint chính thức của nhà cung cấp mô hình.",
+      "scientific_impact": "Báo cáo khoa học công bố kết quả suy luận của LLM là sai sự thật về mặt phương pháp; mô hình AI thực tế chưa từng được đánh giá.",
+      "engineering_impact": "Mã nguồn đánh giá bị tách rời hoàn toàn khỏi hạ tầng cung cấp mô hình thực tế.",
+      "recommended_action": "Viết lại runner để tích hợp trực tiếp LLM Client qua mạng với cơ chế xác thực API key bắt buộc."
+    },
+    {
+      "finding_id": "F-02",
+      "title": "Direct Copying of Ground Truth into Saved Predictions",
+      "severity": "CRITICAL",
+      "affected_system": "Proposed C, Proposed D",
+      "evidence": "backend/app/evaluation/runner.py: prediction['bug_location'] = sample.get('bug_location'); prediction['knowledge_components'] = sample.get('knowledge_components'); prediction['hints'] = [sample.get('hint_1'), ...].",
+      "observed_behavior": "Dự đoán đầu ra khớp chính xác 100% từng ký tự với nhãn vàng ground truth.",
+      "expected_behavior": "Dự đoán phải được sinh ra từ việc phân tích mã nguồn và giải mã văn bản của mô hình AI.",
+      "scientific_impact": "Điểm số hoàn hảo 100% là sản phẩm của thao tác gán biến (assignment operator) trong bộ nhớ, không phải năng lực suy luận của AI.",
+      "engineering_impact": "Dữ liệu nhãn vàng bị rò rỉ trực tiếp vào kho lưu trữ kết quả đầu ra (prediction storage).",
+      "recommended_action": "Cách ly tuyệt đối nhãn vàng; chỉ truyền ModelInput chứa các trường được phép (student_code, compiler_error, problem_statement_vi)."
+    },
+    {
+      "finding_id": "F-03",
+      "title": "Silent Offline Execution Without Fail-Loud Safety",
+      "severity": "CRITICAL",
+      "affected_system": "Evaluation Runner Pipeline",
+      "evidence": "Khi ngắt hoàn toàn kết nối mạng và không đặt OPENAI_API_KEY / GEMINI_API_KEY, runner vẫn hoàn thành với mã thoát 0 và tạo manifest thành công.",
+      "observed_behavior": "Hệ thống âm thầm thành công mà không phát ra bất kỳ cảnh báo hay lỗi nghiêm trọng nào.",
+      "expected_behavior": "Hệ thống nghiên cứu phải dừng ngay lập tức (Fail Loudly) và báo lỗi cấu hình nếu thiếu API key hoặc không thể kết nối tới mô hình.",
+      "scientific_impact": "Tạo ra ảo tưởng rằng nghiên cứu đã được thực hiện hợp lệ trong khi hệ thống chạy giả lập.",
+      "engineering_impact": "Thiếu các chốt chặn kiểm soát lỗi nghiêm ngặt (circuit breaker) trong pipeline thử nghiệm.",
+      "recommended_action": "Triển khai cơ chế Fail-Loud bắt buộc: kiểm tra kết nối và tính hợp lệ của API key trước khi khởi chạy batch."
+    },
+    {
+      "finding_id": "F-04",
+      "title": "Synthetic and Randomized Computational Resource Metrics",
+      "severity": "CRITICAL",
+      "affected_system": "Manifest and Resource Benchmarking",
+      "evidence": "backend/app/evaluation/runner.py: latency_ms = random.uniform(150.0, 420.0); total_tokens = random.randint(300, 850); cost = tokens * rate.",
+      "observed_behavior": "Thời gian đáp ứng và chi phí điện toán được tạo ra bằng module random của Python.",
+      "expected_behavior": "Độ trễ phải đo bằng đồng hồ bấm giờ thời gian thực (time.perf_counter) và số token phải lấy từ usage_metadata của phản hồi API.",
+      "scientific_impact": "Toàn bộ phân tích về tính hiệu quả tính toán, độ trễ triển khai và chi phí vận hành trong bài báo đều không có giá trị thực nghiệm.",
+      "engineering_impact": "Báo cáo giám sát tài nguyên không phản ánh đúng năng lực tính toán của hệ thống.",
+      "recommended_action": "Đo đạc chính xác độ trễ mạng thực và trích xuất token usage thực tế từ API response."
+    }
+  ],
+  "high_findings": [
+    {
+      "finding_id": "F-05",
+      "title": "Complete Absence of ModelInput Abstraction Layer",
+      "severity": "HIGH",
+      "affected_system": "Data Loading and Pipeline Architecture",
+      "evidence": "Dataset loader trả về dict 26 trường và dict này được truyền nguyên vẹn xuyên suốt runner, prompt builder và mock engine.",
+      "observed_behavior": "Không có ranh giới dữ liệu giữa thông tin đầu vào bài toán và nhãn vàng kiểm thử.",
+      "expected_behavior": "Phải có một dataclass/Pydantic model ModelInput nghiêm ngặt chỉ chứa 4 trường đầu vào của học viên.",
+      "scientific_impact": "Tạo điều kiện cho hiện tượng rò rỉ nhãn vàng xảy ra ở bất kỳ công đoạn nào của pipeline.",
+      "engineering_impact": "Cấu trúc dữ liệu lỏng lẻo, vi phạm nguyên tắc bảo vệ thông tin (information hiding).",
+      "recommended_action": "Định nghĩa và áp dụng bắt buộc schema ModelInput nghiêm ngặt (Whitelist-only)."
+    },
+    {
+      "finding_id": "F-06",
+      "title": "Provenance-Blind Metric Calculator",
+      "severity": "HIGH",
+      "affected_system": "backend/app/evaluation/evaluate_metrics.py",
+      "evidence": "evaluate_metrics.py chỉ đọc predictions.jsonl và test.jsonl, tính toán các chỉ số mà không hề kiểm tra manifest, token logprob hay nguồn gốc sinh.",
+      "observed_behavior": "Script tính toán chấp nhận bất kỳ tệp JSONL nào mà không cần biết nó do LLM hay mã mock tạo ra.",
+      "expected_behavior": "Bộ tính toán chỉ số phải xác thực chữ ký số và metadata nguồn gốc trước khi chấp nhận tính toán.",
+      "scientific_impact": "Các chỉ số công bố có thể bị thao túng hoặc thay thế bằng kết quả nhân tạo mà không bị phát hiện.",
+      "engineering_impact": "Thiếu khâu xác thực tính toàn vẹn dữ liệu trong pipeline CI/CD nghiên cứu.",
+      "recommended_action": "Bổ sung bước xác thực nguồn gốc (Provenance Verification) trước khi tính toán số liệu."
+    },
+    {
+      "finding_id": "F-07",
+      "title": "Confounded Experimental Comparison (Proposed C vs Proposed D)",
+      "severity": "HIGH",
+      "affected_system": "Ablation and Comparative Analysis",
+      "evidence": "Cả Proposed C và Proposed D đều chạy qua cùng một logic mock sinh kết quả giả lập; sự khác biệt không phản ánh tác động của Student Context.",
+      "observed_behavior": "So sánh giữa Proposed C và D là so sánh giữa hai cấu hình mock nhân tạo.",
+      "expected_behavior": "Proposed C và D phải chạy trên cùng một LLM với cùng nhiệt độ, duy nhất khác biệt ở việc có hoặc không có Student Context thực sự.",
+      "scientific_impact": "Mất hoàn toàn giá trị khoa học của luận điểm cốt lõi: 'Ngữ cảnh học viên cải thiện độ chính xác chẩn đoán'.",
+      "engineering_impact": "Thử nghiệm ablation bị vô hiệu hóa.",
+      "recommended_action": "Thiết kế lại thử nghiệm ablation có kiểm soát chặt chẽ với LLM thực tế."
+    },
+    {
+      "finding_id": "F-08",
+      "title": "Unverified Cache and Prediction File Reuse",
+      "severity": "MEDIUM",
+      "affected_system": "Prediction Storage and Caching",
+      "evidence": "Các tệp predictions.jsonl có thể được lưu trữ và sử dụng lại vô thời hạn mà không có cơ chế kiểm tra hash của mô hình hay mã nguồn sinh.",
+      "observed_behavior": "Tái sử dụng các tệp dự đoán cũ mà không thể phân biệt được lần chạy nào là mới, lần nào là cũ.",
+      "expected_behavior": "Mỗi lần đánh giá phải gắn với một run_id duy nhất kèm hash commit git và hash cấu hình.",
+      "scientific_impact": "Khả năng tái lập kết quả bị suy giảm nghiêm trọng.",
+      "engineering_impact": "Dễ nhầm lẫn giữa kết quả thử nghiệm cũ và mới.",
+      "recommended_action": "Gắn nhãn cryptographic hash và run_id duy nhất cho mỗi batch dự đoán."
+    }
+  ],
+  "invalidated_results": [
+    {
+      "metric_name": "Proposed D Overall Diagnosis Accuracy",
+      "reported_value": "100.0%",
+      "actual_status": "INVALIDATED",
+      "reason": "Sinh ra từ mã mock sao chép trực tiếp ground truth; không có suy luận LLM."
+    },
+    {
+      "metric_name": "Bug Localization Accuracy",
+      "reported_value": "100.0%",
+      "actual_status": "INVALIDATED",
+      "reason": "Sao chép trực tiếp từ trường sample['bug_location']."
+    },
+    {
+      "metric_name": "Error Category Classification Accuracy",
+      "reported_value": "100.0%",
+      "actual_status": "INVALIDATED",
+      "reason": "Sao chép trực tiếp từ trường sample['error_category']."
+    },
+    {
+      "metric_name": "Knowledge Component Detection F1-Score",
+      "reported_value": "1.000",
+      "actual_status": "INVALIDATED",
+      "reason": "Sao chép trực tiếp từ danh sách sample['knowledge_components']."
+    },
+    {
+      "metric_name": "Misconception Identification F1-Score",
+      "reported_value": "1.000",
+      "actual_status": "INVALIDATED",
+      "reason": "Sao chép trực tiếp từ trường sample['possible_misconception']."
+    },
+    {
+      "metric_name": "Hint Quality (Relevance & Actionability)",
+      "reported_value": "1.000 / 1.000",
+      "actual_status": "INVALIDATED",
+      "reason": "Sao chép trực tiếp các gợi ý chuẩn hint_1, hint_2, hint_3 từ ground truth."
+    },
+    {
+      "metric_name": "Mean Inference Latency (Proposed D)",
+      "reported_value": "285.4 ms",
+      "actual_status": "INVALIDATED",
+      "reason": "Sinh ngẫu nhiên từ hàm random.uniform(150.0, 420.0)."
+    },
+    {
+      "metric_name": "Total Token Consumption & Inference Cost",
+      "reported_value": "Reported V1 Cost Figures",
+      "actual_status": "INVALIDATED",
+      "reason": "Sinh ngẫu nhiên từ random.randint(300, 850); không có chi phí điện toán thực."
+    },
+    {
+      "metric_name": "Ablation Study Deltas (Proposed C vs D)",
+      "reported_value": "Reported Ablation Gains",
+      "actual_status": "INVALIDATED",
+      "reason": "Do cả C và D đều là kết quả mock nhân tạo, các mức chênh lệch hiệu năng là phi thực tế."
+    }
+  ],
+  "unaffected_results": [
+    {
+      "item_name": "VietCSharpTutor-600 Dataset Integrity (Ground Truth Samples)",
+      "status": "UNAFFECTED",
+      "notes": "Tệp dữ liệu gốc (test.jsonl, val.jsonl, train.jsonl) có chất lượng biên soạn ngôn ngữ C# và nhãn sư phạm tốt, được bảo toàn nguyên vẹn."
+    },
+    {
+      "item_name": "Dataset Descriptive Statistics",
+      "status": "UNAFFECTED",
+      "notes": "Các phân tích về số dòng mã, phân bố chủ đề lập trình, danh mục lỗi compiler trong benchmark giữ nguyên tính xác thực mô tả."
+    },
+    {
+      "item_name": "Core Diagnostic Metric Mathematical Definitions",
+      "status": "UNAFFECTED",
+      "notes": "Công thức toán học tính Accuracy, F1-Score (Exact Match, Partial Set Jaccard) trong evaluate_metrics.py là chuẩn xác về mặt lý thuyết."
+    }
+  ],
+  "blocking_actions": [
+    {
+      "blocker_id": "BLOCKER-01",
+      "title": "Strict ModelInput Whitelisting Architecture",
+      "description": "Tạo lớp dữ liệu ModelInput bất biến chỉ chứa: id, language, topic, difficulty, problem_statement_vi, student_code, compiler_error. Tuyệt đối không cho phép bất kỳ trường nhãn vàng nào đi qua.",
+      "target_phase": "Phase 2 Remediation"
+    },
+    {
+      "blocker_id": "BLOCKER-02",
+      "title": "Integration of Real Network LLM Client",
+      "description": "Tích hợp client gọi API thực tế tới Google Gemini API / OpenAI API trong EvaluationRunner; xóa bỏ vĩnh viễn nhánh sao chép nhãn vàng ngầm.",
+      "target_phase": "Phase 2 Remediation"
+    },
+    {
+      "blocker_id": "BLOCKER-03",
+      "title": "Mandatory Fail-Loud Execution Policy",
+      "description": "Cấu hình hệ thống nghiên cứu phải dừng lập tức (raise RuntimeError) khi thiếu API key, rớt mạng, lỗi phản hồi hoặc timeout; nghiêm cấm chạy mock trong research evaluation.",
+      "target_phase": "Phase 2 Remediation"
+    },
+    {
+      "blocker_id": "BLOCKER-04",
+      "title": "Real Telemetry and Resource Measurement",
+      "description": "Đo độ trễ bằng time.perf_counter() thực tế của HTTP roundtrip; trích xuất token usage chính xác từ phản hồi API; xóa bỏ hoàn toàn module random.",
+      "target_phase": "Phase 2 Remediation"
+    },
+    {
+      "blocker_id": "BLOCKER-05",
+      "title": "Cryptographic Run Provenance and Verification",
+      "description": "Mỗi đợt đánh giá phải ghi nhận Run Manifest có hash commit, hash dữ liệu đầu vào, API model version, logprob (nếu có). evaluate_metrics.py chỉ chấp nhận tính điểm khi manifest được xác thực hợp lệ.",
+      "target_phase": "Phase 2 Remediation"
+    },
+    {
+      "blocker_id": "BLOCKER-06",
+      "title": "Formal Invalidation Notice on Historical V1 Artifacts",
+      "description": "Gắn nhãn rõ ràng 'HISTORICAL - INVALIDATED BY APT-047' lên toàn bộ các tệp kết quả V1 cũ mà không xóa bỏ, bảo toàn khả năng truy vết lịch sử.",
+      "target_phase": "Phase 2 Remediation"
+    }
+  ]
+}
