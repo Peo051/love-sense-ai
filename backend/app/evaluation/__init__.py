@@ -3,6 +3,8 @@ from app.evaluation.schemas import (
     ALLOWED_MODEL_INPUT_FIELDS,
     FORBIDDEN_GOLD_FIELDS,
     GROUND_TRUTH_SENTINEL_71F2,
+    EvaluationMetadata,
+    EvaluationRecord,
     GroundTruth,
     ModelInput,
     assert_not_ground_truth,
@@ -12,6 +14,8 @@ from app.evaluation.schemas import (
 __all__ = [
     "ModelInput",
     "GroundTruth",
+    "EvaluationMetadata",
+    "EvaluationRecord",
     "FORBIDDEN_GOLD_FIELDS",
     "ALLOWED_MODEL_INPUT_FIELDS",
     "GROUND_TRUTH_SENTINEL_71F2",

@@ -273,15 +273,145 @@ class GroundTruth(BaseModel):
         )
 
 
+class EvaluationMetadata(BaseModel):
+    """
+    Non-gold experiment bookkeeping and stratification metadata.
+    Accessible only to dataset managers, offline evaluators (for stratified slices), and manifest writers.
+
+    CRITICAL SECURITY INVARIANT:
+    Must NEVER be visible to the model, prompt builders, or provider clients by default.
+    Contains potentially confounding tags like topic and difficulty.
+    """
+
+    sample_id: str = Field(
+        ...,
+        description="Unique sample identifier linking with ModelInput and GroundTruth.",
+        min_length=1,
+    )
+    split: str = Field(
+        default="test",
+        description="Dataset split: 'dev', 'validation', or 'test'.",
+    )
+    dataset_version: str = Field(
+        default="1.0.0",
+        description="Version string of the benchmark dataset.",
+    )
+    source_type: str = Field(
+        default="expert_authored",
+        description="Authoring provenance ('expert_authored', 'controlled_mutation', etc.).",
+    )
+    problem_family_id: str = Field(
+        default="",
+        description="Problem family grouping to verify anti-leakage cross-split isolation.",
+    )
+    topic: str = Field(
+        default="",
+        description="OOP topic tag (e.g. 'csharp.encapsulation') for post-hoc stratification only.",
+    )
+    difficulty: str = Field(
+        default="beginner",
+        description="Difficulty tier ('beginner', 'easy', 'medium') for post-hoc stratification only.",
+    )
+    review_status: str = Field(
+        default="approved",
+        description="Quality assurance review status.",
+    )
+    run_id: Optional[str] = Field(
+        default=None,
+        description="Optional experiment run identifier.",
+    )
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
+
+    @classmethod
+    def from_dataset_record(cls, record: Dict[str, Any], run_id: Optional[str] = None) -> "EvaluationMetadata":
+        """
+        Explicit extraction of experiment metadata from raw dataset record.
+        """
+        if not isinstance(record, dict):
+            raise TypeError(f"Expected dict for dataset record, got {type(record).__name__}")
+
+        sample_id_raw = record.get("id") or record.get("sample_id")
+        if not sample_id_raw or not str(sample_id_raw).strip():
+            raise ValueError("Dataset record missing mandatory 'id' or 'sample_id' for EvaluationMetadata.")
+
+        return cls(
+            sample_id=str(sample_id_raw).strip(),
+            split=str(record.get("split") or "test").strip(),
+            dataset_version=str(record.get("dataset_version") or "1.0.0").strip(),
+            source_type=str(record.get("source_type") or "expert_authored").strip(),
+            problem_family_id=str(record.get("problem_family_id") or "").strip(),
+            topic=str(record.get("topic") or "").strip(),
+            difficulty=str(record.get("difficulty") or "beginner").strip(),
+            review_status=str(record.get("review_status") or "approved").strip(),
+            run_id=run_id,
+        )
+
+
+class EvaluationRecord(BaseModel):
+    """
+    Canonical clean-room container encapsulating the complete lifecycle of an evaluation sample.
+
+    Architecture:
+    ├── model_input: Strictly whitelisted fields visible to the model during inference.
+    ├── ground_truth: Isolated gold annotations for offline grading only.
+    └── metadata: Non-gold experiment bookkeeping and slicing tags.
+
+    Invariants:
+    - Inference API must receive ONLY model_input.
+    - Offline Evaluator receives: prediction, ground_truth, and optionally metadata.
+    - Manifest writer receives: metadata.
+    """
+
+    model_input: ModelInput
+    ground_truth: GroundTruth
+    metadata: EvaluationMetadata
+
+    model_config = ConfigDict(
+        frozen=True,
+        extra="forbid",
+    )
+
+    @classmethod
+    def from_dataset_record(cls, record: Dict[str, Any], run_id: Optional[str] = None) -> "EvaluationRecord":
+        """
+        Parse a raw dataset record and cleanly decompose it into 3 strictly isolated objects.
+        """
+        return cls(
+            model_input=ModelInput.from_dataset_record(record),
+            ground_truth=GroundTruth.from_dataset_record(record),
+            metadata=EvaluationMetadata.from_dataset_record(record, run_id=run_id),
+        )
+
+    def get_inference_input(self) -> ModelInput:
+        """Explicit getter guaranteeing only ModelInput is handed to inference."""
+        return self.model_input
+
+
 def assert_not_ground_truth(data: Any) -> None:
     """
-    Runtime security assertion ensuring GroundTruth is NEVER passed into inference components.
-    Raises TypeError if GroundTruth instance or sentinel is detected.
+    Runtime security assertion ensuring GroundTruth, EvaluationMetadata, or EvaluationRecord
+    is NEVER passed into inference components.
+    Raises TypeError if forbidden object or sentinel is detected.
     """
     if isinstance(data, GroundTruth):
         raise TypeError(
             "CRITICAL ARCHITECTURAL VIOLATION: GroundTruth object passed to inference component! "
             "Model inference must strictly receive ModelInput."
+        )
+    if isinstance(data, EvaluationMetadata):
+        raise TypeError(
+            "CRITICAL ARCHITECTURAL VIOLATION: EvaluationMetadata object passed to inference component! "
+            "Bookkeeping metadata must remain strictly outside the inference path."
+        )
+    if isinstance(data, EvaluationRecord):
+        raise TypeError(
+            "CRITICAL ARCHITECTURAL VIOLATION: Combined EvaluationRecord passed to inference component! "
+            "Inference API must receive ONLY model_input (call record.get_inference_input())."
         )
     if isinstance(data, dict):
         if data.get("sentinel") == GROUND_TRUTH_SENTINEL_71F2:
